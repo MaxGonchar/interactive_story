@@ -12,15 +12,17 @@ install:
 	cd frontend && npm install
 
 dev:
-	@BE_PID=; FE_PID=; \
-	trap 'kill $$BE_PID $$FE_PID 2>/dev/null; exit 1' SIGINT SIGTERM; \
+	@test -f $(UVICORN) || { echo "Error: backend venv not found. Run 'make install' first."; exit 1; }
+	@trap 'kill 0' SIGINT SIGTERM; \
 	$(UVICORN) app.main:app --reload --host 127.0.0.1 --port 8000 --app-dir backend & BE_PID=$$!; \
 	cd frontend && npm run dev & FE_PID=$$!; \
 	wait $$BE_PID; BE_EXIT=$$?; \
-	kill $$FE_PID 2>/dev/null; \
-	exit $$BE_EXIT
+	wait $$FE_PID; FE_EXIT=$$?; \
+	kill 0 2>/dev/null; \
+	[ $$BE_EXIT -ne 0 ] && exit $$BE_EXIT || exit $$FE_EXIT
 
 be:
+	@test -f $(UVICORN) || { echo "Error: backend venv not found. Run 'make install' first."; exit 1; }
 	$(UVICORN) app.main:app --reload --host 127.0.0.1 --port 8000 --app-dir backend
 
 fe:
