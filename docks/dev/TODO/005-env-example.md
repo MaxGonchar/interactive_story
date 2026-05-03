@@ -12,10 +12,6 @@ Create `backend/.env.example` documenting every environment variable the backend
 What IS included:
 - `backend/.env.example` with all required keys and inline comments explaining each
 - Variables to document at minimum:
-  - `LLM_PROVIDER` — LLM provider identifier (e.g. `openai`)
-  - `LLM_MODEL` — model name (e.g. `gpt-4o`)
-  - `OPENAI_API_KEY` — API key (value left blank)
-  - `DATA_DIR` — path to the YAML data directory (default: `../data`)
   - `LOG_LEVEL` — logging verbosity (default: `INFO`)
   - `CORS_ORIGINS` — comma-separated allowed origins (default: `http://localhost:5173`)
 - `backend/.env` added to `.gitignore` (project root) if not already present
