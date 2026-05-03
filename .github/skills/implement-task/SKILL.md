@@ -15,6 +15,55 @@ End-to-end workflow for implementing a single task: branch → understand → pl
 
 ## Procedure
 
+### 0. Verify GitHub CLI (`gh`)
+
+Before any git or GitHub operation, confirm `gh` is available and authenticated.
+
+Run this check in the terminal:
+
+```bash
+if ! command -v gh &>/dev/null; then
+  echo "gh not found"
+else
+  gh auth status
+fi
+```
+
+**If `gh` is not installed**, guide the user through installation:
+
+```bash
+# macOS (Homebrew)
+brew install gh
+
+# Linux (apt)
+sudo apt install gh
+
+# Linux (dnf)
+sudo dnf install gh
+
+# Windows (winget)
+winget install --id GitHub.cli
+```
+
+Official docs: https://cli.github.com/
+
+**If `gh` is installed but not authenticated**, run:
+
+```bash
+gh auth login
+```
+
+Follow the prompts:
+1. Select **GitHub.com**
+2. Choose **HTTPS**
+3. Authenticate via browser or paste a personal access token
+
+Verify success with `gh auth status` before continuing.
+
+> Do not proceed to step 1 until `gh auth status` reports a valid logged-in account.
+
+---
+
 ### 1. Create and Switch to Branch
 
 Determine the branch name:
@@ -22,7 +71,8 @@ Determine the branch name:
 - Otherwise derive 2–4 words from the task title in kebab-case
 
 ```bash
-git checkout main && git pull
+gh repo sync          # sync local main with remote
+git checkout main
 git checkout -b <branch-name>
 ```
 
@@ -104,6 +154,8 @@ Commit message format: `001: add FastAPI health-check endpoint`
 
 ### 9. Push Branch
 
+`gh` manages authentication, so no separate credential setup is needed:
+
 ```bash
 git push -u origin <branch-name>
 ```
@@ -125,6 +177,7 @@ Include in the PR body:
 
 ## Completion Checklist
 
+- [ ] `gh` installed and authenticated (`gh auth status` passes)
 - [ ] Branch created from up-to-date `main`
 - [ ] Task fully read and understood
 - [ ] Architecture docs read
