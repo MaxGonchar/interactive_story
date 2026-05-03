@@ -7,10 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 _DEFAULT_ORIGINS = "http://localhost:5173,http://localhost:3000"
-_allowed_origins = [
+_parsed_origins = [
     o for o in (o.strip() for o in os.getenv("ALLOWED_ORIGINS", _DEFAULT_ORIGINS).split(",")) if o
 ]
-_allow_credentials = "*" not in _allowed_origins
+_allowed_origins = ["*"] if "*" in _parsed_origins else _parsed_origins
+_allow_credentials = _allowed_origins != ["*"]
 
 app = FastAPI(title="Interactive Story API")
 
