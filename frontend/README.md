@@ -5,7 +5,7 @@ React + Vite frontend for the Interactive Story app.
 ## Requirements
 
 - Node.js >= 20.19.0
-- npm >= 10.8
+- npm >= 10.8.0
 
 ## Setup
 
