@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.models.api import ErrorResponse, SceneDetailResponse
+from app.models.api import ErrorResponse, PlayRequest, PlayResponse, SceneDetailResponse
 
 router = APIRouter(prefix="/stories", tags=["scenes"])
 
@@ -32,5 +32,22 @@ def get_scene(story_id: str, scene_id: int):
                     "content": "I look for the nearest light source.",
                 },
             ],
+        }
+    }
+
+
+@router.post(
+    "/{story_id}/scenes/{scene_id}/play",
+    response_model=PlayResponse,
+)
+def play(story_id: str, scene_id: int, request: PlayRequest):
+    return {
+        "data": {
+            "user_message": {"id": 2, "role": "user", "content": request.content},
+            "assistant_message": {
+                "id": 3,
+                "role": "assistant",
+                "content": "A lantern swings near a wooden post...",
+            },
         }
     }
