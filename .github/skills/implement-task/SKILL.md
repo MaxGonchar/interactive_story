@@ -152,7 +152,29 @@ git commit -m "<task-id>: <short imperative summary>"
 
 Commit message format: `001: add FastAPI health-check endpoint`
 
-### 9. Push Branch
+### 9. Request User Review
+
+Before pushing, present a summary of all changes made:
+- List every file that was created or modified
+- Show a `git diff --stat` summary
+- Ask the user to review and confirm they are happy with the changes
+
+```bash
+git diff --stat HEAD
+```
+
+Use `vscode_askQuestions` to ask:
+> "I've committed all changes. Please review the diff above. Are you ready to push the branch and open a PR?"
+
+Do **not** proceed to step 10 until the user explicitly confirms.
+
+If the user requests changes:
+- Implement the requested corrections
+- Re-run tests if affected
+- Amend or add a new commit as appropriate
+- Re-present the summary and ask for confirmation again
+
+### 10. Push Branch
 
 `gh` manages authentication, so no separate credential setup is needed:
 
@@ -160,7 +182,7 @@ Commit message format: `001: add FastAPI health-check endpoint`
 git push -u origin <branch-name>
 ```
 
-### 10. Open Pull Request
+### 11. Open Pull Request
 
 Use the GitHub CLI or GitKraken MCP tool:
 ```bash
@@ -185,5 +207,6 @@ Include in the PR body:
 - [ ] All plan steps implemented
 - [ ] Tests passed (or absence noted)
 - [ ] Commit message follows convention
+- [ ] User reviewed changes and approved push
 - [ ] Branch pushed
 - [ ] PR open with description
