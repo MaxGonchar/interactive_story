@@ -3,6 +3,8 @@ from fastapi import APIRouter
 from app.models.api import (
     DeleteMessageResponse,
     ErrorResponse,
+    FinishSceneRequest,
+    FinishSceneResponse,
     PlayRequest,
     PlayResponse,
     SceneDetailResponse,
@@ -77,3 +79,17 @@ def edit_message(
 )
 def delete_message(story_id: str, scene_id: int, message_id: int):
     return {"success": True}
+
+
+@router.post(
+    "/{story_id}/scenes/{scene_id}/finish",
+    response_model=FinishSceneResponse,
+)
+def finish_scene(story_id: str, scene_id: int, request: FinishSceneRequest):
+    return {
+        "data": {
+            "id": scene_id,
+            "finished": True,
+            "scene_summary": request.scene_summary,
+        }
+    }
