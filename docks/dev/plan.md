@@ -8,7 +8,7 @@ Post-MVP roadmap is listed separately at the bottom.
 
 ## Milestones
 
-### M1 — Project Skeleton
+### ✅ M1 — Project Skeleton
 
 **Goal:** Runnable project with empty structure and health check.
 
@@ -34,7 +34,7 @@ Post-MVP roadmap is listed separately at the bottom.
 
 ---
 
-### M2 — API Contract Stubs
+### ✅ M2 — API Contract Stubs
 
 **Goal:** All MVP endpoints exist and return hardcoded valid responses. No logic, no storage.
 
