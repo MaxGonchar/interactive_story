@@ -1,6 +1,14 @@
 from fastapi import APIRouter
 
-from app.models.api import ErrorResponse, PlayRequest, PlayResponse, SceneDetailResponse
+from app.models.api import (
+    DeleteMessageResponse,
+    ErrorResponse,
+    PlayRequest,
+    PlayResponse,
+    SceneDetailResponse,
+    UpdateMessageRequest,
+    UpdateMessageResponse,
+)
 
 router = APIRouter(prefix="/stories", tags=["scenes"])
 
@@ -51,3 +59,21 @@ def play(story_id: str, scene_id: int, request: PlayRequest):
             },
         }
     }
+
+
+@router.put(
+    "/{story_id}/scenes/{scene_id}/messages/{message_id}",
+    response_model=UpdateMessageResponse,
+)
+def edit_message(
+    story_id: str, scene_id: int, message_id: int, request: UpdateMessageRequest
+):
+    return {"data": {"id": message_id, "role": "user", "content": request.content}}
+
+
+@router.delete(
+    "/{story_id}/scenes/{scene_id}/messages/{message_id}",
+    response_model=DeleteMessageResponse,
+)
+def delete_message(story_id: str, scene_id: int, message_id: int):
+    return {"success": True}
