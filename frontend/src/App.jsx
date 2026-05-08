@@ -1,5 +1,19 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import StoriesPage from './pages/StoriesPage'
+import StoryPage from './pages/StoryPage'
+import ScenePage from './pages/ScenePage'
+
 function App() {
-  return <h1>Interactive Story</h1>
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/stories" replace />} />
+        <Route path="/stories" element={<StoriesPage />} />
+        <Route path="/stories/:storyId" element={<StoryPage />} />
+        <Route path="/stories/:storyId/scenes/:sceneId" element={<ScenePage />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
 export default App
