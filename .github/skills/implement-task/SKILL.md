@@ -85,6 +85,12 @@ Read the task file in full. Extract:
 - **Acceptance criteria**: the conditions for "done"
 - **Test notes**: what to verify
 
+If the task file is located in `docks/dev/TODO/`, move it to `docks/dev/IN_PROGRESS/`:
+
+```bash
+mv docks/dev/TODO/<task-file>.md docks/dev/IN_PROGRESS/<task-file>.md
+```
+
 ### 3. Read Architecture and Conventions
 
 Read the following docs **before** planning. Do not skip.
@@ -143,7 +149,28 @@ npm test        # frontend
 
 Report results. Fix failures before proceeding. If no tests exist and the task doesn't require them, note this explicitly.
 
-### 8. Commit Changes
+### 8. Request User Review
+
+Before committing, present a summary of all changes made:
+- List every file that was created or modified
+- Show a `git diff --stat` summary
+- Ask the user to review and confirm they are happy with the changes
+
+```bash
+git diff --stat
+```
+
+Use `vscode_askQuestions` to ask:
+> "Please review the diff above. Are you ready to commit and open a PR?"
+
+Do **not** proceed to step 9 until the user explicitly confirms.
+
+If the user requests changes:
+- Implement the requested corrections
+- Re-run tests if affected
+- Re-present the summary and ask for confirmation again
+
+### 9. Commit Changes
 
 ```bash
 git add -A
@@ -151,28 +178,6 @@ git commit -m "<task-id>: <short imperative summary>"
 ```
 
 Commit message format: `001: add FastAPI health-check endpoint`
-
-### 9. Request User Review
-
-Before pushing, present a summary of all changes made:
-- List every file that was created or modified
-- Show a `git diff --stat` summary
-- Ask the user to review and confirm they are happy with the changes
-
-```bash
-git diff --stat HEAD
-```
-
-Use `vscode_askQuestions` to ask:
-> "I've committed all changes. Please review the diff above. Are you ready to push the branch and open a PR?"
-
-Do **not** proceed to step 10 until the user explicitly confirms.
-
-If the user requests changes:
-- Implement the requested corrections
-- Re-run tests if affected
-- Amend or add a new commit as appropriate
-- Re-present the summary and ask for confirmation again
 
 ### 10. Push Branch
 
@@ -206,7 +211,7 @@ Include in the PR body:
 - [ ] Plan reviewed and approved by user
 - [ ] All plan steps implemented
 - [ ] Tests passed (or absence noted)
+- [ ] User reviewed changes and approved commit
 - [ ] Commit message follows convention
-- [ ] User reviewed changes and approved push
 - [ ] Branch pushed
 - [ ] PR open with description

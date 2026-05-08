@@ -31,3 +31,28 @@ be:
 
 fe:
 	cd frontend && npm run dev
+
+.PHONY: finish-task
+finish-task:
+	@if [ -z "$(id)" ]; then \
+		echo "Error: task id required — run 'make finish-task id=010'"; exit 1; \
+	fi
+	@TASK_FILE=$$(ls docks/dev/IN_PROGRESS/$(id)-*.md 2>/dev/null | head -n1); \
+	if [ -z "$$TASK_FILE" ]; then \
+		echo "Error: no file matching docks/dev/IN_PROGRESS/$(id)-*.md"; exit 1; \
+	fi; \
+	TASK_BASENAME=$$(basename "$$TASK_FILE"); \
+	CURRENT_BRANCH=$$(git rev-parse --abbrev-ref HEAD); \
+	if [ "$$CURRENT_BRANCH" != "main" ]; then \
+		git switch main; \
+	fi; \
+	git pull; \
+	git switch -c finish-$(id); \
+	mv "$$TASK_FILE" "docks/dev/DONE/$$TASK_BASENAME"; \
+	git add -A; \
+	git commit -m "finish $$TASK_BASENAME"; \
+	git push -u origin finish-$(id); \
+	gh pr create \
+		--title "finish $$TASK_BASENAME" \
+		--body "Moves $$TASK_BASENAME from IN_PROGRESS to DONE." \
+		--base main
