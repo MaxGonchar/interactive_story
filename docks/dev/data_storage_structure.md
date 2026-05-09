@@ -73,11 +73,11 @@ Path: data/stories/index.yaml
 stories:
   - id: "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
     title: "The Black Harbor"
-    order: 1
+    created_at: "2024-06-01T12:00:00Z"
 ```
 
 Constraints:
-- stories must be sorted by order asc when returned
+- stories must be sorted by created_at desc when returned
 - id must exist as folder data/stories/<id>/
 
 ### 2) Story Metadata
@@ -91,26 +91,24 @@ character_ids:
   - "dockmaster-elin"
 scenes:
   - id: 1
-    order: 1
+    finished: true
+    summary:
+      - "You arrive at the harbor and meet Captain Mora, who warns you of dangers ahead."
+      - "You decide to explore the docks for supplies before setting out to sea."
   - id: 2
-    order: 2
-  - id: 3
-    order: 3
-active_scene_id: 3
+    finished: false
 ```
 
 Constraints:
 - id must equal folder name <story_id>
 - each character_id must have matching file in characters/<character_id>.yaml
 - scenes must be sorted by order asc
-- active_scene_id must refer to an existing scene id
 
 ### 3) Character Card
 Path: data/stories/<story_id>/characters/<character_id>.yaml
 
 ```yaml
 id: "captain-mora"
-story_id: "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
 name: "Captain Mora"
 appearance: "Tall, sea-worn coat, scar over left eyebrow"
 traits:
@@ -131,7 +129,6 @@ memory:
 
 Constraints:
 - id must equal filename <character_id>.yaml
-- story_id must equal parent folder story id
 - name must be non-empty string
 
 ### 4) Scene Metadata
@@ -139,7 +136,6 @@ Path: data/stories/<story_id>/scenes/<scene_id>/metadata.yaml
 
 ```yaml
 id: 3
-story_id: "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
 finished: false
 character_ids:
   - "captain-mora"
@@ -147,7 +143,6 @@ scene_description:
   entry_point: "Fog rolls over the black harbor as bells ring in distance."
   general_scene_guide: "Keep tension rising with small discoveries and choices."
   writing_style: "Cinematic, sensory details, concise dialog turns."
-scene_summary: null
 ```
 
 Constraints:
@@ -156,9 +151,7 @@ Constraints:
 - finished is boolean
 - each character_id must exist in story character_ids and have character file
 - scene_description must include: entry_point, general_scene_guide, writing_style
-- if finished=true, scene_summary must be non-empty string
-- if finished=false, scene_summary may be null
-
+  
 ### 5) Scene Messages
 Path: data/stories/<story_id>/scenes/<scene_id>/messages.yaml
 
