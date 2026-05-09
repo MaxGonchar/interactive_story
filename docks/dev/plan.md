@@ -64,7 +64,7 @@ Post-MVP roadmap is listed separately at the bottom.
 
 ---
 
-### M3 — Frontend UI Pages (Mocked)
+### ✅ M3 — Frontend UI Pages (Mocked)
 
 **Goal:** All MVP pages render with mocked API data. No real API calls.
 
