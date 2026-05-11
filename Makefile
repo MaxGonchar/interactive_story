@@ -1,9 +1,9 @@
 SHELL := /bin/bash
 
 VENV    := backend/.venv
-UVICORN := $(VENV)/bin/uvicorn
+PYTEST  := $(VENV)/bin/pytest
 
-.PHONY: install dev be fe
+.PHONY: install dev be fe test-be
 
 install:
 	python3 -m venv $(VENV)
@@ -31,6 +31,10 @@ be:
 
 fe:
 	cd frontend && npm run dev
+
+test-be:
+	@test -f $(PYTEST) || { echo "Error: $(PYTEST) not found — run 'make install' first."; exit 1; }
+	$(PYTEST) backend/tests -v
 
 .PHONY: finish-task
 finish-task:
