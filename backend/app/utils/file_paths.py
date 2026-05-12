@@ -12,7 +12,7 @@ _SCENES_DIR = "scenes"
 
 _INDEX_FILE = "index.yaml"
 _STORY_FILE = "story.yaml"
-_METADATA_FILE = "metadata.yaml"
+_METADATA_FILE = "meta.yaml"
 _MESSAGES_FILE = "messages.yaml"
 
 

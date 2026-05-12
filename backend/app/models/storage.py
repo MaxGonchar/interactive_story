@@ -55,7 +55,7 @@ class SceneMetadataYaml(BaseModel):
     finished: bool = False
     characters_ids: list[str]
     scene_description: SceneDescriptionYaml
-    scene_summary: str | None = None
+    scene_summary: list[str] | None = None
 
 
 # ---------------------------------------------------------------------------

@@ -92,7 +92,7 @@ def test_scene_metadata_parses_fixture():
     assert isinstance(meta.scene_description, SceneDescriptionYaml)
 
 
-def test_scene_metadata_scene_summary_is_optional_str():
+def test_scene_metadata_scene_summary_is_optional_none():
     meta = SceneMetadataYaml(
         id=1,
         finished=False,
@@ -106,7 +106,7 @@ def test_scene_metadata_scene_summary_is_optional_str():
     assert meta.scene_summary is None
 
 
-def test_scene_metadata_accepts_scene_summary_string():
+def test_scene_metadata_accepts_scene_summary_list():
     meta = SceneMetadataYaml(
         id=1,
         finished=True,
@@ -116,9 +116,9 @@ def test_scene_metadata_accepts_scene_summary_string():
             general_scene_guide="G.",
             writing_style="S.",
         ),
-        scene_summary="A brief summary of the scene.",
+        scene_summary=["A brief summary of the scene."],
     )
-    assert meta.scene_summary == "A brief summary of the scene."
+    assert meta.scene_summary == ["A brief summary of the scene."]
 
 
 def test_scene_metadata_missing_characters_ids_raises():
