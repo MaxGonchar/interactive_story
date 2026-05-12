@@ -28,7 +28,7 @@ def test_character_file(fixed_root):
 
 def test_scene_metadata_file(fixed_root):
     result = fp.scene_metadata_file("abc", 1)
-    assert str(result) == str(fixed_root / "stories" / "abc" / "scenes" / "1" / "metadata.yaml")
+    assert str(result) == str(fixed_root / "stories" / "abc" / "scenes" / "1" / "meta.yaml")
 
 
 def test_scene_messages_file(fixed_root):
