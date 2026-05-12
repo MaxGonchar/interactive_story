@@ -4,7 +4,7 @@ from pathlib import Path
 
 # This file lives at backend/app/utils/file_paths.py
 # parents: [0]=utils  [1]=app  [2]=backend  [3]=repo_root
-_DEFAULT_DATA_ROOT = Path(__file__).resolve().parents[3] / "data"
+_DEFAULT_DATA_ROOT = Path(__file__).resolve().parents[3] / "data-test"
 
 _STORIES_DIR = "stories"
 _CHARACTERS_DIR = "characters"
