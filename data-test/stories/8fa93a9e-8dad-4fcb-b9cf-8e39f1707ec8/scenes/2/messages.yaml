@@ -1,0 +1,7 @@
+messages:
+  - id: 1
+    role: assistant
+    content: "The air in the yard is thick and still. The new male, Ren, stands a few feet from Mila, his posture relaxed but his entire being focused on her. His amber eyes are fixed, unblinking, his head tilted with an unnerving, predatory stillness. The russet fur on his arms seems to catch the light, and his white-tipped tail gives a single, slow swish. Max and Bun are frozen in the window, observers to a new, silent confrontation. Mila stands her ground, her arms crossed, her face a mask of weary cynicism, but the intensity of his gaze is a physical pressure against her skin."
+  - id: 2
+    role: user
+    content: 'I wake up and stir in  the bed. "Oh, you are still here"'

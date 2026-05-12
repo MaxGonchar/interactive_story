@@ -47,4 +47,4 @@ def test_all_functions_return_path_objects(fixed_root):
 
 def test_data_root_default_is_data_folder(monkeypatch):
     monkeypatch.delenv("DATA_ROOT", raising=False)
-    assert fp._data_root().name == "data"
+    assert fp._data_root().name == "data-test"

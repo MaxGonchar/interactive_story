@@ -18,7 +18,7 @@ from app.models.storage import (
 )
 
 STORY_ID = "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
-FIXTURE_ROOT = Path(__file__).parents[3] / "data" / "stories"
+FIXTURE_ROOT = Path(__file__).parents[3] / "data-test" / "stories"
 
 
 # ---------------------------------------------------------------------------

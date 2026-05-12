@@ -1,0 +1,14 @@
+id: "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
+title: "Mila and Bun"
+character_ids:
+  - mila
+  - bun
+scenes:
+  - id: 1
+    finished: true
+    summary: 
+      - Max assesses the neglected property, noting the decaying fence, the overgrown house, and the ominous old well, feeling the weight of its abandonment.
+      - Inside, Mila methodically unpacks, observing Max's survey with dry commentary and a sense of pragmatic detachment from the surrounding decay.
+      - A rhythmic thumping from the forest draws Max's attention, revealing a strange, rabbit-like girl who emerges with unnerving grace and open curiosity.
+  - id: 2
+    finished: false
