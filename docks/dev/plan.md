@@ -119,6 +119,10 @@ Post-MVP roadmap is listed separately at the bottom.
 ### M5 — LLM Adapter
 
 **Goal:** LLM client sends a constructed prompt to the model and returns a text response.
+As an LLM service we are going to use venice ai.
+Here is example of integration in another project:
+https://github.com/MaxGonchar/gameV5/blob/main/backend/app/llm/venice_client.py
+https://github.com/MaxGonchar/gameV5/blob/main/backend/app/llm/venice_ai.py
 
 **Entry criteria:** M4 complete
 
