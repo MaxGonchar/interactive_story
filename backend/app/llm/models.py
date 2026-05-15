@@ -7,3 +7,4 @@ class SceneContext(BaseModel):
     scene_description: SceneDescription
     characters: list[CharacterCard]
     messages: list[Message]
+    context_data: list[str] = []
