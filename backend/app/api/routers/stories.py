@@ -1,33 +1,36 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 
-from app.models.api import ErrorResponse, StoryDetailResponse, StoryListResponse
+from app.api.dependencies import get_story_query_service
+from app.models.api import StoryDetailResponse, StoryListResponse
+from app.services.story_query_service import StoryQueryService
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 
 
 @router.get("", response_model=StoryListResponse)
-def list_stories():
-    return {
-        "data": [
-            {
-                "id": "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
-                "title": "The Black Harbor",
-            }
-        ]
-    }
+async def list_stories(svc: StoryQueryService = Depends(get_story_query_service)):
+    stories = await svc.list_stories()
+    return {"data": [{"id": s.id, "title": s.title} for s in stories]}
 
 
 @router.get("/{story_id}", response_model=StoryDetailResponse)
-def get_story(story_id: str):
+async def get_story(
+    story_id: str,
+    svc: StoryQueryService = Depends(get_story_query_service),
+):
+    try:
+        story = await svc.get_story(story_id)
+    except KeyError:
+        return JSONResponse(
+            status_code=404,
+            content={"error": {"code": "not_found", "message": f"Story '{story_id}' not found"}},
+        )
     return {
         "data": {
-            "id": "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
-            "title": "The Black Harbor",
-            "scenes": [
-                {"id": 1, "finished": True},
-                {"id": 2, "finished": True},
-                {"id": 3, "finished": False},
-            ],
-            "active_scene_id": 3,
+            "id": story.id,
+            "title": story.title,
+            "scenes": [{"id": s.id, "finished": s.finished} for s in story.scenes],
+            "active_scene_id": story.active_scene_id,
         }
     }
