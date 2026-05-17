@@ -1,50 +1,48 @@
-const SCENES = {
-  3: {
-    id: 3,
-    finished: false,
-    scene_description: {
-      entry_point: "Fog rolls over the black harbor as bells ring in distance.",
-      general_scene_guide:
-        "Keep tension rising with small discoveries and choices.",
-      writing_style: "Cinematic, sensory details, concise dialog turns.",
-    },
-    scene_summary: null,
-    messages: [
-      {
-        id: 1,
-        role: "assistant",
-        content: "You step into the foggy harbor. The air smells of salt and smoke.",
-      },
-      {
-        id: 2,
-        role: "user",
-        content: "I look for the nearest light source.",
-      },
-      {
-        id: 3,
-        role: "assistant",
-        content: "A lantern swings near a wooden post at the end of the pier.",
-      },
-    ],
-  },
-};
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+
+async function apiFetch(url, options) {
+  const response = await fetch(BASE_URL + url, options);
+  if (!response.ok) {
+    const body = await response.json();
+    throw new Error(body.error.message);
+  }
+  return response.json();
+}
 
 export async function getScene(storyId, sceneId) {
-  return { data: SCENES[sceneId] };
+  return apiFetch(`/api/stories/${storyId}/scenes/${sceneId}`);
 }
 
-export async function playScene() {
-  throw new Error("not implemented");
+export async function playScene(storyId, sceneId, content) {
+  return apiFetch(`/api/stories/${storyId}/scenes/${sceneId}/play`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
 }
 
-export async function editMessage() {
-  throw new Error("not implemented");
+export async function editMessage(storyId, sceneId, messageId, content) {
+  return apiFetch(
+    `/api/stories/${storyId}/scenes/${sceneId}/messages/${messageId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    }
+  );
 }
 
-export async function deleteMessage() {
-  throw new Error("not implemented");
+export async function deleteMessage(storyId, sceneId, messageId) {
+  return apiFetch(
+    `/api/stories/${storyId}/scenes/${sceneId}/messages/${messageId}`,
+    { method: "DELETE" }
+  );
 }
 
-export async function finishScene() {
-  throw new Error("not implemented");
+export async function finishScene(storyId, sceneId, sceneSummary) {
+  return apiFetch(`/api/stories/${storyId}/scenes/${sceneId}/finish`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scene_summary: sceneSummary }),
+  });
 }
