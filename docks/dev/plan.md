@@ -89,7 +89,7 @@ Post-MVP roadmap is listed separately at the bottom.
 
 ---
 
-### M4 — Data Access Layer
+### ✅ M4 — Data Access Layer
 
 **Goal:** Repositories read and write YAML files according to the storage schema.
 
@@ -116,7 +116,7 @@ Post-MVP roadmap is listed separately at the bottom.
 
 ---
 
-### M5 — LLM Adapter
+### ✅ M5 — LLM Adapter
 
 **Goal:** LLM client sends a constructed prompt to the model and returns a text response.
 As an LLM service we are going to use venice ai.
