@@ -143,7 +143,7 @@ https://github.com/MaxGonchar/gameV5/blob/main/backend/app/llm/venice_ai.py
 
 ---
 
-### M6 — Services and Full Integration
+### ✅ M6 — Services and Full Integration
 
 **Goal:** All services implemented. Frontend calls real API. MVP is end-to-end functional.
 
@@ -201,3 +201,23 @@ Features explicitly out of MVP scope, to be planned separately:
 - Scene replay or history navigation
 - User authentication
 - Deployment / production infrastructure
+
+==================================================================
+
+# Post implementation problems and improvements
+
+## Planed:
+
+## Not planned:
+
+- UI: stories page: when I hover the story title I can not understand that it is clickable
+- UI: scenes page: when I hover the scene id I can not understand that it is clickable
+- UI: scene page: entry point should be a first assistant message but not the description
+- No env configs for LLM adapter (model name, API key, etc.)
+- UI: scene page: no call to BE when I press "Send" btn.
+- UI: No icon for "edit" message and no functionality for it. (I want to be able to edit any message in active scene, including assistant messages, to fix typos or add details)
+- UI: No icon for "delete" message and no functionality for it (I want to be able to delete last user message and fallowing assistant message).
+- UI: No icon for regenerating for last assistant message and no functionality for it (I want to be able to regenerate last assistant message).
+
+- No user character card in a story data. No place for it in the system prompt.
+- System prompt: review. Suspect that all messages are put in it instead of passing as a chain of messages. No scenes summaries in context.

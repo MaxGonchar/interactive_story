@@ -4,6 +4,7 @@ from pathlib import Path
 
 # This file lives at backend/app/utils/file_paths.py
 # parents: [0]=utils  [1]=app  [2]=backend  [3]=repo_root
+_BACKEND_DIR = Path(__file__).resolve().parents[2]
 _DEFAULT_DATA_ROOT = Path(__file__).resolve().parents[3] / "data-test"
 
 _STORIES_DIR = "stories"
@@ -17,7 +18,14 @@ _MESSAGES_FILE = "messages.yaml"
 
 
 def _data_root() -> Path:
-    return Path(os.environ.get("DATA_ROOT", str(_DEFAULT_DATA_ROOT)))
+    raw = os.environ.get("DATA_ROOT")
+    if raw is None:
+        return _DEFAULT_DATA_ROOT
+    p = Path(raw)
+    if p.is_absolute():
+        return p
+    # Relative paths in DATA_ROOT are resolved from backend/
+    return (_BACKEND_DIR / p).resolve()
 
 
 def stories_index() -> Path:
