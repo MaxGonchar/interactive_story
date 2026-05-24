@@ -105,3 +105,16 @@ code {
   color: var(--accent);
   background: var(--accent-bg);
 }
+
+.message-bubble .edit-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.message-bubble:hover .edit-btn {
+  opacity: 1;
+}
