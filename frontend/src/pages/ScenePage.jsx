@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getScene, playScene, finishScene } from '../api/scenes'
+import { getScene, playScene, finishScene, editMessage } from '../api/scenes'
 import SceneHeader from '../components/SceneHeader'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
@@ -11,7 +11,7 @@ function ScenePage() {
   const [scene, setScene] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [sending, setSending] = useState(false)
+  const [busy, setBusy] = useState(false)
   const [opError, setOpError] = useState(null)
 
   useEffect(() => {
@@ -23,7 +23,7 @@ function ScenePage() {
 
   async function handleSend(content) {
     setOpError(null)
-    setSending(true)
+    setBusy(true)
     try {
       const response = await playScene(storyId, sceneId, content)
       const { user_message, assistant_message } = response.data
@@ -34,12 +34,13 @@ function ScenePage() {
     } catch (err) {
       setOpError(err.message ?? 'Failed to send message')
     } finally {
-      setSending(false)
+      setBusy(false)
     }
   }
 
   async function handleFinish(summary) {
     setOpError(null)
+    setBusy(true)
     try {
       const response = await finishScene(storyId, sceneId, summary)
       setScene((prev) => ({
@@ -49,6 +50,26 @@ function ScenePage() {
       }))
     } catch (err) {
       setOpError(err.message ?? 'Failed to finish scene')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleEditMessage(messageId, content) {
+    setOpError(null)
+    setBusy(true)
+    try {
+      const response = await editMessage(storyId, sceneId, messageId, content)
+      setScene((prev) => ({
+        ...prev,
+        messages: prev.messages.map((m) =>
+          m.id === messageId ? response.data : m
+        ),
+      }))
+    } catch (err) {
+      setOpError(err.message ?? 'Failed to edit message')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -63,11 +84,11 @@ function ScenePage() {
   return (
     <>
       <SceneHeader scene={scene} />
-      <MessageList messages={scene.messages} />
+      <MessageList messages={scene.messages} onEdit={handleEditMessage} disabled={scene.finished || busy} />
       {opError && <p>{opError}</p>}
       <MessageComposer
         onSend={handleSend}
-        disabled={scene.finished || sending}
+        disabled={scene.finished || busy}
       />
       <SceneActions
         finished={scene.finished}
