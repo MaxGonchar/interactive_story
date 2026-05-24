@@ -118,3 +118,17 @@ code {
 .message-bubble:hover .edit-btn {
   opacity: 1;
 }
+
+.message-bubble .delete-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.message-bubble:hover .delete-btn {
+  opacity: 1;
+}
