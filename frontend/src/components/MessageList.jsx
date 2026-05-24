@@ -1,6 +1,6 @@
 import MessageItem from './MessageItem'
 
-function MessageList({ messages = [] }) {
+function MessageList({ messages = [], onEdit, disabled }) {
   if (messages.length === 0) {
     return <p>No messages yet.</p>
   }
@@ -8,7 +8,7 @@ function MessageList({ messages = [] }) {
   return (
     <div>
       {messages.map((message) => (
-        <MessageItem key={message.id} message={message} />
+        <MessageItem key={message.id} message={message} onEdit={onEdit} disabled={disabled} />
       ))}
     </div>
   )
