@@ -50,7 +50,7 @@ function MessageItem({ message, onEdit, disabled = false }) {
   return (
     <div style={wrapperStyle}>
       <span style={labelStyle}>{label}</span>
-      <div style={bubbleStyle}>
+      <div className="message-bubble" style={bubbleStyle}>
         {editing ? (
           <>
             <textarea
@@ -70,7 +70,7 @@ function MessageItem({ message, onEdit, disabled = false }) {
             <p style={{ margin: 0 }}>{message.content}</p>
             {!disabled && onEdit && (
               <button
-                className="message-edit-btn"
+                className="edit-btn"
                 onClick={() => setEditing(true)}
                 aria-label="Edit message"
               >
