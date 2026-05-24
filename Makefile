@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 
 VENV    := backend/.venv
+UVICORN := $(VENV)/bin/uvicorn
 PYTEST  := $(VENV)/bin/pytest
 
 .PHONY: install dev be fe test-be

@@ -33,4 +33,7 @@ Thumbs.db
 .vscode/settings.json
 *.swp
 
+# User data
+data/
+
 
