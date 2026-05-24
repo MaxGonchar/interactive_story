@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function MessageItem({ message, onEdit, disabled = false }) {
+function MessageItem({ message, onEdit, onDelete, disabled = false }) {
   const isUser = message.role === 'user'
   const label = isUser ? 'You' : 'Narrator'
 
@@ -75,6 +75,15 @@ function MessageItem({ message, onEdit, disabled = false }) {
                 aria-label="Edit message"
               >
                 ✏️
+              </button>
+            )}
+            {onDelete && (
+              <button
+                className="delete-btn"
+                onClick={() => onDelete(message.id)}
+                aria-label="Delete message"
+              >
+                ✕
               </button>
             )}
           </>
