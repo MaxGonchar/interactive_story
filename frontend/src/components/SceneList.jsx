@@ -6,7 +6,7 @@ function SceneList({ scenes = [], activeSceneId, onSelect }) {
   return (
     <ul>
       {scenes.map((scene) => (
-        <li key={scene.id} onClick={() => onSelect(scene.id)}>
+        <li key={scene.id} className="clickable" onClick={() => onSelect(scene.id)}>
           Scene {scene.id}
           {scene.id === activeSceneId && ' (active)'}
           {scene.finished && ' (finished)'}
