@@ -49,3 +49,9 @@ def test_custom_model_name_from_env(monkeypatch):
     monkeypatch.setenv("VENICE_MODEL", "my-custom-model")
     client = SceneLLMClient()
     assert client._model.model == "my-custom-model"
+
+
+def test_raises_when_api_key_missing(monkeypatch):
+    monkeypatch.delenv("VENICE_API_KEY", raising=False)
+    with pytest.raises(KeyError):
+        SceneLLMClient()
