@@ -9,6 +9,14 @@ from app.api.routers import scenes, stories
 
 load_dotenv()
 
+_testing_enabled = os.getenv("TESTING", "").strip().lower() in {"1", "true", "yes", "on"}
+
+if not _testing_enabled and not os.getenv("VENICE_API_KEY"):
+    raise RuntimeError(
+        "VENICE_API_KEY environment variable is required but not set. "
+        "Copy backend/.env.example to backend/.env and supply a valid key."
+    )
+
 _DEFAULT_ORIGINS = "http://localhost:5173,http://localhost:3000"
 _parsed_origins = [
     o for o in (o.strip() for o in os.getenv("ALLOWED_ORIGINS", _DEFAULT_ORIGINS).split(",")) if o
