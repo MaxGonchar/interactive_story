@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getScene, playScene, finishScene, editMessage } from '../api/scenes'
+import { getScene, playScene, finishScene, editMessage, deleteMessage } from '../api/scenes'
 import SceneHeader from '../components/SceneHeader'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
@@ -55,6 +55,37 @@ function ScenePage() {
     }
   }
 
+  async function handleDeleteLastExchange(userMessageId) {
+    setOpError(null)
+    setBusy(true)
+    try {
+      const userIdx = scene.messages.findIndex((m) => m.id === userMessageId)
+      const assistantMsg = scene.messages[userIdx + 1]
+
+      await deleteMessage(storyId, sceneId, userMessageId)
+
+      const idsToRemove = new Set([userMessageId])
+
+      if (assistantMsg) {
+        try {
+          await deleteMessage(storyId, sceneId, assistantMsg.id)
+          idsToRemove.add(assistantMsg.id)
+        } catch (err) {
+          setOpError(err.message ?? 'Failed to delete assistant message')
+        }
+      }
+
+      setScene((prev) => ({
+        ...prev,
+        messages: prev.messages.filter((m) => !idsToRemove.has(m.id)),
+      }))
+    } catch (err) {
+      setOpError(err.message ?? 'Failed to delete message')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function handleEditMessage(messageId, content) {
     setOpError(null)
     setBusy(true)
@@ -84,7 +115,7 @@ function ScenePage() {
   return (
     <>
       <SceneHeader scene={scene} />
-      <MessageList messages={scene.messages} onEdit={handleEditMessage} disabled={scene.finished || busy} />
+      <MessageList messages={scene.messages} onEdit={handleEditMessage} onDelete={handleDeleteLastExchange} disabled={scene.finished || busy} />
       {opError && <p>{opError}</p>}
       <MessageComposer
         onSend={handleSend}
