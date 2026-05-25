@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function MessageItem({ message, onEdit, onDelete, disabled = false }) {
+function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false }) {
   const isUser = message.role === 'user'
   const label = isUser ? 'You' : 'Narrator'
 
@@ -68,6 +68,18 @@ function MessageItem({ message, onEdit, onDelete, disabled = false }) {
         ) : (
           <>
             <p style={{ margin: 0 }}>{message.content}</p>
+            {/* Regenerate button: only for assistant messages, only if onRegenerate is provided */}
+            {message.role === 'assistant' && onRegenerate && (
+              <button
+                className="msg-action-btn"
+                onClick={onRegenerate}
+                aria-label="Regenerate message"
+                type="button"
+              >
+                ↺
+              </button>
+            )}
+            {/* Existing edit/delete buttons */}
             {!disabled && onEdit && (
               <button
                 className="edit-btn"
