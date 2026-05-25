@@ -106,6 +106,10 @@ code {
   background: var(--accent-bg);
 }
 
+.message-bubble {
+  position: relative;
+}
+
 .message-bubble .edit-btn {
   opacity: 0;
   transition: opacity 0.15s;
@@ -130,5 +134,19 @@ code {
 }
 
 .message-bubble:hover .delete-btn {
+  opacity: 1;
+}
+
+/* Regenerate button hover rules */
+.message-bubble .msg-action-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.message-bubble:hover .msg-action-btn {
   opacity: 1;
 }
