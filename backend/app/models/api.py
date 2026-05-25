@@ -120,6 +120,17 @@ class DeleteMessageResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Regenerate  —  POST /api/stories/{story_id}/scenes/{scene_id}/regenerate
+# ---------------------------------------------------------------------------
+
+class RegenerateData(BaseModel):
+    assistant_message: MessageModel
+
+class RegenerateResponse(BaseModel):
+    data: RegenerateData
+
+
+# ---------------------------------------------------------------------------
 # Finish scene  —  POST /api/stories/{story_id}/scenes/{scene_id}/finish
 # ---------------------------------------------------------------------------
 
