@@ -46,3 +46,10 @@ export async function finishScene(storyId, sceneId, sceneSummary) {
     body: JSON.stringify({ scene_summary: sceneSummary }),
   });
 }
+
+export async function regenerateLastAssistantMessage(storyId, sceneId) {
+  return apiFetch(
+    `/api/stories/${storyId}/scenes/${sceneId}/regenerate`,
+    { method: "POST" }
+  );
+}
