@@ -94,3 +94,59 @@ async def test_play_assigns_correct_message_ids():
 
     assert user_msg.id == 6
     assert assistant_msg.id == 7
+
+
+@pytest.mark.asyncio
+async def test_regenerate_replaces_last_assistant_message():
+    user_msg = Message(id=1, role="user", content="Hi")
+    assistant_msg = Message(id=2, role="assistant", content="Old reply")
+    service, scene_repo, _, _ = make_service(messages=[user_msg, assistant_msg], llm_reply="New reply")
+    scene_repo.update_message.return_value = Message(id=2, role="assistant", content="New reply")
+
+    result = await service.regenerate(STORY_ID, SCENE_ID)
+
+    scene_repo.update_message.assert_awaited_once_with(STORY_ID, SCENE_ID, 2, "New reply")
+    assert result.id == 2
+    assert result.role == "assistant"
+    assert result.content == "New reply"
+
+
+@pytest.mark.asyncio
+async def test_regenerate_raises_when_scene_finished():
+    user_msg = Message(id=1, role="user", content="Hi")
+    assistant_msg = Message(id=2, role="assistant", content="Old reply")
+    service, scene_repo, _, _ = make_service(metadata=make_scene_metadata(finished=True), messages=[user_msg, assistant_msg])
+
+    with pytest.raises(ValueError, match="scene_finished"):
+        await service.regenerate(STORY_ID, SCENE_ID)
+    scene_repo.update_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_regenerate_raises_when_no_messages():
+    service, scene_repo, _, _ = make_service(messages=[])
+
+    with pytest.raises(ValueError, match="no_assistant_message"):
+        await service.regenerate(STORY_ID, SCENE_ID)
+    scene_repo.update_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_regenerate_raises_when_last_message_is_user():
+    user_msg = Message(id=1, role="user", content="Hi")
+    service, scene_repo, _, _ = make_service(messages=[user_msg])
+
+    with pytest.raises(ValueError, match="no_assistant_message"):
+        await service.regenerate(STORY_ID, SCENE_ID)
+    scene_repo.update_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_regenerate_does_not_persist_on_llm_failure():
+    user_msg = Message(id=1, role="user", content="Hi")
+    assistant_msg = Message(id=2, role="assistant", content="Old reply")
+    service, scene_repo, _, _ = make_service(messages=[user_msg, assistant_msg], llm_side_effect=RuntimeError("LLM fail"))
+
+    with pytest.raises(RuntimeError, match="LLM fail"):
+        await service.regenerate(STORY_ID, SCENE_ID)
+    scene_repo.update_message.assert_not_awaited()
