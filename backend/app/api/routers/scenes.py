@@ -16,6 +16,7 @@ from app.models.api import (
     SceneDetailResponse,
     UpdateMessageRequest,
     UpdateMessageResponse,
+    RegenerateResponse,
 )
 from app.services.scene_lifecycle_service import SceneLifecycleService
 from app.services.scene_message_service import SceneMessageService
@@ -171,3 +172,43 @@ async def finish_scene(
             "scene_summary": request.scene_summary,
         }
     }
+
+
+@router.post(
+    "/{story_id}/scenes/{scene_id}/regenerate",
+    response_model=RegenerateResponse,
+)
+async def regenerate_assistant_message(
+    story_id: str,
+    scene_id: int,
+    svc: ScenePlayService = Depends(get_scene_play_service),
+):
+    try:
+        assistant_msg = await svc.regenerate(story_id, scene_id)
+    except KeyError:
+        return JSONResponse(
+            status_code=404,
+            content={"error": {"code": "not_found", "message": f"Scene '{scene_id}' not found"}},
+        )
+    except ValueError as e:
+        if str(e) == "scene_finished":
+            return JSONResponse(
+                status_code=409,
+                content={"error": {"code": "scene_finished", "message": "Scene is already finished"}},
+            )
+        elif str(e) == "no_assistant_message":
+            return JSONResponse(
+                status_code=409,
+                content={"error": {"code": "no_assistant_message", "message": "No assistant message to regenerate"}},
+            )
+        else:
+            return JSONResponse(
+                status_code=502,
+                content={"error": {"code": "llm_error", "message": "LLM request failed"}},
+            )
+    except Exception:
+        return JSONResponse(
+            status_code=502,
+            content={"error": {"code": "llm_error", "message": "LLM request failed"}},
+        )
+    return {"data": {"assistant_message": {"id": assistant_msg.id, "role": assistant_msg.role, "content": assistant_msg.content}}}
