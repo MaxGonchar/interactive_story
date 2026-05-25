@@ -1,12 +1,31 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getScene, playScene, finishScene, editMessage, deleteMessage } from '../api/scenes'
+import { getScene, playScene, finishScene, editMessage, deleteMessage, regenerateLastAssistantMessage } from '../api/scenes'
 import SceneHeader from '../components/SceneHeader'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
 import SceneActions from '../components/SceneActions'
 
 function ScenePage() {
+
+    async function handleRegenerate() {
+      setOpError(null)
+      setBusy(true)
+      try {
+        const response = await regenerateLastAssistantMessage(storyId, sceneId)
+        const { assistant_message } = response.data
+        setScene((prev) => ({
+          ...prev,
+          messages: prev.messages.map((m) =>
+            m.id === assistant_message.id ? assistant_message : m
+          ),
+        }))
+      } catch (err) {
+        setOpError(err.message ?? 'Failed to regenerate message')
+      } finally {
+        setBusy(false)
+      }
+    }
   const { storyId, sceneId } = useParams()
   const [scene, setScene] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -115,7 +134,13 @@ function ScenePage() {
   return (
     <>
       <SceneHeader scene={scene} />
-      <MessageList messages={scene.messages} onEdit={handleEditMessage} onDelete={handleDeleteLastExchange} disabled={scene.finished || busy} />
+      <MessageList
+        messages={scene.messages}
+        onEdit={handleEditMessage}
+        onDelete={handleDeleteLastExchange}
+        onRegenerate={handleRegenerate}
+        disabled={scene.finished || busy}
+      />
       {opError && <p>{opError}</p>}
       <MessageComposer
         onSend={handleSend}
