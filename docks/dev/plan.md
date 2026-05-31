@@ -903,6 +903,7 @@ context = SceneContext(
 
 ### Problems
 - Readme for LLM about how to run tests
+- Review async calls for ones that are sequential but could be parallel.
 - SceneLLMClient.invoke() method also responsible for building the system prompt and messages. This is a smell that the responsibilities are not well-separated. The client should be focused on calling the LLM with a given context.
 
 ### Enhancements
