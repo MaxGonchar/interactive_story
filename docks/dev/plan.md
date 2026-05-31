@@ -901,5 +901,9 @@ context = SceneContext(
 
 ## Not planned:
 
+### Problems
+- Readme for LLM about how to run tests
+- SceneLLMClient.invoke() method also responsible for building the system prompt and messages. This is a smell that the responsibilities are not well-separated. The client should be focused on calling the LLM with a given context.
 
+### Enhancements
 - No user character card in a story data. No place for it in the system prompt. (As a user I want to play different roles in a story. Since all personality related traits will be a user responsobility, the card should contain a user character appearance so LLM can use it in the system prompt to create more personalized and immersive responses)

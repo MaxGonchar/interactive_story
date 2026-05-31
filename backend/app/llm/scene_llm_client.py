@@ -1,6 +1,6 @@
-import os
 
-from langchain_core.messages import HumanMessage, SystemMessage
+import os
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
 from app.llm.models import SceneContext
 from app.llm.prompt_builder import PromptBuilder
@@ -18,6 +18,11 @@ class SceneLLMClient:
 
     async def invoke(self, context: SceneContext, user_message: str) -> str:
         system_prompt = self._prompt_builder.build_system_prompt(context)
-        messages = [SystemMessage(system_prompt), HumanMessage(user_message)]
+        history_msgs = context.messages
+        history = [
+            AIMessage(m.content) if m.role == "assistant" else HumanMessage(m.content)
+            for m in history_msgs
+        ]
+        messages = [SystemMessage(system_prompt)] + history + [HumanMessage(user_message)]
         response = await self._model.ainvoke(messages)
         return response.content
