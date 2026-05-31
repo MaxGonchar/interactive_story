@@ -906,6 +906,7 @@ context = SceneContext(
 - Review async calls for ones that are sequential but could be parallel.
 - Update task creator skill to add "why do we need those changes"
 - Implement agent to analyze code and suggest improvements.
+- Implement requirements for tests and assistant to review it.
 - SceneLLMClient.invoke() method also responsible for building the system prompt and messages. This is a smell that the responsibilities are not well-separated. The client should be focused on calling the LLM with a given context.
 
 ### Enhancements
