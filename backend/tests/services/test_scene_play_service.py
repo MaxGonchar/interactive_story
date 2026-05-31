@@ -25,12 +25,16 @@ def make_scene_metadata(finished: bool = False) -> SceneMetadata:
     )
 
 
+from app.models.domain import SceneRef, StoryMeta
+from unittest.mock import AsyncMock, MagicMock
+
 def make_service(
     metadata: SceneMetadata | None = None,
     messages: list[Message] | None = None,
     llm_reply: str = "Assistant reply",
     llm_side_effect: Exception | None = None,
-) -> tuple[ScenePlayService, AsyncMock, AsyncMock, MagicMock]:
+    story_meta: StoryMeta | None = None,
+) -> tuple[ScenePlayService, AsyncMock, AsyncMock, MagicMock, AsyncMock]:
     scene_repo = AsyncMock()
     scene_repo.get_metadata.return_value = metadata or make_scene_metadata()
     scene_repo.get_messages.return_value = messages if messages is not None else []
@@ -44,13 +48,25 @@ def make_service(
     else:
         llm_client.invoke.return_value = llm_reply
 
-    service = ScenePlayService(scene_repo, character_repo, llm_client)
-    return service, scene_repo, character_repo, llm_client
+    story_repo = AsyncMock()
+    if story_meta is None:
+        # Default: one unfinished scene
+        story_meta = StoryMeta(
+            id=STORY_ID,
+            title="Test Story",
+            character_ids=["c1"],
+            scenes=[SceneRef(id=SCENE_ID, finished=False, summary=None)],
+            active_scene_id=SCENE_ID,
+        )
+    story_repo.get_story.return_value = story_meta
+
+    service = ScenePlayService(scene_repo, character_repo, llm_client, story_repo)
+    return service, scene_repo, character_repo, llm_client, story_repo
 
 
 @pytest.mark.asyncio
 async def test_play_returns_both_messages():
-    service, scene_repo, _, _ = make_service(llm_reply="Hello back!")
+    service, scene_repo, _, _, _ = make_service(llm_reply="Hello back!")
 
     user_msg, assistant_msg = await service.play(STORY_ID, SCENE_ID, "Hello")
 
@@ -64,7 +80,7 @@ async def test_play_returns_both_messages():
 
 @pytest.mark.asyncio
 async def test_play_raises_when_scene_finished():
-    service, scene_repo, _, _ = make_service(metadata=make_scene_metadata(finished=True))
+    service, scene_repo, _, _, _ = make_service(metadata=make_scene_metadata(finished=True))
 
     with pytest.raises(ValueError, match="scene_finished"):
         await service.play(STORY_ID, SCENE_ID, "Hello")
@@ -74,7 +90,7 @@ async def test_play_raises_when_scene_finished():
 
 @pytest.mark.asyncio
 async def test_play_does_not_persist_on_llm_failure():
-    service, scene_repo, _, _ = make_service(llm_side_effect=RuntimeError("LLM down"))
+    service, scene_repo, _, _, _ = make_service(llm_side_effect=RuntimeError("LLM down"))
 
     with pytest.raises(RuntimeError, match="LLM down"):
         await service.play(STORY_ID, SCENE_ID, "Hello")
@@ -88,7 +104,7 @@ async def test_play_assigns_correct_message_ids():
         Message(id=3, role="user", content="msg3"),
         Message(id=5, role="assistant", content="msg5"),
     ]
-    service, _, _, _ = make_service(messages=existing)
+    service, _, _, _, _ = make_service(messages=existing)
 
     user_msg, assistant_msg = await service.play(STORY_ID, SCENE_ID, "New input")
 
@@ -100,7 +116,7 @@ async def test_play_assigns_correct_message_ids():
 async def test_regenerate_replaces_last_assistant_message():
     user_msg = Message(id=1, role="user", content="Hi")
     assistant_msg = Message(id=2, role="assistant", content="Old reply")
-    service, scene_repo, _, _ = make_service(messages=[user_msg, assistant_msg], llm_reply="New reply")
+    service, scene_repo, _, _, _ = make_service(messages=[user_msg, assistant_msg], llm_reply="New reply")
     scene_repo.update_message.return_value = Message(id=2, role="assistant", content="New reply")
 
     result = await service.regenerate(STORY_ID, SCENE_ID)
@@ -115,7 +131,7 @@ async def test_regenerate_replaces_last_assistant_message():
 async def test_regenerate_raises_when_scene_finished():
     user_msg = Message(id=1, role="user", content="Hi")
     assistant_msg = Message(id=2, role="assistant", content="Old reply")
-    service, scene_repo, _, _ = make_service(metadata=make_scene_metadata(finished=True), messages=[user_msg, assistant_msg])
+    service, scene_repo, _, _, _ = make_service(metadata=make_scene_metadata(finished=True), messages=[user_msg, assistant_msg])
 
     with pytest.raises(ValueError, match="scene_finished"):
         await service.regenerate(STORY_ID, SCENE_ID)
@@ -124,7 +140,7 @@ async def test_regenerate_raises_when_scene_finished():
 
 @pytest.mark.asyncio
 async def test_regenerate_raises_when_no_messages():
-    service, scene_repo, _, _ = make_service(messages=[])
+    service, scene_repo, _, _, _ = make_service(messages=[])
 
     with pytest.raises(ValueError, match="no_assistant_message"):
         await service.regenerate(STORY_ID, SCENE_ID)
@@ -134,7 +150,7 @@ async def test_regenerate_raises_when_no_messages():
 @pytest.mark.asyncio
 async def test_regenerate_raises_when_last_message_is_user():
     user_msg = Message(id=1, role="user", content="Hi")
-    service, scene_repo, _, _ = make_service(messages=[user_msg])
+    service, scene_repo, _, _, _ = make_service(messages=[user_msg])
 
     with pytest.raises(ValueError, match="no_assistant_message"):
         await service.regenerate(STORY_ID, SCENE_ID)
@@ -145,7 +161,7 @@ async def test_regenerate_raises_when_last_message_is_user():
 async def test_regenerate_does_not_persist_on_llm_failure():
     user_msg = Message(id=1, role="user", content="Hi")
     assistant_msg = Message(id=2, role="assistant", content="Old reply")
-    service, scene_repo, _, _ = make_service(messages=[user_msg, assistant_msg], llm_side_effect=RuntimeError("LLM fail"))
+    service, scene_repo, _, _, _ = make_service(messages=[user_msg, assistant_msg], llm_side_effect=RuntimeError("LLM fail"))
 
     with pytest.raises(RuntimeError, match="LLM fail"):
         await service.regenerate(STORY_ID, SCENE_ID)
