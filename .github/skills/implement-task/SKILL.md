@@ -1,7 +1,7 @@
 ---
 name: implement-task
-description: "Implement changes from a specific task file. Use when: implementing a task, working on a ticket, executing a TODO item, starting work on a feature, fixing a bug from a task card. Produces a feature branch, a reviewed implementation plan, code changes, tests run, and an open PR."
-argument-hint: "Path or ID of the task file to implement, e.g. docks/dev/TODO/001-backend-package-layout.md"
+description: "Implement changes from a specific task. Use when: implementing a task, working on a ticket, executing a TODO item, starting work on a feature, fixing a bug from a task card. Tasks can be GitHub Project board items or local task files. Produces a feature branch, a reviewed implementation plan, code changes, tests run, and an open PR."
+argument-hint: "Title, item ID, or item URL of the board task to implement (e.g. 'Add scene router'); or path to a local task file (e.g. docks/dev/TODO/001-backend-package-layout.md)"
 ---
 
 # Implement Task
@@ -9,9 +9,20 @@ argument-hint: "Path or ID of the task file to implement, e.g. docks/dev/TODO/00
 End-to-end workflow for implementing a single task: branch → understand → plan → review → code → test → PR.
 
 ## When to Use
-- Starting work on any task in `docks/dev/TODO/`
-- Implementing a specific feature, fix, or refactor described in a task file
-- Executing a ticket when the task ID or path is known
+- Starting work on any task on the GitHub Project board (`interactive-story`, project **3**, owner `MaxGonchar`)
+- Starting work on a local task file in `docks/dev/TODO/`
+- Implementing a specific feature, fix, or refactor described in a task
+- Executing a ticket when the task title, item ID, or file path is known
+
+## GitHub Project Board
+
+| Field | Value |
+|-------|-------|
+| Owner | `MaxGonchar` |
+| Project number | `3` |
+| Project ID | `PVT_kwHOA7xGXs4BX8zb` |
+| Status field ID | `PVTSSF_lAHOA7xGXs4BX8zbzhTGDQE` |
+| Status option IDs | `f75ad846` = Backlog · `61e4505c` = Ready · `47fc9ee4` = In progress · `df73e18b` = In review · `98236657` = Done |
 
 ## Procedure
 
@@ -64,31 +75,54 @@ Verify success with `gh auth status` before continuing.
 
 ---
 
-### 1. Create and Switch to Branch
+### 1. Locate and Read the Task
 
-Determine the branch name:
-- If the task file has a numeric ID prefix (e.g. `001-backend-package-layout.md`), use the full slug: `001-backend-package-layout`
-- Otherwise derive 2–4 words from the task title in kebab-case
+Determine the task source:
 
+**A — GitHub Project board item** (preferred)
+
+If given a title or URL, first find the item ID:
 ```bash
-gh repo sync          # sync local main with remote
-git checkout main
-git checkout -b <branch-name>
+GH_PAGER= gh project item-list 3 --owner MaxGonchar --format json \
+  --jq '.items[] | select(.title | test("<search term>"; "i")) | {id, title}'
 ```
 
-### 2. Understand the Task
+Then fetch the full body (content) of the item:
+```bash
+GH_PAGER= gh project item-list 3 --owner MaxGonchar --format json \
+  --jq '.items[] | select(.id == "<ITEM_ID>") | {id, title, body: .content.body}'
+```
 
-Read the task file in full. Extract:
+Mark the item **In progress** immediately:
+```bash
+GH_PAGER= gh project item-edit --id <ITEM_ID> \
+  --project-id PVT_kwHOA7xGXs4BX8zb \
+  --field-id PVTSSF_lAHOA7xGXs4BX8zbzhTGDQE \
+  --single-select-option-id 47fc9ee4
+```
+
+**B — Local task file**
+
+Read the file directly. If it is in `docks/dev/TODO/`, move it to `docks/dev/IN_PROGRESS/`:
+```bash
+mv docks/dev/TODO/<task-file>.md docks/dev/IN_PROGRESS/<task-file>.md
+```
+
+From either source, extract:
 - **Goal**: what problem this solves or feature it delivers
 - **Scope**: which files/modules are touched
 - **Deliverable**: the concrete artifact to produce
 - **Acceptance criteria**: the conditions for "done"
 - **Test notes**: what to verify
 
-If the task file is located in `docks/dev/TODO/`, move it to `docks/dev/IN_PROGRESS/`:
+### 2. Create and Switch to Branch
+
+Determine the branch name from the task title — derive 2–4 words in kebab-case (e.g. `add-scene-router`):
 
 ```bash
-mv docks/dev/TODO/<task-file>.md docks/dev/IN_PROGRESS/<task-file>.md
+gh repo sync          # sync local main with remote
+git checkout main
+git checkout -b <branch-name>
 ```
 
 ### 3. Read Architecture and Conventions
@@ -174,10 +208,10 @@ If the user requests changes:
 
 ```bash
 git add -A
-git commit -m "<task-id>: <short imperative summary>"
+git commit -m "<branch-name>: <short imperative summary>"
 ```
 
-Commit message format: `001: add FastAPI health-check endpoint`
+Commit message format: `add-scene-router: wire play endpoint to ScenePlayService`
 
 ### 10. Push Branch
 
@@ -189,22 +223,46 @@ git push -u origin <branch-name>
 
 ### 11. Open Pull Request
 
-Use the GitHub CLI or GitKraken MCP tool:
+Use the GitHub CLI:
 ```bash
 gh pr create \
-  --title "<task-id>: <short summary>" \
-  --body "Closes task <task-id>. <one-sentence description of changes>" \
+  --title "<short summary>" \
+  --body "<one-sentence description of changes>
+
+Changes:
+- <file or module changed and why>
+
+How to test: <steps>
+
+Board item: <ITEM_ID or task title>" \
   --base main
 ```
 
 Include in the PR body:
-- Reference to the task file
+- Reference to the board item title (or local task file path)
 - Summary of changes made
 - How to test / verify
+
+### 12. Mark Board Item Done
+
+If the task came from the GitHub Project board, set its status to **Done**:
+```bash
+GH_PAGER= gh project item-edit --id <ITEM_ID> \
+  --project-id PVT_kwHOA7xGXs4BX8zb \
+  --field-id PVTSSF_lAHOA7xGXs4BX8zbzhTGDQE \
+  --single-select-option-id 98236657
+```
+
+If the task came from a local file, move it to `docks/dev/DONE/`:
+```bash
+mv docks/dev/IN_PROGRESS/<task-file>.md docks/dev/DONE/<task-file>.md
+```
 
 ## Completion Checklist
 
 - [ ] `gh` installed and authenticated (`gh auth status` passes)
+- [ ] Task located (board item fetched or local file read)
+- [ ] Board item (or local file) marked **In progress**
 - [ ] Branch created from up-to-date `main`
 - [ ] Task fully read and understood
 - [ ] Architecture docs read
@@ -215,3 +273,4 @@ Include in the PR body:
 - [ ] Commit message follows convention
 - [ ] Branch pushed
 - [ ] PR open with description
+- [ ] Board item marked **Done** (or local file moved to `DONE/`)

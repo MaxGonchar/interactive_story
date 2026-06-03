@@ -24,5 +24,11 @@ class SceneLLMClient:
             for m in history_msgs
         ]
         messages = [SystemMessage(system_prompt)] + history + [HumanMessage(user_message)]
+
+        print("=== MESSAGES ===")
+        for m in messages:
+            print(f"{m.type.upper()}: {m.content}")
+        print("=== END MESSAGES ===")
+
         response = await self._model.ainvoke(messages)
         return response.content
