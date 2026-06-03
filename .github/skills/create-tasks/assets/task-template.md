@@ -1,11 +1,14 @@
-# Task {id}: {Short Descriptive Name}
+# {Short Descriptive Name}
 
 **Feature:** {feature name or milestone}
-**Status:** TODO
 
 ## Description
 
 {1–3 sentences describing what this task does and why it exists.}
+
+## Motivation
+
+{Why do we need these changes? What problem does this solve, what risk does it remove, or what value does it deliver? Reference the symptom, bug, design gap, or user need that drives this task.}
 
 ## Scope
 

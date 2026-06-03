@@ -902,12 +902,44 @@ context = SceneContext(
 ## Not planned:
 
 ### Problems
-- Readme for LLM about how to run tests
-- Review async calls for ones that are sequential but could be parallel.
-- Update task creator skill to add "why do we need those changes"
-- Implement agent to analyze code and suggest improvements.
-- Implement requirements for tests and assistant to review it.
 - SceneLLMClient.invoke() method also responsible for building the system prompt and messages. This is a smell that the responsibilities are not well-separated. The client should be focused on calling the LLM with a given context.
+- remove "entry_point" (motivation: it will be the first assistant message in a scene. For now it will be created manually)
+- in chat align text to the left
+- md support for chat items in UI
+- when edit messages - ugly text input field. Would be goos to have something similar to the chat text blob (size, style?)
+- when I finish scene in the story scenes page it's still marled as active.
 
 ### Enhancements
+
+---
+
 - No user character card in a story data. No place for it in the system prompt. (As a user I want to play different roles in a story. Since all personality related traits will be a user responsobility, the card should contain a user character appearance so LLM can use it in the system prompt to create more personalized and immersive responses)
+  - the card form should be free form dict with "name" key as a mandatory field and other fields that can be added on demand. The final character card text that is supposed to be injected into the system prompt will be generated fallowing next pattern:
+  ```md
+  ## {{name}}
+
+  ### {{feature_key}}
+  {{feature_value if it's string}}
+  - {{feature_value if it's list}}
+  ```
+
+---
+
+- CHaracter card is currently restricted with predefined set of fields. It expects all character fallow the same schema and restricts space for experiments. How would I like to see character data structure that will allow to more flexible:
+  - mandatory fields: "name", and "memory"
+  - The final character text that is supposed to be injected into the system prompt will be generated fallowing next pattern:
+  ```md
+  ## {{name}}
+
+  ### {{feature_key}}
+  {{feature_value if it's string}}
+  - {{feature_value if it's list}}
+  ```
+  This will allow me to play with different types of characters with different sets of features without changing the code.
+
+  Architectural questions:
+  - who will be responsible for character mg text generating.
+
+---
+
+- main nav bar (discuss placement and items to be added there)
