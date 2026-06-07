@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false }) {
   const isUser = message.role === 'user'
@@ -89,7 +91,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
           </>
         ) : (
           <>
-            <p style={{ margin: 0 }}>{message.content}</p>
+            <div className="message-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown></div>
             {/* Regenerate button: only for assistant messages, only if onRegenerate is provided */}
             {message.role === 'assistant' && onRegenerate && (
               <button
