@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false }) {
   const isUser = message.role === 'user'
@@ -7,6 +7,15 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(message.content)
   const [saving, setSaving] = useState(false)
+  const textareaRef = useRef(null)
+
+  useEffect(() => {
+    if (editing && textareaRef.current) {
+      const el = textareaRef.current
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    }
+  }, [editing, draft])
 
   const handleSave = async () => {
     if (!onEdit) return
@@ -35,6 +44,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
 
   const bubbleStyle = {
     maxWidth: '70%',
+    width: editing ? '70%' : undefined,
     padding: '8px 12px',
     borderRadius: '8px',
     background: isUser ? 'var(--accent-bg)' : 'var(--code-bg)',
@@ -54,11 +64,23 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
         {editing ? (
           <>
             <textarea
+              ref={textareaRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               maxLength={4000}
-              rows={4}
-              style={{ width: '100%', boxSizing: 'border-box' }}
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid var(--border)',
+                outline: 'none',
+                resize: 'none',
+                overflow: 'hidden',
+                font: 'inherit',
+                color: 'inherit',
+                padding: '0',
+              }}
             />
             <div>
               <button onClick={handleSave} disabled={saveDisabled}>Save</button>
