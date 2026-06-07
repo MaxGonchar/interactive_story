@@ -89,7 +89,6 @@ def make_scene_metadata(finished: bool = False) -> SceneMetadata:
         characters_ids=["c1"],
         finished=finished,
         scene_description=SceneDescription(
-            entry_point="Start here.",
             general_scene_guide="Guide text.",
             writing_style="Descriptive.",
         ),
@@ -236,5 +235,16 @@ async def test_regenerate_does_not_persist_on_llm_failure():
     service, scene_repo, _, _, _ = make_service(messages=[user_msg, assistant_msg], llm_side_effect=RuntimeError("LLM fail"))
 
     with pytest.raises(RuntimeError, match="LLM fail"):
+        await service.regenerate(STORY_ID, SCENE_ID)
+    scene_repo.update_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_regenerate_raises_no_user_message_when_only_assistant():
+    # Only the entry-point assistant message exists — no preceding user message
+    assistant_msg = Message(id=1, role="assistant", content="Entry point text")
+    service, scene_repo, _, _, _ = make_service(messages=[assistant_msg])
+
+    with pytest.raises(ValueError, match="no_user_message"):
         await service.regenerate(STORY_ID, SCENE_ID)
     scene_repo.update_message.assert_not_awaited()

@@ -56,7 +56,6 @@ class StoryDetailResponse(BaseModel):
 
 
 class SceneDescriptionModel(BaseModel):
-    entry_point: str
     general_scene_guide: str
     writing_style: str
 

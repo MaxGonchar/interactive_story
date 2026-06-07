@@ -13,7 +13,6 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 def _make_context() -> SceneContext:
     return SceneContext(
         scene_description=SceneDescription(
-            entry_point="A dark alley.",
             general_scene_guide="Build tension.",
             writing_style="Gritty noir.",
         ),
@@ -62,7 +61,6 @@ def test_raises_when_api_key_missing(monkeypatch):
 def _make_context_with_messages(messages):
     return SceneContext(
         scene_description=SceneDescription(
-            entry_point="A dark alley.",
             general_scene_guide="Build tension.",
             writing_style="Gritty noir.",
         ),

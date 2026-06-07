@@ -18,7 +18,6 @@ def make_scene_metadata(finished: bool = False) -> SceneMetadata:
         characters_ids=["c1"],
         finished=finished,
         scene_description=SceneDescription(
-            entry_point="Start here.",
             general_scene_guide="Guide text.",
             writing_style="Descriptive.",
         ),

@@ -47,7 +47,6 @@ async def get_scene(
             "id": metadata.id,
             "finished": metadata.finished,
             "scene_description": {
-                "entry_point": metadata.scene_description.entry_point,
                 "general_scene_guide": metadata.scene_description.general_scene_guide,
                 "writing_style": metadata.scene_description.writing_style,
             },
@@ -200,6 +199,11 @@ async def regenerate_assistant_message(
             return JSONResponse(
                 status_code=409,
                 content={"error": {"code": "no_assistant_message", "message": "No assistant message to regenerate"}},
+            )
+        elif str(e) == "no_user_message":
+            return JSONResponse(
+                status_code=409,
+                content={"error": {"code": "no_user_message", "message": "No preceding user message to regenerate from"}},
             )
         else:
             return JSONResponse(

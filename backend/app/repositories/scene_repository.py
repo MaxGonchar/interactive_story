@@ -22,7 +22,6 @@ class SceneRepository:
             characters_ids=raw.characters_ids,
             finished=raw.finished,
             scene_description=SceneDescription(
-                entry_point=raw.scene_description.entry_point,
                 general_scene_guide=raw.scene_description.general_scene_guide,
                 writing_style=raw.scene_description.writing_style,
             ),

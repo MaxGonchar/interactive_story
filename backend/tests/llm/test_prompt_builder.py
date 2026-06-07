@@ -7,7 +7,6 @@ from app.models.domain import CharacterCard, MemoryEntry, SceneDescription
 
 def _make_scene_description() -> SceneDescription:
     return SceneDescription(
-        entry_point="The path leads into the old park.",
         general_scene_guide="Focus on exploring the park together.",
         writing_style="Immersive, detail-oriented prose.",
     )
@@ -47,13 +46,13 @@ def test_returns_non_empty_string():
     assert len(result) > 0
 
 
-def test_contains_entry_point():
+def test_does_not_contain_entry_point():
     ctx = SceneContext(
         scene_description=_make_scene_description(),
         characters=[],
         messages=[],
     )
-    assert "The path leads into the old park." in _build(ctx)
+    assert "Scene Starting Point" not in _build(ctx)
 
 
 def test_contains_context_data_items():

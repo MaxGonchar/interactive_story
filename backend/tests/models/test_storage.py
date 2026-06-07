@@ -98,7 +98,6 @@ def test_scene_metadata_scene_summary_is_optional_none():
         finished=False,
         characters_ids=["mila"],
         scene_description=SceneDescriptionYaml(
-            entry_point="Entry.",
             general_scene_guide="Guide.",
             writing_style="Style.",
         ),
@@ -112,7 +111,6 @@ def test_scene_metadata_accepts_scene_summary_list():
         finished=True,
         characters_ids=["mila"],
         scene_description=SceneDescriptionYaml(
-            entry_point="E.",
             general_scene_guide="G.",
             writing_style="S.",
         ),
@@ -127,7 +125,7 @@ def test_scene_metadata_missing_characters_ids_raises():
             id=1,
             finished=False,
             scene_description=SceneDescriptionYaml(
-                entry_point="E.", general_scene_guide="G.", writing_style="S."
+                general_scene_guide="G.", writing_style="S."
             ),
         )
 

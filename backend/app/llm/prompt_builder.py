@@ -77,9 +77,6 @@ _CHARACTER_TEMPLATE = Template("""\
 """)
 
 _SCENE_CONFIG_TEMPLATE = Template("""\
-## Scene Starting Point
-{{ entry_point }}
-
 ## General Direction of Development
 {{ general_scene_guide }}
 
@@ -93,7 +90,6 @@ class PromptBuilder:
         context_data = self._build_context_data(context)
         character_profiles = self._build_character_profiles(context)
         scene_configuration = _SCENE_CONFIG_TEMPLATE.render(
-            entry_point=context.scene_description.entry_point,
             general_scene_guide=context.scene_description.general_scene_guide,
             writing_style=context.scene_description.writing_style,
         )

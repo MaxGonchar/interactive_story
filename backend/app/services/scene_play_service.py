@@ -84,7 +84,7 @@ class ScenePlayService:
         if context_messages and context_messages[-1].role == "user":
             user_content = context_messages[-1].content
         else:
-            user_content = metadata.scene_description.entry_point
+            raise ValueError("no_user_message")
 
         characters = await self._character_repo.get_characters(story_id, metadata.characters_ids)
         context = SceneContext(
