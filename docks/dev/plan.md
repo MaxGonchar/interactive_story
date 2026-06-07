@@ -1,5 +1,8 @@
 # Problems
 
+## Only one message bubble can be edited at a time
+Currently I can open more than one message bubble for editing, which causes confusion and bugs. The UI should enforce that only one bubble can be in edit mode at a time.
+
 # Enhancements
 
 ## User Character Card

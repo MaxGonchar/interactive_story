@@ -108,6 +108,7 @@ code {
 
 .message-bubble {
   position: relative;
+  text-align: left;
 }
 
 .message-bubble .edit-btn {
