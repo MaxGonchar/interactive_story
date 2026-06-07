@@ -4,7 +4,6 @@ from app.models.domain import CharacterCard, Message, SceneDescription
 
 def test_scene_context_construction():
     scene_description = SceneDescription(
-        entry_point="A dark forest at midnight.",
         general_scene_guide="Build tension slowly.",
         writing_style="Gothic horror.",
     )
@@ -21,7 +20,6 @@ def test_scene_context_construction():
         messages=[message],
     )
 
-    assert ctx.scene_description.entry_point == "A dark forest at midnight."
     assert len(ctx.characters) == 1
     assert ctx.characters[0].name == "Mila"
     assert len(ctx.messages) == 1
@@ -30,7 +28,6 @@ def test_scene_context_construction():
 
 def test_scene_context_empty_lists():
     scene_description = SceneDescription(
-        entry_point="Open field.",
         general_scene_guide="Keep it calm.",
         writing_style="Pastoral.",
     )

@@ -44,7 +44,6 @@ class StoryYaml(BaseModel):
 
 
 class SceneDescriptionYaml(BaseModel):
-    entry_point: str
     general_scene_guide: str
     writing_style: str
 

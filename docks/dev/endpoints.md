@@ -102,7 +102,6 @@ Get scene content: metadata and full message history.
         "id": 3,
         "finished": false,
         "scene_description": {
-            "entry_point": "Fog rolls over the black harbor as bells ring in distance.",
             "general_scene_guide": "Keep tension rising with small discoveries and choices.",
             "writing_style": "Cinematic, sensory details, concise dialog turns."
         },

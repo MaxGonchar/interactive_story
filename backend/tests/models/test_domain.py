@@ -104,11 +104,10 @@ def test_character_card_optional_fields_accept_empty_lists():
 
 def test_scene_description():
     desc = SceneDescription(
-        entry_point="The air is thick.",
         general_scene_guide="Guide text.",
         writing_style="Stark and physical.",
     )
-    assert desc.entry_point == "The air is thick."
+    assert desc.general_scene_guide == "Guide text."
 
 
 def test_scene_metadata():
@@ -118,7 +117,6 @@ def test_scene_metadata():
         characters_ids=["mila", "bun"],
         finished=False,
         scene_description=SceneDescription(
-            entry_point="Entry.",
             general_scene_guide="Guide.",
             writing_style="Style.",
         ),
@@ -134,7 +132,7 @@ def test_scene_metadata_with_summary():
         characters_ids=["mila"],
         finished=True,
         scene_description=SceneDescription(
-            entry_point="E.", general_scene_guide="G.", writing_style="S."
+            general_scene_guide="G.", writing_style="S."
         ),
         scene_summary=["Summary line one.", "Summary line two."],
     )

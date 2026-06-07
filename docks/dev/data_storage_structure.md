@@ -140,7 +140,6 @@ finished: false
 character_ids:
   - "captain-mora"
 scene_description:
-  entry_point: "Fog rolls over the black harbor as bells ring in distance."
   general_scene_guide: "Keep tension rising with small discoveries and choices."
   writing_style: "Cinematic, sensory details, concise dialog turns."
 ```
@@ -150,7 +149,7 @@ Constraints:
 - story_id must equal parent folder story id
 - finished is boolean
 - each character_id must exist in story character_ids and have character file
-- scene_description must include: entry_point, general_scene_guide, writing_style
+- scene_description must include: general_scene_guide, writing_style
   
 ### 5) Scene Messages
 Path: data/stories/<story_id>/scenes/<scene_id>/messages.yaml
