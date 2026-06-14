@@ -59,5 +59,6 @@ def get_scene_message_service(
 
 def get_scene_lifecycle_service(
     scene_repo: SceneRepository = Depends(get_scene_repository),
+    story_repo: StoryRepository = Depends(get_story_repository),
 ) -> SceneLifecycleService:
-    return SceneLifecycleService(scene_repo)
+    return SceneLifecycleService(scene_repo, story_repo)

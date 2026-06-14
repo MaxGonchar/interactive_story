@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.models.domain import SceneRef, StoryIndexItem, StoryMeta
 from app.models.storage import StoriesIndex, StoryYaml
 from app.utils import file_paths, yaml_storage
+from app.utils.atomic_write import atomic_write
 
 
 class StoryRepository:
@@ -38,4 +39,26 @@ class StoryRepository:
                 for s in story.scenes
             ],
             active_scene_id=active_scene_id,
+        )
+
+    async def update_scene_finished(
+        self, story_id: str, scene_id: int, summary: str
+    ) -> None:
+        try:
+            data = await yaml_storage.read_yaml(file_paths.story_file(story_id))
+        except FileNotFoundError:
+            raise KeyError(story_id)
+
+        story = StoryYaml(**data)
+
+        scene = next((s for s in story.scenes if s.id == scene_id), None)
+        if scene is None:
+            raise KeyError(scene_id)
+
+        scene.finished = True
+        scene.summary = [summary]
+
+        await atomic_write(
+            file_paths.story_file(story_id),
+            yaml_storage.dump_yaml(story.model_dump()),
         )
