@@ -62,22 +62,12 @@ class SceneMetadataYaml(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class CharacterMemoryEntryYaml(BaseModel):
-    case: str
-    reflection: str
-
-
 class CharacterYaml(BaseModel):
     id: str
     story_id: str | None = None
     name: str
-    appearance: str | None = None
-    traits: list[str] | None = None
-    speech_patterns: list[str] | None = None
-    body_language: list[str] | None = None
-    likes: list[str] | None = None
-    fears: list[str] | None = None
-    memory: list[CharacterMemoryEntryYaml] | None = None
+    features: dict[str, str | list[str]] = {}
+    memory: list[str] = []
 
 
 # ---------------------------------------------------------------------------

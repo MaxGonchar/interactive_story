@@ -5,7 +5,6 @@ import yaml
 from pydantic import ValidationError
 
 from app.models.storage import (
-    CharacterMemoryEntryYaml,
     CharacterYaml,
     MessageYaml,
     MessagesYaml,
@@ -143,17 +142,23 @@ def test_character_yaml_parses_fixture():
     assert char.name == "Mila"
 
 
-def test_character_yaml_optional_fields_default_none():
+def test_character_yaml_defaults():
     char = CharacterYaml(id="bun", name="Bun")
-    assert char.appearance is None
-    assert char.traits is None
-    assert char.memory is None
+    assert char.features == {}
+    assert char.memory == []
     assert char.story_id is None
 
 
-def test_character_memory_entry_yaml():
-    entry = CharacterMemoryEntryYaml(case="A case.", reflection="A reflection.")
-    assert entry.case == "A case."
+def test_character_yaml_with_features_and_memory():
+    char = CharacterYaml(
+        id="bun",
+        name="Bun",
+        features={"appearance": "Fluffy.", "traits": ["Curious", "Playful"]},
+        memory=["Learned to use a toilet."],
+    )
+    assert char.features["appearance"] == "Fluffy."
+    assert char.features["traits"] == ["Curious", "Playful"]
+    assert char.memory == ["Learned to use a toilet."]
 
 
 def test_character_yaml_missing_name_raises():

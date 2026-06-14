@@ -44,38 +44,6 @@ Emma is a 18 years old girl. She has long, wavy blonde hair that falls past her 
 5. Output 2-3 paragraphs using the specified formatting.\
 """)
 
-_CHARACTER_TEMPLATE = Template("""\
-## {{ name }}
-{% if appearance %}
-### Appearance
-{{ appearance }}
-{% endif %}
-{% if traits %}
-### Personal Traits
-{% for item in traits %}- {{ item }}
-{% endfor %}{% endif %}
-{% if speech_patterns %}
-### Speech Patterns
-{% for item in speech_patterns %}- {{ item }}
-{% endfor %}{% endif %}
-{% if body_language %}
-### Body Language
-{% for item in body_language %}- {{ item }}
-{% endfor %}{% endif %}
-{% if likes %}
-### Likes
-{% for item in likes %}- {{ item }}
-{% endfor %}{% endif %}
-{% if fears %}
-### Fears
-{% for item in fears %}- {{ item }}
-{% endfor %}{% endif %}
-{% if memory %}
-### Memory
-{% for entry in memory %}- {{ entry.case }}: {{ entry.reflection }}
-{% endfor %}{% endif %}\
-""")
-
 _SCENE_CONFIG_TEMPLATE = Template("""\
 ## General Direction of Development
 {{ general_scene_guide }}
@@ -107,18 +75,5 @@ class PromptBuilder:
     def _build_character_profiles(self, context: SceneContext) -> str:
         if not context.characters:
             return "(no characters)"
-        profiles = []
-        for char in context.characters:
-            profiles.append(
-                _CHARACTER_TEMPLATE.render(
-                    name=char.name,
-                    appearance=char.appearance,
-                    traits=char.traits or [],
-                    speech_patterns=char.speech_patterns or [],
-                    body_language=char.body_language or [],
-                    likes=char.likes or [],
-                    fears=char.fears or [],
-                    memory=char.memory or [],
-                )
-            )
+        profiles = [char.to_prompt_text() for char in context.characters]
         return "\n\n".join(profiles)

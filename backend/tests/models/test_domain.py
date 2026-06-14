@@ -3,7 +3,6 @@ from pydantic import ValidationError
 
 from app.models.domain import (
     CharacterCard,
-    MemoryEntry,
     Message,
     SceneDescription,
     SceneMetadata,
@@ -57,49 +56,82 @@ def test_story_meta_active_scene_id_none():
     assert meta.active_scene_id is None
 
 
-def test_memory_entry():
-    entry = MemoryEntry(case="A case description.", reflection="A reflection.")
-    assert entry.case == "A case description."
+def test_character_card_defaults():
+    card = CharacterCard(id="bun", story_id="abc", name="Bun")
+    assert card.features == {}
+    assert card.memory == []
 
 
-def test_character_card_full():
+def test_character_card_with_features_and_memory():
     card = CharacterCard(
         id="mila",
         story_id="8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         name="Mila",
-        appearance="Tall and wiry.",
-        traits=["Cynical", "Resourceful"],
-        speech_patterns=["Uses gardening metaphors."],
-        body_language=["Rarely stands still."],
-        likes=["Rain on dry earth."],
-        fears=["Sterile corporate spaces."],
-        memory=[MemoryEntry(case="Day one.", reflection="Reflection one.")],
+        features={
+            "appearance": "Tall and wiry.",
+            "traits": ["Cynical", "Resourceful"],
+        },
+        memory=["Day one. Reflection: Felt overwhelmed."],
     )
-    assert card.story_id == "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
-    assert card.traits == ["Cynical", "Resourceful"]
+    assert card.features["traits"] == ["Cynical", "Resourceful"]
+    assert card.memory == ["Day one. Reflection: Felt overwhelmed."]
 
 
-def test_character_card_optional_fields_default_none():
-    card = CharacterCard(id="bun", story_id="abc", name="Bun")
-    assert card.appearance is None
-    assert card.traits is None
-    assert card.memory is None
+# ---------------------------------------------------------------------------
+# CharacterCard.to_prompt_text()
+# ---------------------------------------------------------------------------
 
 
-def test_character_card_optional_fields_accept_empty_lists():
+def test_to_prompt_text_string_feature_renders_as_plain_text():
     card = CharacterCard(
-        id="bun",
-        story_id="abc",
-        name="Bun",
-        traits=[],
-        speech_patterns=[],
-        body_language=[],
-        likes=[],
-        fears=[],
-        memory=[],
+        id="c", story_id="s", name="Ghost",
+        features={"appearance": "Tall and pale."},
     )
-    assert card.traits == []
-    assert card.memory == []
+    result = card.to_prompt_text()
+    assert "### Appearance" in result
+    assert "Tall and pale." in result
+
+
+def test_to_prompt_text_list_feature_renders_as_bullet_points():
+    card = CharacterCard(
+        id="c", story_id="s", name="Ghost",
+        features={"traits": ["Brave", "Curious"]},
+    )
+    result = card.to_prompt_text()
+    assert "### Traits" in result
+    assert "- Brave" in result
+    assert "- Curious" in result
+
+
+def test_to_prompt_text_feature_key_is_title_cased():
+    card = CharacterCard(
+        id="c", story_id="s", name="Ghost",
+        features={"speech_patterns": ["Short sentences."]},
+    )
+    result = card.to_prompt_text()
+    assert "### Speech Patterns" in result
+
+
+def test_to_prompt_text_memory_section_present_when_non_empty():
+    card = CharacterCard(
+        id="c", story_id="s", name="Ghost",
+        memory=["Encountered a stranger."],
+    )
+    result = card.to_prompt_text()
+    assert "### Memory" in result
+    assert "- Encountered a stranger." in result
+
+
+def test_to_prompt_text_memory_section_omitted_when_empty():
+    card = CharacterCard(id="c", story_id="s", name="Ghost", memory=[])
+    result = card.to_prompt_text()
+    assert "### Memory" not in result
+
+
+def test_to_prompt_text_empty_features_produces_only_name_header():
+    card = CharacterCard(id="c", story_id="s", name="Ghost")
+    result = card.to_prompt_text()
+    assert result == "## Ghost"
 
 
 def test_scene_description():

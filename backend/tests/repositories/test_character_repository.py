@@ -28,12 +28,11 @@ async def test_get_character_returns_all_fields(data_root):
     repo = CharacterRepository()
     result = await repo.get_character(FIXTURE_STORY_ID, "mila")
 
-    assert isinstance(result.traits, list)
-    assert len(result.traits) > 0
+    assert isinstance(result.features, dict)
+    assert len(result.features) > 0
     assert isinstance(result.memory, list)
     assert len(result.memory) > 0
-    assert result.memory[0].case
-    assert result.memory[0].reflection
+    assert isinstance(result.memory[0], str)
 
 
 @pytest.mark.asyncio

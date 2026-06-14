@@ -2,7 +2,7 @@ import pytest
 
 from app.llm.models import SceneContext
 from app.llm.prompt_builder import PromptBuilder
-from app.models.domain import CharacterCard, MemoryEntry, SceneDescription
+from app.models.domain import CharacterCard, SceneDescription
 
 
 def _make_scene_description() -> SceneDescription:
@@ -17,13 +17,8 @@ def _make_character(**kwargs) -> CharacterCard:
         id="char-1",
         story_id="story-1",
         name="Sarah",
-        appearance=None,
-        traits=None,
-        speech_patterns=None,
-        body_language=None,
-        likes=None,
-        fears=None,
-        memory=None,
+        features={},
+        memory=[],
     )
     defaults.update(kwargs)
     return CharacterCard(**defaults)
@@ -106,13 +101,15 @@ def test_character_with_all_optional_fields_none_does_not_raise():
 def test_character_with_all_optional_fields_populated():
     char = _make_character(
         name="Emma",
-        appearance="Tall, red hair.",
-        traits=["Brave", "Curious"],
-        speech_patterns=["Short sentences."],
-        body_language=["Crosses arms when nervous."],
-        likes=["Coffee"],
-        fears=["Heights"],
-        memory=[MemoryEntry(case="First meeting", reflection="Felt at ease.")],
+        features={
+            "appearance": "Tall, red hair.",
+            "traits": ["Brave", "Curious"],
+            "speech_patterns": ["Short sentences."],
+            "body_language": ["Crosses arms when nervous."],
+            "likes": ["Coffee"],
+            "fears": ["Heights"],
+        },
+        memory=["First meeting. Reflection: Felt at ease."],
     )
     ctx = SceneContext(
         scene_description=_make_scene_description(),
@@ -124,5 +121,5 @@ def test_character_with_all_optional_fields_populated():
     assert "Brave" in result
     assert "Coffee" in result
     assert "Heights" in result
-    assert "First meeting" in result
+    assert "First meeting." in result
 

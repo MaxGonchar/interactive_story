@@ -25,22 +25,28 @@ class StoryMeta(BaseModel):
     active_scene_id: int | None
 
 
-class MemoryEntry(BaseModel):
-    case: str
-    reflection: str
-
-
 class CharacterCard(BaseModel):
     id: str
     story_id: str
     name: str
-    appearance: str | None = None
-    traits: list[str] | None = None
-    speech_patterns: list[str] | None = None
-    body_language: list[str] | None = None
-    likes: list[str] | None = None
-    fears: list[str] | None = None
-    memory: list[MemoryEntry] | None = None
+    features: dict[str, str | list[str]] = {}
+    memory: list[str] = []
+
+    def to_prompt_text(self) -> str:
+        lines: list[str] = [f"## {self.name}"]
+        for key, value in self.features.items():
+            heading = key.replace("_", " ").title()
+            lines.append(f"### {heading}")
+            if isinstance(value, list):
+                for item in value:
+                    lines.append(f"- {item}")
+            else:
+                lines.append(value)
+        if self.memory:
+            lines.append("### Memory")
+            for entry in self.memory:
+                lines.append(f"- {entry}")
+        return "\n".join(lines)
 
 
 class SceneDescription(BaseModel):
