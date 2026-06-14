@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from app.models.domain import CharacterCard, MemoryEntry
+from app.models.domain import CharacterCard
 from app.models.storage import CharacterYaml
 from app.utils import file_paths, yaml_storage
 
@@ -22,17 +22,8 @@ class CharacterRepository:
             id=char.id,
             story_id=char.story_id if char.story_id is not None else story_id,
             name=char.name,
-            appearance=char.appearance,
-            traits=char.traits,
-            speech_patterns=char.speech_patterns,
-            body_language=char.body_language,
-            likes=char.likes,
-            fears=char.fears,
-            memory=(
-                [MemoryEntry(case=m.case, reflection=m.reflection) for m in char.memory]
-                if char.memory is not None
-                else None
-            ),
+            features=char.features,
+            memory=char.memory,
         )
 
     async def get_characters(
