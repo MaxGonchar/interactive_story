@@ -37,11 +37,13 @@ def test_story_meta():
     meta = StoryMeta(
         id="8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         title="Mila and Bun",
+        user_character_id="max",
         character_ids=["mila", "bun"],
         scenes=[SceneRef(id=1, finished=True), SceneRef(id=2, finished=False)],
         active_scene_id=2,
     )
     assert meta.active_scene_id == 2
+    assert meta.user_character_id == "max"
     assert len(meta.scenes) == 2
 
 
@@ -49,6 +51,7 @@ def test_story_meta_active_scene_id_none():
     meta = StoryMeta(
         id="abc",
         title="Test",
+        user_character_id="max",
         character_ids=[],
         scenes=[],
         active_scene_id=None,

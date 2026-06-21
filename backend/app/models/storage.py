@@ -34,6 +34,7 @@ class SceneRefYaml(BaseModel):
 class StoryYaml(BaseModel):
     id: str
     title: str
+    user_character_id: str
     character_ids: list[str]
     scenes: list[SceneRefYaml]
 

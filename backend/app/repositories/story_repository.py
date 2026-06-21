@@ -33,6 +33,7 @@ class StoryRepository:
         return StoryMeta(
             id=story.id,
             title=story.title,
+            user_character_id=story.user_character_id,
             character_ids=story.character_ids,
             scenes=[
                 SceneRef(id=s.id, finished=s.finished, summary=s.summary)
