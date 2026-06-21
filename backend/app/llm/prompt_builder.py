@@ -27,10 +27,7 @@ You are an Interactive Narrative Engine. Your purpose is to drive a specific sce
 
 # User's Character Profile
 
-## Emma
-
-### 2. Appearance
-Emma is a 18 years old girl. She has long, wavy blonde hair that falls past her shoulders, and bright blue eyes that seem to sparkle with mischief. Her style is eclectic, often mixing vintage pieces with modern trends, and she has a penchant for bold accessories like chunky necklaces and oversized sunglasses.
+{{ user_character_profile }}
 
 # Scene Configuration
 
@@ -61,10 +58,12 @@ class PromptBuilder:
             general_scene_guide=context.scene_description.general_scene_guide,
             writing_style=context.scene_description.writing_style,
         )
+        user_character_profile = context.user_character.to_prompt_text()
         return _SYSTEM_PROMPT_TEMPLATE.render(
             context_data=context_data,
             character_profiles=character_profiles,
             scene_configuration=scene_configuration,
+            user_character_profile=user_character_profile,
         )
 
     def _build_context_data(self, context: SceneContext) -> str:
