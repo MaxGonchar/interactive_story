@@ -51,9 +51,14 @@ class ScenePlayService:
             for line in s.summary
         ]
 
+        user_character = await self._character_repo.get_character(
+            story_id, story_meta.user_character_id
+        )
+
         context = SceneContext(
             scene_description=metadata.scene_description,
             characters=characters,
+            user_character=user_character,
             messages=messages,
             context_data=context_data,
         )
@@ -87,9 +92,14 @@ class ScenePlayService:
             raise ValueError("no_user_message")
 
         characters = await self._character_repo.get_characters(story_id, metadata.characters_ids)
+        story_meta = await self._story_repo.get_story(story_id)
+        user_character = await self._character_repo.get_character(
+            story_id, story_meta.user_character_id
+        )
         context = SceneContext(
             scene_description=metadata.scene_description,
             characters=characters,
+            user_character=user_character,
             messages=context_messages,
         )
 

@@ -115,6 +115,10 @@ def make_service(
 
     character_repo = AsyncMock()
     character_repo.get_characters.return_value = []
+    from app.models.domain import CharacterCard
+    character_repo.get_character.return_value = CharacterCard(
+        id="user-char", story_id=STORY_ID, name="Hero"
+    )
 
     llm_client = AsyncMock()
     if llm_side_effect is not None:
@@ -137,6 +141,41 @@ def make_service(
 
     service = ScenePlayService(scene_repo, character_repo, llm_client, story_repo)
     return service, scene_repo, character_repo, llm_client, story_repo
+
+
+@pytest.mark.asyncio
+async def test_play_includes_user_character_in_context():
+    service, _, character_repo, llm_client, _ = make_service()
+    captured = {}
+    async def fake_invoke(context, *_):
+        captured["user_character"] = context.user_character
+        return "reply"
+    llm_client.invoke.side_effect = fake_invoke
+
+    await service.play(STORY_ID, SCENE_ID, "Hello")
+
+    assert captured["user_character"].id == "user-char"
+    character_repo.get_character.assert_awaited_once_with(STORY_ID, "max")
+
+
+@pytest.mark.asyncio
+async def test_regenerate_includes_user_character_in_context():
+    user_msg = Message(id=1, role="user", content="Hi")
+    assistant_msg = Message(id=2, role="assistant", content="Old reply")
+    service, scene_repo, character_repo, llm_client, _ = make_service(
+        messages=[user_msg, assistant_msg]
+    )
+    scene_repo.update_message.return_value = Message(id=2, role="assistant", content="New reply")
+    captured = {}
+    async def fake_invoke(context, *_):
+        captured["user_character"] = context.user_character
+        return "New reply"
+    llm_client.invoke.side_effect = fake_invoke
+
+    await service.regenerate(STORY_ID, SCENE_ID)
+
+    assert captured["user_character"].id == "user-char"
+    character_repo.get_character.assert_awaited_once_with(STORY_ID, "max")
 
 
 @pytest.mark.asyncio
