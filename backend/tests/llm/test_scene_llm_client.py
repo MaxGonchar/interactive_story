@@ -6,8 +6,11 @@ import pytest
 import types
 from app.llm.models import SceneContext
 from app.llm.scene_llm_client import SceneLLMClient, _DEFAULT_MODEL
-from app.models.domain import SceneDescription, Message
+from app.models.domain import CharacterCard, SceneDescription, Message
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+
+
+DEFAULT_USER_CHARACTER = CharacterCard(id="user-1", story_id="story-1", name="Emma")
 
 
 def _make_context() -> SceneContext:
@@ -17,6 +20,7 @@ def _make_context() -> SceneContext:
             writing_style="Gritty noir.",
         ),
         characters=[],
+        user_character=DEFAULT_USER_CHARACTER,
         messages=[],
     )
 
@@ -65,6 +69,7 @@ def _make_context_with_messages(messages):
             writing_style="Gritty noir.",
         ),
         characters=[],
+        user_character=DEFAULT_USER_CHARACTER,
         messages=messages,
     )
 

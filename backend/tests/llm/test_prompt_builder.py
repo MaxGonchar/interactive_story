@@ -24,6 +24,10 @@ def _make_character(**kwargs) -> CharacterCard:
     return CharacterCard(**defaults)
 
 
+def _make_user_character() -> CharacterCard:
+    return CharacterCard(id="user-1", story_id="story-1", name="Emma")
+
+
 def _build(context: SceneContext) -> str:
     return PromptBuilder().build_system_prompt(context)
 
@@ -34,6 +38,7 @@ def test_returns_non_empty_string():
     ctx = SceneContext(
         scene_description=_make_scene_description(),
         characters=[],
+        user_character=_make_user_character(),
         messages=[],
     )
     result = _build(ctx)
@@ -45,6 +50,7 @@ def test_does_not_contain_entry_point():
     ctx = SceneContext(
         scene_description=_make_scene_description(),
         characters=[],
+        user_character=_make_user_character(),
         messages=[],
     )
     assert "Scene Starting Point" not in _build(ctx)
@@ -54,6 +60,7 @@ def test_contains_context_data_items():
     ctx = SceneContext(
         scene_description=_make_scene_description(),
         characters=[],
+        user_character=_make_user_character(),
         messages=[],
         context_data=["It is raining.", "The door is locked."],
     )
@@ -70,6 +77,7 @@ def test_contains_character_names():
     ctx = SceneContext(
         scene_description=_make_scene_description(),
         characters=chars,
+        user_character=_make_user_character(),
         messages=[],
     )
     result = _build(ctx)
@@ -81,6 +89,7 @@ def test_empty_characters_and_messages_does_not_raise():
     ctx = SceneContext(
         scene_description=_make_scene_description(),
         characters=[],
+        user_character=_make_user_character(),
         messages=[],
     )
     _build(ctx)  # must not raise
@@ -92,6 +101,7 @@ def test_character_with_all_optional_fields_none_does_not_raise():
     ctx = SceneContext(
         scene_description=_make_scene_description(),
         characters=[_make_character(name="Ghost")],
+        user_character=_make_user_character(),
         messages=[],
     )
     result = _build(ctx)
@@ -114,6 +124,7 @@ def test_character_with_all_optional_fields_populated():
     ctx = SceneContext(
         scene_description=_make_scene_description(),
         characters=[char],
+        user_character=_make_user_character(),
         messages=[],
     )
     result = _build(ctx)
