@@ -20,6 +20,7 @@ class SceneRef(BaseModel):
 class StoryMeta(BaseModel):
     id: str
     title: str
+    user_character_id: str
     character_ids: list[str]
     scenes: list[SceneRef]
     active_scene_id: int | None

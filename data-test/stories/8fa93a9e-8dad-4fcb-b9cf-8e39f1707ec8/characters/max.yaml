@@ -1,0 +1,12 @@
+id: max
+story_id: "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
+name: Max
+features:
+  appearance: A man in his late thirties with a lean, weather-worn build. He moves with quiet deliberateness, his hands bearing the calluses of someone who prefers to fix things rather than delegate.
+  traits:
+    - Observant and methodical, preferring to assess a situation fully before acting.
+    - Carries a quiet determination that occasionally tips into stubbornness.
+  speech_patterns:
+    - Speaks in measured, direct sentences with little ornamentation.
+    - Asks clarifying questions rather than making assumptions.
+memory: []

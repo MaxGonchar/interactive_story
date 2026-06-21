@@ -7,6 +7,7 @@ def _make_story_meta_with_finished_scenes():
     return StoryMeta(
         id="story-1",
         title="Test Story",
+        user_character_id="max",
         character_ids=["c1"],
         scenes=[
             SceneRef(id=0, finished=True, summary=["Scene zero happened.", "More context."]),
@@ -37,6 +38,7 @@ async def test_play_context_data_empty_when_no_prior_finished():
     story_meta = StoryMeta(
         id="story-2",
         title="Test Story",
+        user_character_id="max",
         character_ids=["c1"],
         scenes=[
             SceneRef(id=0, finished=False, summary=None),
@@ -59,6 +61,7 @@ async def test_play_excludes_finished_scenes_after_current():
     story_meta = StoryMeta(
         id="story-3",
         title="Test Story",
+        user_character_id="max",
         character_ids=["c1"],
         scenes=[
             SceneRef(id=0, finished=True, summary=["Scene zero happened."]),
@@ -125,6 +128,7 @@ def make_service(
         story_meta = StoryMeta(
             id=STORY_ID,
             title="Test Story",
+            user_character_id="max",
             character_ids=["c1"],
             scenes=[SceneRef(id=SCENE_ID, finished=False, summary=None)],
             active_scene_id=SCENE_ID,

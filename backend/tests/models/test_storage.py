@@ -58,6 +58,7 @@ def test_story_yaml_parses_fixture():
         data = yaml.safe_load(f)
     story = StoryYaml(**data)
     assert story.id == STORY_ID
+    assert story.user_character_id == "max"
     assert len(story.scenes) >= 1
     assert isinstance(story.scenes[0], SceneRefYaml)
 
@@ -75,7 +76,12 @@ def test_scene_ref_yaml_summary_defaults_none():
 
 def test_story_yaml_missing_id_raises():
     with pytest.raises(ValidationError):
-        StoryYaml(title="X", character_ids=[], scenes=[])
+        StoryYaml(title="X", user_character_id="max", character_ids=[], scenes=[])
+
+
+def test_story_yaml_missing_user_character_id_raises():
+    with pytest.raises(ValidationError):
+        StoryYaml(id="abc", title="X", character_ids=[], scenes=[])
 
 
 # ---------------------------------------------------------------------------

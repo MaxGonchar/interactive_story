@@ -50,6 +50,7 @@ async def test_get_story_returns_story_meta(data_root):
 
     assert result.id == FIXTURE_STORY_ID
     assert result.title == "Mila and Bun"
+    assert result.user_character_id == "max"
     assert len(result.scenes) == 2
 
 

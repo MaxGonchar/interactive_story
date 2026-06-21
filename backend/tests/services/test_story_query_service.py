@@ -27,6 +27,7 @@ async def test_get_story_returns_story_meta():
     expected = StoryMeta(
         id="abc",
         title="Story A",
+        user_character_id="max",
         character_ids=["c1"],
         scenes=[SceneRef(id=1, finished=False)],
         active_scene_id=1,
