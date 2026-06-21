@@ -25,7 +25,7 @@ def _make_character(**kwargs) -> CharacterCard:
 
 
 def _make_user_character() -> CharacterCard:
-    return CharacterCard(id="user-1", story_id="story-1", name="Emma")
+    return CharacterCard(id="user-1", story_id="story-1", name="Mila")
 
 
 def _build(context: SceneContext) -> str:
@@ -106,6 +106,28 @@ def test_character_with_all_optional_fields_none_does_not_raise():
     )
     result = _build(ctx)
     assert "Ghost" in result
+
+
+def test_user_character_profile_in_prompt():
+    ctx = SceneContext(
+        scene_description=_make_scene_description(),
+        characters=[],
+        user_character=_make_user_character(),
+        messages=[],
+    )
+    result = _build(ctx)
+    assert "Mila" in result
+
+
+def test_hardcoded_protagonist_absent():
+    ctx = SceneContext(
+        scene_description=_make_scene_description(),
+        characters=[],
+        user_character=_make_user_character(),
+        messages=[],
+    )
+    result = _build(ctx)
+    assert "Emma is a 18 years old girl" not in result
 
 
 def test_character_with_all_optional_fields_populated():
