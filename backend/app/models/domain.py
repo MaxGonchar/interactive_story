@@ -4,11 +4,14 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+StoryType = Literal["scene", "choice_driven"]
+
 
 class StoryIndexItem(BaseModel):
     id: str
     title: str
     created_at: str
+    type: StoryType
 
 
 class SceneRef(BaseModel):

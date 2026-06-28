@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from app.models.domain import StoryType
+
 
 # ---------------------------------------------------------------------------
 # Stories index  —  data/stories/index.yaml
@@ -14,6 +16,7 @@ class StoriesIndexEntry(BaseModel):
     id: str
     title: str
     created_at: str
+    type: StoryType = "scene"
 
 
 class StoriesIndex(BaseModel):

@@ -12,7 +12,7 @@ class StoryRepository:
         index = StoriesIndex(**data)
         sorted_entries = sorted(index.stories, key=lambda e: e.created_at, reverse=True)
         return [
-            StoryIndexItem(id=e.id, title=e.title, created_at=e.created_at)
+            StoryIndexItem(id=e.id, title=e.title, created_at=e.created_at, type=e.type)
             for e in sorted_entries
         ]
 

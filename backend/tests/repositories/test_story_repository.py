@@ -32,6 +32,7 @@ async def test_list_stories_returns_story_index_items(data_root):
     assert item.id == FIXTURE_STORY_ID
     assert item.title == "Mila and Bun"
     assert item.created_at == "2024-06-01T12:00:00Z"
+    assert item.type == "scene"
 
 
 @pytest.mark.asyncio

@@ -1,6 +1,16 @@
 import pytest
 from pydantic import ValidationError
-from app.models.api import RegenerateData, RegenerateResponse, MessageModel, StoryDetail, SceneListItem
+from app.models.api import RegenerateData, RegenerateResponse, MessageModel, StoryDetail, SceneListItem, StoryListItem
+
+
+def test_story_list_item_has_type_field():
+    item = StoryListItem(id="abc", title="Test", type="scene")
+    assert item.type == "scene"
+
+
+def test_story_list_item_type_choice_driven():
+    item = StoryListItem(id="abc", title="Test", type="choice_driven")
+    assert item.type == "choice_driven"
 
 
 def test_regenerate_response_validates():

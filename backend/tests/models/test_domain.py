@@ -17,9 +17,21 @@ def test_story_index_item():
         id="8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         title="Mila and Bun",
         created_at="2024-06-01T12:00:00Z",
+        type="scene",
     )
     assert item.id == "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
     assert item.title == "Mila and Bun"
+    assert item.type == "scene"
+
+
+def test_story_index_item_type_choice_driven():
+    item = StoryIndexItem(
+        id="abc",
+        title="Test",
+        created_at="2024-06-01T12:00:00Z",
+        type="choice_driven",
+    )
+    assert item.type == "choice_driven"
 
 
 def test_scene_ref_with_summary():
