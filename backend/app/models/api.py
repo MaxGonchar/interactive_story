@@ -150,3 +150,90 @@ class FinishedSceneData(BaseModel):
 
 class FinishSceneResponse(BaseModel):
     data: FinishedSceneData
+
+
+# ---------------------------------------------------------------------------
+# Choice-Driven Play  —  GET /api/stories/{story_id}/choice-play
+# ---------------------------------------------------------------------------
+
+
+class ChoiceModel(BaseModel):
+    action: str
+    consequence: str
+
+
+class StepModel(BaseModel):
+    id: int
+    incoming_choice: ChoiceModel | None
+    text: str
+    choices: list[ChoiceModel]
+
+
+class ChoiceDrivenPlayData(BaseModel):
+    id: str
+    title: str
+    steps: list[StepModel]
+
+
+class ChoiceDrivenPlayResponse(BaseModel):
+    data: ChoiceDrivenPlayData
+
+
+# ---------------------------------------------------------------------------
+# Generate / Regenerate Choices
+# POST /api/stories/{story_id}/choice-play/generate-choices
+# POST /api/stories/{story_id}/choice-play/regenerate-choices
+# ---------------------------------------------------------------------------
+
+
+class GenerateChoicesData(BaseModel):
+    choices: list[ChoiceModel]
+
+
+class GenerateChoicesResponse(BaseModel):
+    data: GenerateChoicesData
+
+
+# ---------------------------------------------------------------------------
+# Select Choice  —  POST /api/stories/{story_id}/choice-play/select-choice
+# ---------------------------------------------------------------------------
+
+
+class SelectChoiceRequest(BaseModel):
+    action: str
+    consequence: str
+
+
+class SelectChoiceResponse(BaseModel):
+    data: StepModel
+
+
+# ---------------------------------------------------------------------------
+# Edit Step  —  PATCH /api/stories/{story_id}/choice-play/steps/{step_id}
+# ---------------------------------------------------------------------------
+
+
+class EditStepRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
+
+
+class EditStepData(BaseModel):
+    id: int
+    text: str
+
+
+class EditStepResponse(BaseModel):
+    data: EditStepData
+
+
+# ---------------------------------------------------------------------------
+# Return To Step  —  DELETE /api/stories/{story_id}/choice-play/steps/{step_id}/forward
+# ---------------------------------------------------------------------------
+
+
+class ReturnToStepData(BaseModel):
+    step_id: int
+
+
+class ReturnToStepResponse(BaseModel):
+    data: ReturnToStepData
