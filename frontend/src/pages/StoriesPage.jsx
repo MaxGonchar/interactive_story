@@ -27,7 +27,13 @@ function StoriesPage() {
   return (
     <StoryList
       stories={stories}
-      onSelect={(id) => navigate(`/stories/${id}`)}
+      onSelect={(story) =>
+        navigate(
+          story.type === 'choice_driven'
+            ? `/stories/${story.id}/play`
+            : `/stories/${story.id}`
+        )
+      }
     />
   )
 }

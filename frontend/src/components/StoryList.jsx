@@ -6,8 +6,13 @@ function StoryList({ stories = [], onSelect }) {
   return (
     <ul>
       {stories.map((story) => (
-        <li key={story.id} className="clickable" onClick={() => onSelect(story.id)}>
+        <li key={story.id} className="clickable" onClick={() => onSelect(story)}>
           {story.title}
+          {story.type && (
+            <span className="story-type-badge">
+              {story.type === 'choice_driven' ? 'Choice' : 'Scene'}
+            </span>
+          )}
         </li>
       ))}
     </ul>
