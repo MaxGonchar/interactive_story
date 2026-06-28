@@ -10,6 +10,7 @@ function App() {
         <Route path="/" element={<Navigate to="/stories" replace />} />
         <Route path="/stories" element={<StoriesPage />} />
         <Route path="/stories/:storyId" element={<StoryPage />} />
+        <Route path="/stories/:storyId/play" element={null} />
         <Route path="/stories/:storyId/scenes/:sceneId" element={<ScenePage />} />
       </Routes>
     </BrowserRouter>
