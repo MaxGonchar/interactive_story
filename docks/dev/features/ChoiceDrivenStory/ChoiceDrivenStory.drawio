@@ -1,0 +1,376 @@
+<mxfile host="Electron" pages="2">
+  <diagram name="Flow" id="O2Rc5um73BY2n9wd5pYQ">
+    <mxGraphModel dx="3631" dy="1871" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-1" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" value="Story Generator" vertex="1">
+          <mxGeometry height="230" width="400" x="120" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-3" parent="3vl7G5Oc6cNrnIvVDUGz-1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;b&gt;Meaning: &lt;/b&gt;Keep the consistent story flow.&lt;div&gt;&lt;br&gt;&lt;div&gt;User input structure:&lt;/div&gt;&lt;div&gt;- previous Story text&lt;/div&gt;&lt;div&gt;- next Action Choice&lt;/div&gt;&lt;div&gt;- expected Action Outcome&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Assistant output:&lt;/div&gt;&lt;div&gt;Story Text where next Action Choice and expected Action Outcome are applied and added to the Story Text in consistent way&lt;/div&gt;" vertex="1">
+          <mxGeometry height="150" width="400" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-2" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" value="Option Generator" vertex="1">
+          <mxGeometry height="230" width="400" x="560" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-5" parent="3vl7G5Oc6cNrnIvVDUGz-2" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;b&gt;Meaning:&lt;/b&gt;&amp;nbsp;Generating next Action Choice and Action Outcome basing on the previous story and the particular assistant instructions (plot developing direction)" vertex="1">
+          <mxGeometry height="150" width="400" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-4" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Terminology:&lt;div&gt;&lt;b&gt;Story Text:&lt;/b&gt; the text of the main story, consistent, sounding as a real story in one ganre and writing style.&lt;/div&gt;&lt;div&gt;&lt;b&gt;Action Choice:&lt;/b&gt;&amp;nbsp;action that should be applied by the main character as the next step in the plot.&lt;/div&gt;&lt;div&gt;&lt;b&gt;Action Outcome: &lt;/b&gt;a result (consequences) of the main character action.&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="620" x="-540" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-7" parent="1" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" value="User Message" vertex="1">
+          <mxGeometry height="80" width="240" x="-520" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-8" parent="1" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Assistant Message" vertex="1">
+          <mxGeometry height="80" width="240" x="-240" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-9" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="FLOW" vertex="1">
+          <mxGeometry height="30" width="60" x="80" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-47" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="3vl7G5Oc6cNrnIvVDUGz-35">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="1440" />
+              <mxPoint x="120" y="1440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-48" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="3vl7G5Oc6cNrnIvVDUGz-38">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-49" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="3vl7G5Oc6cNrnIvVDUGz-41">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="1440" />
+              <mxPoint x="1120" y="1440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-10" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" value="Story Generator" vertex="1">
+          <mxGeometry height="230" width="400" x="360" y="1130" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-32" parent="3vl7G5Oc6cNrnIvVDUGz-10" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" value="User Message&lt;div&gt;The current story +&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Action Choice + Action Outcome&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="40" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-33" parent="3vl7G5Oc6cNrnIvVDUGz-10" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Assistant Message&lt;div&gt;Updated story with includes&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Action Choice and applied Action Outcome&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="150" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-19" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="3vl7G5Oc6cNrnIvVDUGz-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="120" y="840" />
+              <mxPoint x="555" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-12" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" value="Option Generator 1" vertex="1">
+          <mxGeometry height="230" width="400" x="-80" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-14" parent="3vl7G5Oc6cNrnIvVDUGz-12" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" value="User Message&lt;div&gt;Initial part of the story&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-15" parent="3vl7G5Oc6cNrnIvVDUGz-12" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Assistant Message&lt;div&gt;Action Choice + Action Outcome&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="120" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-31" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="3vl7G5Oc6cNrnIvVDUGz-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-18" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Actor" vertex="1">
+          <mxGeometry height="60" width="30" x="545" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-20" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" value="Option Generator 2" vertex="1">
+          <mxGeometry height="230" width="400" x="360" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-21" parent="3vl7G5Oc6cNrnIvVDUGz-20" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" value="User Message&lt;div&gt;Initial part of the story&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-22" parent="3vl7G5Oc6cNrnIvVDUGz-20" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Assistant Message&lt;div&gt;Action Choice + Action Outcome&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="120" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-23" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" value="Option Generator n" vertex="1">
+          <mxGeometry height="230" width="400" x="920" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-24" parent="3vl7G5Oc6cNrnIvVDUGz-23" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" value="User Message&lt;div&gt;Initial part of the story&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-25" parent="3vl7G5Oc6cNrnIvVDUGz-23" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Assistant Message&lt;div&gt;Action Choice + Action Outcome&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="120" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-26" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="..." vertex="1">
+          <mxGeometry height="30" width="90" x="800" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-27" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="3vl7G5Oc6cNrnIvVDUGz-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-28" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0.1;entryDx=0;entryDy=0;entryPerimeter=0;" target="3vl7G5Oc6cNrnIvVDUGz-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1120" y="840" />
+              <mxPoint x="568" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-29" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;div&gt;Current story&lt;/div&gt;Set of next actions to the user to choose" vertex="1">
+          <mxGeometry height="30" width="160" x="580" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-30" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Chosen Action" vertex="1">
+          <mxGeometry height="30" width="60" x="575" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-50" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="3vl7G5Oc6cNrnIvVDUGz-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-200" y="1639" />
+              <mxPoint x="-200" y="950" />
+            </Array>
+            <mxPoint x="520" y="960" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-35" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" value="Option Generator 1" vertex="1">
+          <mxGeometry height="230" width="400" x="-80" y="1524" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-36" parent="3vl7G5Oc6cNrnIvVDUGz-35" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" value="User Message&lt;div&gt;Updated part of the story&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-37" parent="3vl7G5Oc6cNrnIvVDUGz-35" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Assistant Message&lt;div&gt;Action Choice + Action Outcome&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="120" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-38" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" value="Option Generator 2" vertex="1">
+          <mxGeometry height="230" width="400" x="360" y="1524" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-40" parent="3vl7G5Oc6cNrnIvVDUGz-38" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Assistant Message&lt;div&gt;Action Choice + Action Outcome&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="120" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-46" parent="3vl7G5Oc6cNrnIvVDUGz-38" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" value="User Message&lt;div&gt;Updated part of the story&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="35" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-53" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="3vl7G5Oc6cNrnIvVDUGz-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1120" y="1820" />
+              <mxPoint x="-200" y="1820" />
+              <mxPoint x="-200" y="950" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-41" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" value="Option Generator n" vertex="1">
+          <mxGeometry height="230" width="400" x="920" y="1524" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-43" parent="3vl7G5Oc6cNrnIvVDUGz-41" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Assistant Message&lt;div&gt;Action Choice + Action Outcome&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="120" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-45" parent="3vl7G5Oc6cNrnIvVDUGz-41" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" value="User Message&lt;div&gt;Updated part of the story&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-44" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="..." vertex="1">
+          <mxGeometry height="30" width="60" x="800" y="1634" as="geometry" />
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-52" edge="1" parent="1" source="3vl7G5Oc6cNrnIvVDUGz-38" style="endArrow=classic;html=1;rounded=0;" target="3vl7G5Oc6cNrnIvVDUGz-18" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="1820" />
+              <mxPoint x="-200" y="1820" />
+              <mxPoint x="-200" y="950" />
+            </Array>
+            <mxPoint x="480" y="1390" as="sourcePoint" />
+            <mxPoint x="530" y="1340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3vl7G5Oc6cNrnIvVDUGz-54" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;div&gt;Current story&lt;/div&gt;Set of next actions to the user to choose" vertex="1">
+          <mxGeometry height="30" width="160" x="310" y="970" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="VTix_CaZaORBIuJXpdt_" name="UI">
+    <mxGraphModel dx="1803" dy="1203" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="OtSmQycSSsmXbngywBPg-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="800" width="1280" x="480" y="1650" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Screen: 8 x 5" vertex="1">
+          <mxGeometry height="30" width="80" x="250" y="1770" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-3" parent="1" style="whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="50" width="1240" x="500" y="1670" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-4" parent="1" style="whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="470" width="1060" x="610" y="1740" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-7" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;color: rgb(20, 20, 20);&quot;&gt;&lt;i&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;b&gt;incididunt ut labore&lt;/b&gt; et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&amp;nbsp;&lt;/font&gt;&lt;i style=&quot;color: rgb(20, 20, 20);&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor&amp;nbsp;&lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20);&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="110" width="960" x="620" y="1750" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-10" parent="1" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;strokeWidth=1;shape=mxgraph.mockup.navigation.scrollBar;strokeColor=#999999;barPos=20;fillColor2=#808080;strokeColor2=none;direction=north;" value="" vertex="1">
+          <mxGeometry height="470" width="20" x="1650" y="1740" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-11" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="620" y="1850" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-17" parent="1" style="html=1;verticalLabelPosition=bottom;align=center;labelBackgroundColor=#ffffff;verticalAlign=top;strokeWidth=2;strokeColor=#141414;shadow=0;dashed=0;shape=mxgraph.ios7.icons.reload;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="650" y="1850" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-22" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 21px;&quot;&gt;Title&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="1065" y="1680" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-23" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Stories&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="520" y="1680" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-27" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="Input Text field:&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Submit btn - inactive during submitting&lt;/div&gt;&lt;div&gt;Text remains during submitting so can be reused in case of error&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="240" x="3230" y="3870" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-29" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;Story Playing Page&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="340" x="925" y="1580" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-68" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Option 1:&amp;nbsp;&lt;i style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; et dolore magna aliqua.&lt;/span&gt;&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="490" x="630" y="2220" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-69" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Option 2: &lt;i style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; et dolore magna aliqua.&lt;/span&gt;&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="490" x="1160" y="2220" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-70" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Option 4: &lt;i style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; et dolore magna aliqua.&lt;/span&gt;&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="490" x="1160" y="2290" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-71" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Option 3: &lt;i style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; et dolore magna aliqua.&lt;/span&gt;&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="490" x="630" y="2290" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-72" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Option 6: &lt;i style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; et dolore magna aliqua.&lt;/span&gt;&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="490" x="1160" y="2360" as="geometry" />
+        </mxCell>
+        <mxCell id="OtSmQycSSsmXbngywBPg-73" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Option 5: &lt;i style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20); text-align: left;&quot;&gt; et dolore magna aliqua.&lt;/span&gt;&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="490" x="630" y="2360" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-1" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="620" y="1850" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;color: rgb(20, 20, 20);&quot;&gt;&lt;i&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;b&gt;incididunt ut labore&lt;/b&gt; et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&amp;nbsp;&lt;/font&gt;&lt;i style=&quot;color: rgb(20, 20, 20);&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor&amp;nbsp;&lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20);&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="110" width="960" x="620" y="1870" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-3" parent="1" style="html=1;verticalLabelPosition=bottom;align=center;labelBackgroundColor=#ffffff;verticalAlign=top;strokeWidth=2;strokeColor=#141414;shadow=0;dashed=0;shape=mxgraph.ios7.icons.reload;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="650" y="1970" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-4" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="620" y="1970" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-5" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;color: rgb(20, 20, 20);&quot;&gt;&lt;i&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;b&gt;incididunt ut labore&lt;/b&gt; et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&amp;nbsp;&lt;/font&gt;&lt;i style=&quot;color: rgb(20, 20, 20);&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor&amp;nbsp;&lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20);&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="110" width="960" x="620" y="1990" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-6" parent="1" style="html=1;verticalLabelPosition=bottom;align=center;labelBackgroundColor=#ffffff;verticalAlign=top;strokeWidth=2;strokeColor=#141414;shadow=0;dashed=0;shape=mxgraph.ios7.icons.reload;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="1800" y="1775" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-7" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="620" y="2090" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-8" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="1800" y="1720" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-9" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Correct particular generation" vertex="1">
+          <mxGeometry height="30" width="250" x="1830" y="1715" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-10" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="return to particular generation and rechoose next move" vertex="1">
+          <mxGeometry height="30" width="330" x="1860" y="1770" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-12" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Generation - LLM output for particular choice. When user returns to the particular generation to redo next step, all fallowing generations that were already generated becames deleted" vertex="1">
+          <mxGeometry height="30" width="360" x="1800" y="1845" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-13" edge="1" parent="1" source="4qSLHdfaaY_HtF-j-aSM-12" style="endArrow=classic;html=1;rounded=0;" target="OtSmQycSSsmXbngywBPg-7" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1640" y="1920" as="sourcePoint" />
+            <mxPoint x="1690" y="1870" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Main window with the text list of generations. Each generation has &quot;correct&quot; and &quot;return&quot; icons" vertex="1">
+          <mxGeometry height="30" width="270" x="1800" y="1910" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-15" edge="1" parent="1" source="4qSLHdfaaY_HtF-j-aSM-14" style="endArrow=classic;html=1;rounded=0;" target="OtSmQycSSsmXbngywBPg-4" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1640" y="1940" as="sourcePoint" />
+            <mxPoint x="1690" y="1890" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-16" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Header having the story title and navigation to the stories list" vertex="1">
+          <mxGeometry height="30" width="190" x="1850" y="1580" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-17" edge="1" parent="1" source="4qSLHdfaaY_HtF-j-aSM-16" style="endArrow=classic;html=1;rounded=0;" target="OtSmQycSSsmXbngywBPg-3" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1580" y="1860" as="sourcePoint" />
+            <mxPoint x="1630" y="1810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-18" parent="1" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;strokeWidth=1;shape=mxgraph.mockup.navigation.scrollBar;strokeColor=#999999;barPos=20;fillColor2=#808080;strokeColor2=none;direction=north;" value="" vertex="1">
+          <mxGeometry height="200" width="20" x="1654" y="2220" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-19" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Greed with options to choose. Two columns. Scrolling on the left side" vertex="1">
+          <mxGeometry height="30" width="230" x="1820" y="2230" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-20" edge="1" parent="1" source="4qSLHdfaaY_HtF-j-aSM-19" style="endArrow=classic;html=1;rounded=0;" target="4qSLHdfaaY_HtF-j-aSM-18" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1640" y="2180" as="sourcePoint" />
+            <mxPoint x="1690" y="2130" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-21" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="800" width="1280" x="480" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-22" parent="1" style="whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="50" width="1240" x="500" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-23" parent="1" style="whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="470" width="1060" x="610" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-24" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;color: rgb(20, 20, 20);&quot;&gt;&lt;i&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;b&gt;incididunt ut labore&lt;/b&gt; et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&amp;nbsp;&lt;/font&gt;&lt;i style=&quot;color: rgb(20, 20, 20);&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor&amp;nbsp;&lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20);&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="110" width="960" x="620" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-25" parent="1" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;strokeWidth=1;shape=mxgraph.mockup.navigation.scrollBar;strokeColor=#999999;barPos=20;fillColor2=#808080;strokeColor2=none;direction=north;" value="" vertex="1">
+          <mxGeometry height="470" width="20" x="1650" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-26" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="620" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-27" parent="1" style="html=1;verticalLabelPosition=bottom;align=center;labelBackgroundColor=#ffffff;verticalAlign=top;strokeWidth=2;strokeColor=#141414;shadow=0;dashed=0;shape=mxgraph.ios7.icons.reload;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="650" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-28" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 21px;&quot;&gt;Title&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="1065" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-29" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Stories&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="520" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-30" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;Story Playing Page&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="340" x="925" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-37" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="620" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-38" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;color: rgb(20, 20, 20);&quot;&gt;&lt;i&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;b&gt;incididunt ut labore&lt;/b&gt; et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&amp;nbsp;&lt;/font&gt;&lt;i style=&quot;color: rgb(20, 20, 20);&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor&amp;nbsp;&lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20);&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="110" width="960" x="620" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-39" parent="1" style="html=1;verticalLabelPosition=bottom;align=center;labelBackgroundColor=#ffffff;verticalAlign=top;strokeWidth=2;strokeColor=#141414;shadow=0;dashed=0;shape=mxgraph.ios7.icons.reload;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="650" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-40" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="620" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-41" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;color: rgb(20, 20, 20);&quot;&gt;&lt;i&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt; adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor &lt;b&gt;incididunt ut labore&lt;/b&gt; et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&amp;nbsp;&lt;/font&gt;&lt;i style=&quot;color: rgb(20, 20, 20);&quot;&gt;Lorem ipsum dolor sit amet, consectetur&lt;/i&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&amp;nbsp;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor&amp;nbsp;&lt;/span&gt;&lt;b style=&quot;color: rgb(20, 20, 20);&quot;&gt;incididunt ut labore&lt;/b&gt;&lt;span style=&quot;color: rgb(20, 20, 20);&quot;&gt;&amp;nbsp;et dolore magna aliqua. &quot;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&quot;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="110" width="960" x="620" y="1060" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-42" parent="1" style="strokeColor=#141414;verticalLabelPosition=bottom;shadow=0;dashed=0;verticalAlign=top;strokeWidth=2;html=1;shape=mxgraph.mockup.misc.editIcon;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="620" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-44" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Go" vertex="1">
+          <mxGeometry height="60" width="120" x="1065" y="1300" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-45" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="BTN to generate moves for the next step" vertex="1">
+          <mxGeometry height="30" width="170" x="1870" y="1340" as="geometry" />
+        </mxCell>
+        <mxCell id="4qSLHdfaaY_HtF-j-aSM-46" edge="1" parent="1" source="4qSLHdfaaY_HtF-j-aSM-45" style="endArrow=classic;html=1;rounded=0;" target="4qSLHdfaaY_HtF-j-aSM-44" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1300" y="1390" as="sourcePoint" />
+            <mxPoint x="1350" y="1340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
