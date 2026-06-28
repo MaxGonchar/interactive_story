@@ -15,6 +15,7 @@ _INDEX_FILE = "index.yaml"
 _STORY_FILE = "story.yaml"
 _METADATA_FILE = "meta.yaml"
 _MESSAGES_FILE = "messages.yaml"
+_HISTORY_FILE = "history.yaml"
 
 
 def _data_root() -> Path:
@@ -46,3 +47,7 @@ def scene_metadata_file(story_id: str, scene_id: int) -> Path:
 
 def scene_messages_file(story_id: str, scene_id: int) -> Path:
     return _data_root() / _STORIES_DIR / story_id / _SCENES_DIR / str(scene_id) / _MESSAGES_FILE
+
+
+def history_file(story_id: str) -> Path:
+    return _data_root() / _STORIES_DIR / story_id / _HISTORY_FILE

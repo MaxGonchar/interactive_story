@@ -6,6 +6,9 @@ from pydantic import ValidationError
 
 from app.models.storage import (
     CharacterYaml,
+    ChoiceDrivenStoryYaml,
+    ChoiceYaml,
+    HistoryYaml,
     MessageYaml,
     MessagesYaml,
     SceneDescriptionYaml,
@@ -13,6 +16,7 @@ from app.models.storage import (
     SceneRefYaml,
     StoriesIndex,
     StoriesIndexEntry,
+    StepYaml,
     StoryYaml,
 )
 
@@ -226,3 +230,112 @@ def test_message_yaml_invalid_role_raises():
 def test_messages_yaml_missing_messages_raises():
     with pytest.raises(ValidationError):
         MessagesYaml()
+
+
+# ---------------------------------------------------------------------------
+# ChoiceDrivenStoryYaml
+# ---------------------------------------------------------------------------
+
+
+def test_choice_driven_story_yaml_fields():
+    story = ChoiceDrivenStoryYaml(
+        id="abc",
+        title="Fog City",
+        type="choice_driven",
+        character_ids=["john"],
+        writing_style="Dark and suspenseful",
+        plot_directions=["Romance", "Betrayal"],
+    )
+    assert story.id == "abc"
+    assert story.type == "choice_driven"
+    assert story.plot_directions == ["Romance", "Betrayal"]
+
+
+def test_choice_driven_story_yaml_missing_writing_style_raises():
+    with pytest.raises(ValidationError):
+        ChoiceDrivenStoryYaml(
+            id="abc",
+            title="Fog City",
+            type="choice_driven",
+            character_ids=[],
+            plot_directions=[],
+        )
+
+
+# ---------------------------------------------------------------------------
+# ChoiceYaml
+# ---------------------------------------------------------------------------
+
+
+def test_choice_yaml_fields():
+    c = ChoiceYaml(action="Enter fog", consequence="A figure appears")
+    assert c.action == "Enter fog"
+    assert c.consequence == "A figure appears"
+
+
+def test_choice_yaml_missing_field_raises():
+    with pytest.raises(ValidationError):
+        ChoiceYaml(action="only action")
+
+
+# ---------------------------------------------------------------------------
+# StepYaml
+# ---------------------------------------------------------------------------
+
+
+def test_step_yaml_first_step_no_incoming_choice():
+    step = StepYaml(
+        id=1,
+        incoming_choice=None,
+        text="The harbor fog rolled in.",
+        choices=[ChoiceYaml(action="Enter", consequence="Mystery")],
+    )
+    assert step.incoming_choice is None
+    assert len(step.choices) == 1
+
+
+def test_step_yaml_with_incoming_choice():
+    step = StepYaml(
+        id=2,
+        incoming_choice=ChoiceYaml(action="Run", consequence="Escape"),
+        text="You flee.",
+        choices=[],
+    )
+    assert step.incoming_choice.action == "Run"
+    assert step.choices == []
+
+
+def test_step_yaml_missing_text_raises():
+    with pytest.raises(ValidationError):
+        StepYaml(id=1, incoming_choice=None, choices=[])
+
+
+# ---------------------------------------------------------------------------
+# HistoryYaml
+# ---------------------------------------------------------------------------
+
+
+def test_history_yaml_empty_steps():
+    h = HistoryYaml(steps=[])
+    assert h.steps == []
+
+
+def test_history_yaml_with_steps():
+    h = HistoryYaml(
+        steps=[
+            StepYaml(id=1, incoming_choice=None, text="Intro.", choices=[]),
+            StepYaml(
+                id=2,
+                incoming_choice=ChoiceYaml(action="Go", consequence="Arrive"),
+                text="You arrive.",
+                choices=[],
+            ),
+        ]
+    )
+    assert len(h.steps) == 2
+    assert h.steps[0].id == 1
+
+
+def test_history_yaml_missing_steps_raises():
+    with pytest.raises(ValidationError):
+        HistoryYaml()

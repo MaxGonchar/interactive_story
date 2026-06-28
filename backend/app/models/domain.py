@@ -71,3 +71,23 @@ class Message(BaseModel):
     id: int
     role: Literal["user", "assistant"]
     content: str
+
+
+class Choice(BaseModel):
+    action: str
+    consequence: str
+
+
+class Step(BaseModel):
+    id: int
+    incoming_choice: Choice | None
+    text: str
+    choices: list[Choice]
+
+
+class ChoiceDrivenStoryMeta(BaseModel):
+    id: str
+    title: str
+    writing_style: str
+    plot_directions: list[str]
+    character_ids: list[str]

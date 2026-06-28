@@ -87,3 +87,38 @@ class MessageYaml(BaseModel):
 
 class MessagesYaml(BaseModel):
     messages: list[MessageYaml]
+
+
+# ---------------------------------------------------------------------------
+# Choice-driven story  —  data/stories/<story_id>/story.yaml (choice_driven)
+# ---------------------------------------------------------------------------
+
+
+class ChoiceDrivenStoryYaml(BaseModel):
+    id: str
+    title: str
+    type: Literal["choice_driven"]
+    character_ids: list[str]
+    writing_style: str
+    plot_directions: list[str]
+
+
+# ---------------------------------------------------------------------------
+# Choice-driven history  —  data/stories/<story_id>/history.yaml
+# ---------------------------------------------------------------------------
+
+
+class ChoiceYaml(BaseModel):
+    action: str
+    consequence: str
+
+
+class StepYaml(BaseModel):
+    id: int
+    incoming_choice: ChoiceYaml | None
+    text: str
+    choices: list[ChoiceYaml]
+
+
+class HistoryYaml(BaseModel):
+    steps: list[StepYaml]

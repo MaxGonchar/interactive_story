@@ -48,3 +48,8 @@ def test_all_functions_return_path_objects(fixed_root):
 def test_data_root_default_is_data_folder(monkeypatch):
     monkeypatch.delenv("DATA_ROOT", raising=False)
     assert fp._data_root().name == "data-test"
+
+
+def test_history_file(fixed_root):
+    result = fp.history_file("abc")
+    assert str(result) == str(fixed_root / "stories" / "abc" / "history.yaml")
