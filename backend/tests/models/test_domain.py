@@ -3,10 +3,13 @@ from pydantic import ValidationError
 
 from app.models.domain import (
     CharacterCard,
+    Choice,
+    ChoiceDrivenStoryMeta,
     Message,
     SceneDescription,
     SceneMetadata,
     SceneRef,
+    Step,
     StoryIndexItem,
     StoryMeta,
 )
@@ -199,3 +202,84 @@ def test_message_user_role():
 def test_message_invalid_role_raises():
     with pytest.raises(ValidationError):
         Message(id=3, role="narrator", content="Narration.")
+
+
+# ---------------------------------------------------------------------------
+# Choice
+# ---------------------------------------------------------------------------
+
+
+def test_choice_fields():
+    c = Choice(action="Step into the fog", consequence="A figure emerges")
+    assert c.action == "Step into the fog"
+    assert c.consequence == "A figure emerges"
+
+
+def test_choice_missing_field_raises():
+    with pytest.raises(ValidationError):
+        Choice(action="only action")
+
+
+# ---------------------------------------------------------------------------
+# Step
+# ---------------------------------------------------------------------------
+
+
+def test_step_with_incoming_choice():
+    step = Step(
+        id=2,
+        incoming_choice=Choice(action="Run", consequence="You escape"),
+        text="You flee into the night.",
+        choices=[],
+    )
+    assert step.incoming_choice.action == "Run"
+    assert step.choices == []
+
+
+def test_step_first_step_no_incoming_choice():
+    step = Step(
+        id=1,
+        incoming_choice=None,
+        text="The harbor fog rolled in.",
+        choices=[Choice(action="Enter fog", consequence="Mystery deepens")],
+    )
+    assert step.incoming_choice is None
+    assert len(step.choices) == 1
+
+
+def test_step_choices_list():
+    choices = [
+        Choice(action="A", consequence="Outcome A"),
+        Choice(action="B", consequence="Outcome B"),
+    ]
+    step = Step(id=1, incoming_choice=None, text="Intro.", choices=choices)
+    assert len(step.choices) == 2
+
+
+# ---------------------------------------------------------------------------
+# ChoiceDrivenStoryMeta
+# ---------------------------------------------------------------------------
+
+
+def test_choice_driven_story_meta():
+    meta = ChoiceDrivenStoryMeta(
+        id="abc",
+        title="Test Story",
+        writing_style="Dark and suspenseful",
+        plot_directions=["Romance", "Betrayal"],
+        character_ids=["john"],
+    )
+    assert meta.writing_style == "Dark and suspenseful"
+    assert meta.plot_directions == ["Romance", "Betrayal"]
+    assert meta.character_ids == ["john"]
+
+
+def test_choice_driven_story_meta_empty_plot_directions():
+    meta = ChoiceDrivenStoryMeta(
+        id="abc",
+        title="Test",
+        writing_style="Lyrical",
+        plot_directions=[],
+        character_ids=[],
+    )
+    assert meta.plot_directions == []
