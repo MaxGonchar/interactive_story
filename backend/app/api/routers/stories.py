@@ -11,7 +11,7 @@ router = APIRouter(prefix="/stories", tags=["stories"])
 @router.get("", response_model=StoryListResponse)
 async def list_stories(svc: StoryQueryService = Depends(get_story_query_service)):
     stories = await svc.list_stories()
-    return {"data": [{"id": s.id, "title": s.title} for s in stories]}
+    return {"data": [{"id": s.id, "title": s.title, "type": s.type} for s in stories]}
 
 
 @router.get("/{story_id}", response_model=StoryDetailResponse)

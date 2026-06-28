@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from app.models.domain import StoryType
+
 
 # ---------------------------------------------------------------------------
 # Error models
@@ -23,6 +25,7 @@ class ErrorResponse(BaseModel):
 class StoryListItem(BaseModel):
     id: str
     title: str
+    type: StoryType
 
 
 class StoryListResponse(BaseModel):

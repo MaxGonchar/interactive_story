@@ -43,6 +43,32 @@ def test_stories_index_entry_fields():
     assert entry.title == "Mila and Bun"
 
 
+def test_stories_index_entry_type_defaults_scene():
+    entry = StoriesIndexEntry(
+        id=STORY_ID,
+        title="Mila and Bun",
+        created_at="2024-06-01T12:00:00Z",
+    )
+    assert entry.type == "scene"
+
+
+def test_stories_index_entry_type_choice_driven():
+    entry = StoriesIndexEntry(
+        id=STORY_ID,
+        title="Mila and Bun",
+        created_at="2024-06-01T12:00:00Z",
+        type="choice_driven",
+    )
+    assert entry.type == "choice_driven"
+
+
+def test_stories_index_parses_fixture_entry_type_defaults_scene():
+    with open(f"{FIXTURE_ROOT}/index.yaml") as f:
+        data = yaml.safe_load(f)
+    index = StoriesIndex(**data)
+    assert index.stories[0].type == "scene"
+
+
 def test_stories_index_missing_stories_raises():
     with pytest.raises(ValidationError):
         StoriesIndex()

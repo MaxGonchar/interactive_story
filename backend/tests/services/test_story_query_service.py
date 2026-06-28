@@ -9,8 +9,8 @@ from app.services.story_query_service import StoryQueryService
 @pytest.mark.asyncio
 async def test_list_stories_returns_repository_result():
     expected = [
-        StoryIndexItem(id="abc", title="Story A", created_at="2024-01-01T00:00:00Z"),
-        StoryIndexItem(id="def", title="Story B", created_at="2023-12-01T00:00:00Z"),
+        StoryIndexItem(id="abc", title="Story A", created_at="2024-01-01T00:00:00Z", type="scene"),
+        StoryIndexItem(id="def", title="Story B", created_at="2023-12-01T00:00:00Z", type="scene"),
     ]
     repo = AsyncMock()
     repo.list_stories.return_value = expected
