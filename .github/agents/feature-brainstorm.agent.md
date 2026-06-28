@@ -1,7 +1,7 @@
 ---
 description: "Feature brainstorming and design agent. Use when: exploring a new feature idea, discussing technology choices, thinking through UX or architecture, evaluating value and scope, producing a design doc. Produces a markdown design doc saved to docks/dev/features/."
 name: "Feature Brainstorm"
-tools: [read, search, write, todo]
+tools: [read, search, edit, todo]
 argument-hint: "Describe the feature idea you want to explore (a few words or a full description)."
 ---
 
