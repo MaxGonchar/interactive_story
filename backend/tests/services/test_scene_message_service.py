@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from app.exceptions import NotFoundError, SceneFinishedError
 from app.models.domain import Message, SceneDescription, SceneMetadata
 from app.services.scene_message_service import SceneMessageService
 
@@ -63,7 +64,7 @@ async def test_edit_message_returns_updated_message():
 async def test_edit_message_raises_when_scene_finished():
     service, scene_repo = make_service(finished=True)
 
-    with pytest.raises(ValueError, match="scene_finished"):
+    with pytest.raises(SceneFinishedError):
         await service.edit_message(STORY_ID, SCENE_ID, MESSAGE_ID, "new text")
 
     scene_repo.update_message.assert_not_awaited()
@@ -71,9 +72,9 @@ async def test_edit_message_raises_when_scene_finished():
 
 @pytest.mark.asyncio
 async def test_edit_message_raises_when_message_not_found():
-    service, scene_repo = make_service(update_side_effect=KeyError(MESSAGE_ID))
+    service, scene_repo = make_service(update_side_effect=NotFoundError(MESSAGE_ID))
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await service.edit_message(STORY_ID, SCENE_ID, MESSAGE_ID, "new text")
 
 
@@ -91,7 +92,7 @@ async def test_delete_message_succeeds():
 async def test_delete_message_raises_when_scene_finished():
     service, scene_repo = make_service(finished=True)
 
-    with pytest.raises(ValueError, match="scene_finished"):
+    with pytest.raises(SceneFinishedError):
         await service.delete_message(STORY_ID, SCENE_ID, MESSAGE_ID)
 
     scene_repo.delete_message.assert_not_awaited()
@@ -99,7 +100,7 @@ async def test_delete_message_raises_when_scene_finished():
 
 @pytest.mark.asyncio
 async def test_delete_message_raises_when_message_not_found():
-    service, scene_repo = make_service(delete_side_effect=KeyError(MESSAGE_ID))
+    service, scene_repo = make_service(delete_side_effect=NotFoundError(MESSAGE_ID))
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await service.delete_message(STORY_ID, SCENE_ID, MESSAGE_ID)

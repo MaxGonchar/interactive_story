@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
+from app.exceptions import LLMError
 from app.llm.venice_client import VeniceClient
 
 
@@ -38,29 +39,29 @@ async def test_chat_complete_returns_content():
 
 
 @pytest.mark.asyncio
-async def test_chat_complete_raises_value_error_missing_choices():
+async def test_chat_complete_raises_llm_error_missing_choices():
     fake_response = _make_mock_response({"result": "ok"})
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = fake_response
         client = VeniceClient(api_key="test-key")
-        with pytest.raises(ValueError, match="choices"):
+        with pytest.raises(LLMError, match="choices"):
             await client.chat_complete({"model": "venice-1", "messages": []})
 
 
 @pytest.mark.asyncio
-async def test_chat_complete_raises_value_error_empty_choices():
+async def test_chat_complete_raises_llm_error_empty_choices():
     fake_response = _make_mock_response({"choices": []})
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = fake_response
         client = VeniceClient(api_key="test-key")
-        with pytest.raises(ValueError, match="choices"):
+        with pytest.raises(LLMError, match="choices"):
             await client.chat_complete({"model": "venice-1", "messages": []})
 
 
 @pytest.mark.asyncio
-async def test_chat_complete_raises_http_status_error_on_non_2xx():
+async def test_chat_complete_raises_llm_error_on_non_2xx():
     mock_response = MagicMock()
     mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
         "401 Unauthorized",
@@ -71,5 +72,5 @@ async def test_chat_complete_raises_http_status_error_on_non_2xx():
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_response
         client = VeniceClient(api_key="bad-key")
-        with pytest.raises(httpx.HTTPStatusError):
+        with pytest.raises(LLMError):
             await client.chat_complete({"model": "venice-1", "messages": []})

@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from app.exceptions import SceneFinishedError
 from app.models.domain import SceneDescription, SceneMetadata
 from app.services.scene_lifecycle_service import SceneLifecycleService
 
@@ -67,7 +68,7 @@ async def test_finish_scene_calls_update_scene_finished():
 async def test_finish_scene_raises_when_already_finished():
     service, scene_repo, story_repo = make_service(metadata=make_scene_metadata(finished=True))
 
-    with pytest.raises(ValueError, match="scene_finished"):
+    with pytest.raises(SceneFinishedError):
         await service.finish_scene(STORY_ID, SCENE_ID, SUMMARY)
 
     scene_repo.save_metadata.assert_not_awaited()

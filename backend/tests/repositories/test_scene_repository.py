@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+from app.exceptions import NotFoundError
 from app.models.domain import Message, SceneDescription, SceneMetadata
 from app.repositories.scene_repository import SceneRepository
 
@@ -44,7 +45,7 @@ async def test_get_metadata_returns_scene_metadata(data_root):
 async def test_get_metadata_nonexistent_raises_key_error(data_root):
     repo = SceneRepository()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.get_metadata(FIXTURE_STORY_ID, 999)
 
 
@@ -149,7 +150,7 @@ async def test_update_message_changes_only_target(writable_data_root):
 async def test_update_message_nonexistent_raises_key_error(writable_data_root):
     repo = SceneRepository()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.update_message(FIXTURE_STORY_ID, FIXTURE_SCENE_ID, message_id=999, new_content="x")
 
 
@@ -174,5 +175,5 @@ async def test_delete_message_removes_only_target(writable_data_root):
 async def test_delete_message_nonexistent_raises_key_error(writable_data_root):
     repo = SceneRepository()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.delete_message(FIXTURE_STORY_ID, FIXTURE_SCENE_ID, message_id=999)

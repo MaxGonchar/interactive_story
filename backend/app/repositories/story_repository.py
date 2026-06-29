@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.exceptions import NotFoundError
 from app.models.domain import SceneRef, StoryIndexItem, StoryMeta
 from app.models.storage import StoriesIndex, StoryYaml
 from app.utils import file_paths, yaml_storage
@@ -20,7 +21,7 @@ class StoryRepository:
         try:
             data = await yaml_storage.read_yaml(file_paths.story_file(story_id))
         except FileNotFoundError:
-            raise KeyError(story_id)
+            raise NotFoundError(f"Story '{story_id}' not found")
 
         story = StoryYaml(**data)
 
@@ -48,13 +49,13 @@ class StoryRepository:
         try:
             data = await yaml_storage.read_yaml(file_paths.story_file(story_id))
         except FileNotFoundError:
-            raise KeyError(story_id)
+            raise NotFoundError(f"Story '{story_id}' not found")
 
         story = StoryYaml(**data)
 
         scene = next((s for s in story.scenes if s.id == scene_id), None)
         if scene is None:
-            raise KeyError(scene_id)
+            raise NotFoundError(f"Scene '{scene_id}' not found")
 
         scene.finished = True
         scene.summary = [summary]

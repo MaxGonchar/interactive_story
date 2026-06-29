@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
+from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFinishedError
 from app.models.domain import Message, SceneDescription, SceneMetadata, SceneRef, StoryMeta
 from app.services.scene_play_service import ScenePlayService
 
@@ -196,7 +197,7 @@ async def test_play_returns_both_messages():
 async def test_play_raises_when_scene_finished():
     service, scene_repo, _, _, _ = make_service(metadata=make_scene_metadata(finished=True))
 
-    with pytest.raises(ValueError, match="scene_finished"):
+    with pytest.raises(SceneFinishedError):
         await service.play(STORY_ID, SCENE_ID, "Hello")
 
     scene_repo.add_message.assert_not_awaited()
@@ -247,7 +248,7 @@ async def test_regenerate_raises_when_scene_finished():
     assistant_msg = Message(id=2, role="assistant", content="Old reply")
     service, scene_repo, _, _, _ = make_service(metadata=make_scene_metadata(finished=True), messages=[user_msg, assistant_msg])
 
-    with pytest.raises(ValueError, match="scene_finished"):
+    with pytest.raises(SceneFinishedError):
         await service.regenerate(STORY_ID, SCENE_ID)
     scene_repo.update_message.assert_not_awaited()
 
@@ -256,7 +257,7 @@ async def test_regenerate_raises_when_scene_finished():
 async def test_regenerate_raises_when_no_messages():
     service, scene_repo, _, _, _ = make_service(messages=[])
 
-    with pytest.raises(ValueError, match="no_assistant_message"):
+    with pytest.raises(NoAssistantMessageError):
         await service.regenerate(STORY_ID, SCENE_ID)
     scene_repo.update_message.assert_not_awaited()
 
@@ -266,7 +267,7 @@ async def test_regenerate_raises_when_last_message_is_user():
     user_msg = Message(id=1, role="user", content="Hi")
     service, scene_repo, _, _, _ = make_service(messages=[user_msg])
 
-    with pytest.raises(ValueError, match="no_assistant_message"):
+    with pytest.raises(NoAssistantMessageError):
         await service.regenerate(STORY_ID, SCENE_ID)
     scene_repo.update_message.assert_not_awaited()
 
@@ -288,6 +289,6 @@ async def test_regenerate_raises_no_user_message_when_only_assistant():
     assistant_msg = Message(id=1, role="assistant", content="Entry point text")
     service, scene_repo, _, _, _ = make_service(messages=[assistant_msg])
 
-    with pytest.raises(ValueError, match="no_user_message"):
+    with pytest.raises(NoUserMessageError):
         await service.regenerate(STORY_ID, SCENE_ID)
     scene_repo.update_message.assert_not_awaited()

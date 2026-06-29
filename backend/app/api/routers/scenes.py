@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
 
 from app.api.dependencies import (
     get_scene_lifecycle_service,
@@ -35,13 +34,7 @@ async def get_scene(
     scene_id: int,
     svc: SceneQueryService = Depends(get_scene_query_service),
 ):
-    try:
-        metadata, messages = await svc.get_scene(story_id, scene_id)
-    except KeyError:
-        return JSONResponse(
-            status_code=404,
-            content={"error": {"code": "not_found", "message": f"Scene '{scene_id}' not found"}},
-        )
+    metadata, messages = await svc.get_scene(story_id, scene_id)
     return {
         "data": {
             "id": metadata.id,
@@ -66,23 +59,7 @@ async def play(
     request: PlayRequest,
     svc: ScenePlayService = Depends(get_scene_play_service),
 ):
-    try:
-        user_msg, assistant_msg = await svc.play(story_id, scene_id, request.content)
-    except KeyError:
-        return JSONResponse(
-            status_code=404,
-            content={"error": {"code": "not_found", "message": f"Scene '{scene_id}' not found"}},
-        )
-    except ValueError:
-        return JSONResponse(
-            status_code=409,
-            content={"error": {"code": "scene_finished", "message": "Scene is already finished"}},
-        )
-    except Exception:
-        return JSONResponse(
-            status_code=502,
-            content={"error": {"code": "llm_error", "message": "LLM request failed"}},
-        )
+    user_msg, assistant_msg = await svc.play(story_id, scene_id, request.content)
     return {
         "data": {
             "user_message": {"id": user_msg.id, "role": user_msg.role, "content": user_msg.content},
@@ -102,18 +79,7 @@ async def edit_message(
     request: UpdateMessageRequest,
     svc: SceneMessageService = Depends(get_scene_message_service),
 ):
-    try:
-        message = await svc.edit_message(story_id, scene_id, message_id, request.content)
-    except KeyError:
-        return JSONResponse(
-            status_code=404,
-            content={"error": {"code": "not_found", "message": f"Message '{message_id}' not found"}},
-        )
-    except ValueError:
-        return JSONResponse(
-            status_code=409,
-            content={"error": {"code": "scene_finished", "message": "Scene is already finished"}},
-        )
+    message = await svc.edit_message(story_id, scene_id, message_id, request.content)
     return {"data": {"id": message.id, "role": message.role, "content": message.content}}
 
 
@@ -127,18 +93,7 @@ async def delete_message(
     message_id: int,
     svc: SceneMessageService = Depends(get_scene_message_service),
 ):
-    try:
-        await svc.delete_message(story_id, scene_id, message_id)
-    except KeyError:
-        return JSONResponse(
-            status_code=404,
-            content={"error": {"code": "not_found", "message": f"Message '{message_id}' not found"}},
-        )
-    except ValueError:
-        return JSONResponse(
-            status_code=409,
-            content={"error": {"code": "scene_finished", "message": "Scene is already finished"}},
-        )
+    await svc.delete_message(story_id, scene_id, message_id)
     return {"success": True}
 
 
@@ -152,18 +107,7 @@ async def finish_scene(
     request: FinishSceneRequest,
     svc: SceneLifecycleService = Depends(get_scene_lifecycle_service),
 ):
-    try:
-        await svc.finish_scene(story_id, scene_id, request.scene_summary)
-    except KeyError:
-        return JSONResponse(
-            status_code=404,
-            content={"error": {"code": "not_found", "message": f"Scene '{scene_id}' not found"}},
-        )
-    except ValueError:
-        return JSONResponse(
-            status_code=409,
-            content={"error": {"code": "scene_finished", "message": "Scene is already finished"}},
-        )
+    await svc.finish_scene(story_id, scene_id, request.scene_summary)
     return {
         "data": {
             "id": scene_id,
@@ -182,37 +126,5 @@ async def regenerate_assistant_message(
     scene_id: int,
     svc: ScenePlayService = Depends(get_scene_play_service),
 ):
-    try:
-        assistant_msg = await svc.regenerate(story_id, scene_id)
-    except KeyError:
-        return JSONResponse(
-            status_code=404,
-            content={"error": {"code": "not_found", "message": f"Scene '{scene_id}' not found"}},
-        )
-    except ValueError as e:
-        if str(e) == "scene_finished":
-            return JSONResponse(
-                status_code=409,
-                content={"error": {"code": "scene_finished", "message": "Scene is already finished"}},
-            )
-        elif str(e) == "no_assistant_message":
-            return JSONResponse(
-                status_code=409,
-                content={"error": {"code": "no_assistant_message", "message": "No assistant message to regenerate"}},
-            )
-        elif str(e) == "no_user_message":
-            return JSONResponse(
-                status_code=409,
-                content={"error": {"code": "no_user_message", "message": "No preceding user message to regenerate from"}},
-            )
-        else:
-            return JSONResponse(
-                status_code=502,
-                content={"error": {"code": "llm_error", "message": "LLM request failed"}},
-            )
-    except Exception:
-        return JSONResponse(
-            status_code=502,
-            content={"error": {"code": "llm_error", "message": "LLM request failed"}},
-        )
+    assistant_msg = await svc.regenerate(story_id, scene_id)
     return {"data": {"assistant_message": {"id": assistant_msg.id, "role": assistant_msg.role, "content": assistant_msg.content}}}

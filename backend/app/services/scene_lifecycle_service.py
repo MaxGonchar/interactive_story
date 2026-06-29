@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.exceptions import SceneFinishedError
 from app.models.domain import SceneMetadata
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
@@ -16,7 +17,7 @@ class SceneLifecycleService:
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
 
         if metadata.finished:
-            raise ValueError("scene_finished")
+            raise SceneFinishedError()
 
         updated = metadata.model_copy(
             update={"finished": True, "scene_summary": [summary]}

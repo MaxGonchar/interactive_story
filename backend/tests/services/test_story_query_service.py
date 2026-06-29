@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from app.exceptions import NotFoundError
 from app.models.domain import SceneRef, StoryIndexItem, StoryMeta
 from app.services.story_query_service import StoryQueryService
 
@@ -45,9 +46,9 @@ async def test_get_story_returns_story_meta():
 @pytest.mark.asyncio
 async def test_get_story_raises_key_error_when_not_found():
     repo = AsyncMock()
-    repo.get_story.side_effect = KeyError("nonexistent")
+    repo.get_story.side_effect = NotFoundError("nonexistent")
 
     service = StoryQueryService(repo)
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await service.get_story("nonexistent")

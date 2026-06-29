@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
+from app.exceptions import NoStepsError
 from app.llm.choice_engine_client import ChoiceEngineClient
 from app.llm.story_engine_client import StoryEngineClient
 from app.models.domain import Choice, Step
@@ -30,7 +31,7 @@ class ChoiceDrivenPlayService:
         )
 
         if not steps:
-            raise ValueError("no_steps")
+            raise NoStepsError()
 
         characters = await self._character_repo.get_characters(story_id, meta.character_ids)
         story_text = "\n\n".join(s.text for s in steps)
@@ -52,7 +53,7 @@ class ChoiceDrivenPlayService:
         steps = await self._repo.get_history(story_id)
 
         if not steps:
-            raise ValueError("no_steps")
+            raise NoStepsError()
 
         await self._repo.update_step_choices(story_id, steps[-1].id, [])
         return await self.generate_choices(story_id)

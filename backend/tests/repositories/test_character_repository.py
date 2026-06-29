@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from app.exceptions import NotFoundError
 from app.repositories.character_repository import CharacterRepository
 
 FIXTURE_STORY_ID = "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
@@ -39,7 +40,7 @@ async def test_get_character_returns_all_fields(data_root):
 async def test_get_character_nonexistent_raises_key_error(data_root):
     repo = CharacterRepository()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.get_character(FIXTURE_STORY_ID, "nonexistent-character")
 
 
@@ -66,5 +67,5 @@ async def test_get_characters_preserves_order(data_root):
 async def test_get_characters_missing_id_raises_key_error(data_root):
     repo = CharacterRepository()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.get_characters(FIXTURE_STORY_ID, ["mila", "nonexistent-character"])

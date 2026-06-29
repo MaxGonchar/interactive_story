@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from app.exceptions import NotFoundError
 from app.models.domain import Message, SceneDescription, SceneMetadata
 from app.services.scene_query_service import SceneQueryService
 
@@ -47,12 +48,12 @@ async def test_get_scene_returns_metadata_and_messages():
 @pytest.mark.asyncio
 async def test_get_scene_raises_when_story_not_found():
     story_repo = AsyncMock()
-    story_repo.get_story.side_effect = KeyError(STORY_ID)
+    story_repo.get_story.side_effect = NotFoundError(STORY_ID)
     scene_repo = AsyncMock()
 
     service = SceneQueryService(story_repo, scene_repo)
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await service.get_scene(STORY_ID, SCENE_ID)
 
     scene_repo.get_metadata.assert_not_awaited()
@@ -62,9 +63,9 @@ async def test_get_scene_raises_when_story_not_found():
 async def test_get_scene_raises_when_scene_not_found():
     story_repo = AsyncMock()
     scene_repo = AsyncMock()
-    scene_repo.get_metadata.side_effect = KeyError(SCENE_ID)
+    scene_repo.get_metadata.side_effect = NotFoundError(SCENE_ID)
 
     service = SceneQueryService(story_repo, scene_repo)
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await service.get_scene(STORY_ID, SCENE_ID)
