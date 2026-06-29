@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.exceptions import NotFoundError
 from app.models.domain import Message, SceneDescription, SceneMetadata
 from app.models.storage import MessagesYaml, SceneMetadataYaml
 from app.utils import file_paths, yaml_storage
@@ -13,7 +14,7 @@ class SceneRepository:
                 file_paths.scene_metadata_file(story_id, scene_id)
             )
         except FileNotFoundError:
-            raise KeyError(scene_id)
+            raise NotFoundError(f"Scene '{scene_id}' not found")
 
         raw = SceneMetadataYaml(**data)
         return SceneMetadata(
@@ -64,7 +65,7 @@ class SceneRepository:
         messages = await self.get_messages(story_id, scene_id)
         index = next((i for i, m in enumerate(messages) if m.id == message_id), None)
         if index is None:
-            raise KeyError(message_id)
+            raise NotFoundError(f"Message '{message_id}' not found")
 
         updated = Message(id=messages[index].id, role=messages[index].role, content=new_content)
         messages[index] = updated
@@ -76,7 +77,7 @@ class SceneRepository:
     ) -> None:
         messages = await self.get_messages(story_id, scene_id)
         if not any(m.id == message_id for m in messages):
-            raise KeyError(message_id)
+            raise NotFoundError(f"Message '{message_id}' not found")
 
         await self._save_messages(
             story_id, scene_id, [m for m in messages if m.id != message_id]

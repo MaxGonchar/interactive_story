@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.exceptions import SceneFinishedError
 from app.models.domain import Message
 from app.repositories.scene_repository import SceneRepository
 
@@ -14,7 +15,7 @@ class SceneMessageService:
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
 
         if metadata.finished:
-            raise ValueError("scene_finished")
+            raise SceneFinishedError()
 
         return await self._scene_repo.update_message(
             story_id, scene_id, message_id, new_content
@@ -26,6 +27,6 @@ class SceneMessageService:
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
 
         if metadata.finished:
-            raise ValueError("scene_finished")
+            raise SceneFinishedError()
 
         await self._scene_repo.delete_message(story_id, scene_id, message_id)

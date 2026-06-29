@@ -3,6 +3,7 @@ import shutil
 
 import pytest
 
+from app.exceptions import NotFoundError
 from app.repositories.story_repository import StoryRepository
 
 FIXTURE_STORY_ID = "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
@@ -83,7 +84,7 @@ async def test_get_story_active_scene_id_is_first_unfinished(data_root):
 async def test_get_story_nonexistent_raises_key_error(data_root):
     repo = StoryRepository()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.get_story("nonexistent-id")
 
 
@@ -111,5 +112,5 @@ async def test_update_scene_finished_sets_finished_and_summary(writable_data_roo
 async def test_update_scene_finished_nonexistent_scene_raises_key_error(writable_data_root):
     repo = StoryRepository()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.update_scene_finished(FIXTURE_STORY_ID, 999, SUMMARY)

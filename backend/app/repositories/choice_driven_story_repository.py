@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.exceptions import NotFoundError
 from app.models.domain import Choice, ChoiceDrivenStoryMeta, Step
 from app.models.storage import ChoiceDrivenStoryYaml, ChoiceYaml, HistoryYaml, StepYaml
 from app.utils import file_paths, yaml_storage
@@ -11,7 +12,7 @@ class ChoiceDrivenStoryRepository:
         try:
             data = await yaml_storage.read_yaml(file_paths.story_file(story_id))
         except FileNotFoundError:
-            raise KeyError(story_id)
+            raise NotFoundError(f"Story '{story_id}' not found")
 
         raw = ChoiceDrivenStoryYaml(**data)
         return ChoiceDrivenStoryMeta(
@@ -42,7 +43,7 @@ class ChoiceDrivenStoryRepository:
         steps = await self.get_history(story_id)
         target = next((s for s in steps if s.id == step_id), None)
         if target is None:
-            raise KeyError(step_id)
+            raise NotFoundError(f"Step '{step_id}' not found")
         target.choices = choices
         await self._save_history(story_id, steps)
 
@@ -50,7 +51,7 @@ class ChoiceDrivenStoryRepository:
         steps = await self.get_history(story_id)
         target = next((s for s in steps if s.id == step_id), None)
         if target is None:
-            raise KeyError(step_id)
+            raise NotFoundError(f"Step '{step_id}' not found")
         target.text = text
         await self._save_history(story_id, steps)
 

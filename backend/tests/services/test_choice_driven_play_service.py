@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.exceptions import NoStepsError
 from app.models.domain import Choice, ChoiceDrivenStoryMeta, Step
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 
@@ -140,7 +141,7 @@ async def test_generate_choices_passes_full_story_text():
 async def test_generate_choices_raises_when_no_steps():
     service, _, _ = _make_service(steps=[])
 
-    with pytest.raises(ValueError, match="no_steps"):
+    with pytest.raises(NoStepsError):
         await service.generate_choices(_STORY_ID)
 
 
@@ -187,7 +188,7 @@ async def test_regenerate_choices_clears_then_generates():
 async def test_regenerate_choices_raises_when_no_steps():
     service, _, _ = _make_service(steps=[])
 
-    with pytest.raises(ValueError, match="no_steps"):
+    with pytest.raises(NoStepsError):
         await service.regenerate_choices(_STORY_ID)
 
 

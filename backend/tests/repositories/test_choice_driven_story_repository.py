@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 import yaml
 
+from app.exceptions import NotFoundError
+
 from app.models.domain import Choice, ChoiceDrivenStoryMeta, Step
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
 
@@ -66,7 +68,7 @@ async def test_get_story_meta_returns_correct_data(story_root):
 async def test_get_story_meta_missing_story_raises_key_error(story_root):
     repo = ChoiceDrivenStoryRepository()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.get_story_meta("nonexistent-story")
 
 
@@ -145,7 +147,7 @@ async def test_update_step_choices_nonexistent_step_raises_key_error(story_root)
     repo = ChoiceDrivenStoryRepository()
     await repo.append_step(STORY_ID, _make_step(1))
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.update_step_choices(STORY_ID, step_id=99, choices=[])
 
 
@@ -170,7 +172,7 @@ async def test_update_step_text_nonexistent_step_raises_key_error(story_root):
     repo = ChoiceDrivenStoryRepository()
     await repo.append_step(STORY_ID, _make_step(1))
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         await repo.update_step_text(STORY_ID, step_id=99, text="New text.")
 
 

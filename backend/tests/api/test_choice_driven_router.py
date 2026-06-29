@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.dependencies import get_choice_driven_play_service
+from app.exceptions import NoStepsError, NotFoundError
 from app.main import app
 from app.models.domain import Choice, ChoiceDrivenStoryMeta, Step
 
@@ -39,23 +40,31 @@ def _make_mock_service(
     edited_step: Step | None = None,
     returned_step_id: int = 1,
     story_not_found: bool = False,
+    generate_choices_side_effect: Exception | None = None,
+    regenerate_choices_side_effect: Exception | None = None,
 ) -> MagicMock:
     svc = MagicMock()
     svc._repo = MagicMock()
 
     if story_not_found:
-        svc._repo.get_story_meta = AsyncMock(side_effect=KeyError(_MISSING_ID))
-        svc.get_play_state = AsyncMock(side_effect=KeyError(_MISSING_ID))
-        svc.generate_choices = AsyncMock(side_effect=KeyError(_MISSING_ID))
-        svc.regenerate_choices = AsyncMock(side_effect=KeyError(_MISSING_ID))
-        svc.select_choice = AsyncMock(side_effect=KeyError(_MISSING_ID))
-        svc.edit_step_text = AsyncMock(side_effect=KeyError(_MISSING_ID))
-        svc.return_to_step = AsyncMock(side_effect=KeyError(_MISSING_ID))
+        svc._repo.get_story_meta = AsyncMock(side_effect=NotFoundError(_MISSING_ID))
+        svc.get_play_state = AsyncMock(side_effect=NotFoundError(_MISSING_ID))
+        svc.generate_choices = AsyncMock(side_effect=NotFoundError(_MISSING_ID))
+        svc.regenerate_choices = AsyncMock(side_effect=NotFoundError(_MISSING_ID))
+        svc.select_choice = AsyncMock(side_effect=NotFoundError(_MISSING_ID))
+        svc.edit_step_text = AsyncMock(side_effect=NotFoundError(_MISSING_ID))
+        svc.return_to_step = AsyncMock(side_effect=NotFoundError(_MISSING_ID))
     else:
         svc._repo.get_story_meta = AsyncMock(return_value=_META)
         svc.get_play_state = AsyncMock(return_value=steps or [_STEP_1, _STEP_2])
-        svc.generate_choices = AsyncMock(return_value=choices or [_CHOICE_A, _CHOICE_B])
-        svc.regenerate_choices = AsyncMock(return_value=choices or [_CHOICE_A, _CHOICE_B])
+        if generate_choices_side_effect is not None:
+            svc.generate_choices = AsyncMock(side_effect=generate_choices_side_effect)
+        else:
+            svc.generate_choices = AsyncMock(return_value=choices or [_CHOICE_A, _CHOICE_B])
+        if regenerate_choices_side_effect is not None:
+            svc.regenerate_choices = AsyncMock(side_effect=regenerate_choices_side_effect)
+        else:
+            svc.regenerate_choices = AsyncMock(return_value=choices or [_CHOICE_A, _CHOICE_B])
         svc.select_choice = AsyncMock(return_value=new_step or _STEP_2)
         svc.edit_step_text = AsyncMock(return_value=edited_step or _STEP_1)
         svc.return_to_step = AsyncMock(return_value=returned_step_id)
@@ -132,6 +141,18 @@ class TestGenerateChoices:
 
         assert resp.status_code == 404
 
+    def test_returns_409_when_no_steps(self):
+        mock_svc = _make_mock_service(generate_choices_side_effect=NoStepsError())
+        app.dependency_overrides[get_choice_driven_play_service] = lambda: mock_svc
+
+        with TestClient(app) as client:
+            resp = client.post(f"/api/stories/{_STORY_ID}/choice-play/generate-choices")
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 409
+        assert resp.json()["error"]["code"] == "no_steps"
+
 
 # ---------------------------------------------------------------------------
 # POST /api/stories/{story_id}/choice-play/regenerate-choices
@@ -162,6 +183,18 @@ class TestRegenerateChoices:
         app.dependency_overrides.clear()
 
         assert resp.status_code == 404
+
+    def test_returns_409_when_no_steps(self):
+        mock_svc = _make_mock_service(regenerate_choices_side_effect=NoStepsError())
+        app.dependency_overrides[get_choice_driven_play_service] = lambda: mock_svc
+
+        with TestClient(app) as client:
+            resp = client.post(f"/api/stories/{_STORY_ID}/choice-play/regenerate-choices")
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 409
+        assert resp.json()["error"]["code"] == "no_steps"
 
 
 # ---------------------------------------------------------------------------

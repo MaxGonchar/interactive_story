@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
 
 from app.api.dependencies import get_choice_driven_play_service
 from app.models.api import (
@@ -17,13 +16,6 @@ from app.models.domain import Choice
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 
 router = APIRouter(prefix="/stories", tags=["choice-driven"])
-
-
-def _not_found(story_id: str) -> JSONResponse:
-    return JSONResponse(
-        status_code=404,
-        content={"error": {"code": "not_found", "message": f"Story '{story_id}' not found"}},
-    )
 
 
 def _step_to_dict(step) -> dict:
@@ -47,11 +39,8 @@ async def get_choice_play(
     story_id: str,
     svc: ChoiceDrivenPlayService = Depends(get_choice_driven_play_service),
 ):
-    try:
-        meta = await svc._repo.get_story_meta(story_id)
-        steps = await svc.get_play_state(story_id)
-    except KeyError:
-        return _not_found(story_id)
+    meta = await svc._repo.get_story_meta(story_id)
+    steps = await svc.get_play_state(story_id)
     return {
         "data": {
             "id": meta.id,
@@ -69,10 +58,7 @@ async def generate_choices(
     story_id: str,
     svc: ChoiceDrivenPlayService = Depends(get_choice_driven_play_service),
 ):
-    try:
-        choices = await svc.generate_choices(story_id)
-    except KeyError:
-        return _not_found(story_id)
+    choices = await svc.generate_choices(story_id)
     return {"data": {"choices": [{"action": c.action, "consequence": c.consequence} for c in choices]}}
 
 
@@ -84,10 +70,7 @@ async def regenerate_choices(
     story_id: str,
     svc: ChoiceDrivenPlayService = Depends(get_choice_driven_play_service),
 ):
-    try:
-        choices = await svc.regenerate_choices(story_id)
-    except KeyError:
-        return _not_found(story_id)
+    choices = await svc.regenerate_choices(story_id)
     return {"data": {"choices": [{"action": c.action, "consequence": c.consequence} for c in choices]}}
 
 
@@ -100,11 +83,8 @@ async def select_choice(
     request: SelectChoiceRequest,
     svc: ChoiceDrivenPlayService = Depends(get_choice_driven_play_service),
 ):
-    try:
-        choice = Choice(action=request.action, consequence=request.consequence)
-        step = await svc.select_choice(story_id, choice)
-    except KeyError:
-        return _not_found(story_id)
+    choice = Choice(action=request.action, consequence=request.consequence)
+    step = await svc.select_choice(story_id, choice)
     return {"data": _step_to_dict(step)}
 
 
@@ -118,10 +98,7 @@ async def edit_step(
     request: EditStepRequest,
     svc: ChoiceDrivenPlayService = Depends(get_choice_driven_play_service),
 ):
-    try:
-        step = await svc.edit_step_text(story_id, step_id, request.text)
-    except KeyError:
-        return _not_found(story_id)
+    step = await svc.edit_step_text(story_id, step_id, request.text)
     return {"data": {"id": step.id, "text": step.text}}
 
 
@@ -134,8 +111,5 @@ async def return_to_step(
     step_id: int,
     svc: ChoiceDrivenPlayService = Depends(get_choice_driven_play_service),
 ):
-    try:
-        returned_step_id = await svc.return_to_step(story_id, step_id)
-    except KeyError:
-        return _not_found(story_id)
+    returned_step_id = await svc.return_to_step(story_id, step_id)
     return {"data": {"step_id": returned_step_id}}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
+from app.exceptions import NotFoundError
 from app.models.domain import CharacterCard
 from app.models.storage import CharacterYaml
 from app.utils import file_paths, yaml_storage
@@ -14,7 +15,7 @@ class CharacterRepository:
                 file_paths.character_file(story_id, character_id)
             )
         except FileNotFoundError:
-            raise KeyError(character_id)
+            raise NotFoundError(f"Character '{character_id}' not found")
 
         char = CharacterYaml(**data)
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFinishedError
 from app.llm.models import SceneContext
 from app.llm.scene_llm_client import SceneLLMClient
 from app.models.domain import Message
@@ -27,7 +28,7 @@ class ScenePlayService:
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
 
         if metadata.finished:
-            raise ValueError("scene_finished")
+            raise SceneFinishedError()
 
         characters, messages = (
             await self._character_repo.get_characters(
@@ -76,11 +77,11 @@ class ScenePlayService:
     async def regenerate(self, story_id: str, scene_id: int) -> Message:
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
         if metadata.finished:
-            raise ValueError("scene_finished")
+            raise SceneFinishedError()
 
         messages = await self._scene_repo.get_messages(story_id, scene_id)
         if not messages or messages[-1].role != "assistant":
-            raise ValueError("no_assistant_message")
+            raise NoAssistantMessageError()
 
         # Exclude the last assistant message
         context_messages = messages[:-1]
@@ -89,7 +90,7 @@ class ScenePlayService:
         if context_messages and context_messages[-1].role == "user":
             user_content = context_messages[-1].content
         else:
-            raise ValueError("no_user_message")
+            raise NoUserMessageError()
 
         characters = await self._character_repo.get_characters(story_id, metadata.characters_ids)
         story_meta = await self._story_repo.get_story(story_id)
