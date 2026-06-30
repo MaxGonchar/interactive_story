@@ -3,11 +3,15 @@ import { useState } from 'react'
 function MessageComposer({ onSend, disabled = false }) {
   const [text, setText] = useState('')
 
-  function handleSend() {
+  async function handleSend() {
     const trimmed = text.trim()
     if (!trimmed) return
-    onSend(trimmed)
-    setText('')
+    try {
+      await onSend(trimmed)
+      setText('')
+    } catch {
+      // leave text intact so user can retry
+    }
   }
 
   return (
