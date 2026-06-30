@@ -52,6 +52,7 @@ function ScenePage() {
       }))
     } catch (err) {
       setOpError(err.message ?? 'Failed to send message')
+      throw err
     } finally {
       setBusy(false)
     }
