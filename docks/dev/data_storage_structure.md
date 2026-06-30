@@ -92,9 +92,6 @@ character_ids:
 scenes:
   - id: 1
     finished: true
-    summary:
-      - "You arrive at the harbor and meet Captain Mora, who warns you of dangers ahead."
-      - "You decide to explore the docks for supplies before setting out to sea."
   - id: 2
     finished: false
 ```
@@ -142,6 +139,10 @@ character_ids:
 scene_description:
   general_scene_guide: "Keep tension rising with small discoveries and choices."
   writing_style: "Cinematic, sensory details, concise dialog turns."
+scene_summary: null
+context:
+  - "You arrived at the harbor and met Captain Mora, who warned you of dangers ahead."
+  - "You decided to explore the docks for supplies before setting out to sea."
 ```
 
 Constraints:

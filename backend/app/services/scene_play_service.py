@@ -40,18 +40,9 @@ class ScenePlayService:
         user_id = max((m.id for m in messages), default=0) + 1
         assistant_id = user_id + 1
 
-        # Fetch story meta and build context_data from finished scenes before current
-        story_meta = await self._story_repo.get_story(story_id)
-        current_index = next(
-            (i for i, s in enumerate(story_meta.scenes) if s.id == scene_id), None
-        )
-        context_data = [
-            line
-            for i, s in enumerate(story_meta.scenes)
-            if s.finished and (current_index is None or i < current_index) and s.summary
-            for line in s.summary
-        ]
+        context_data = metadata.context or []
 
+        story_meta = await self._story_repo.get_story(story_id)
         user_character = await self._character_repo.get_character(
             story_id, story_meta.user_character_id
         )

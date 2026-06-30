@@ -37,7 +37,7 @@ class StoryRepository:
             user_character_id=story.user_character_id,
             character_ids=story.character_ids,
             scenes=[
-                SceneRef(id=s.id, finished=s.finished, summary=s.summary)
+                SceneRef(id=s.id, finished=s.finished)
                 for s in story.scenes
             ],
             active_scene_id=active_scene_id,
@@ -58,7 +58,6 @@ class StoryRepository:
             raise NotFoundError(f"Scene '{scene_id}' not found")
 
         scene.finished = True
-        scene.summary = [summary]
 
         await atomic_write(
             file_paths.story_file(story_id),

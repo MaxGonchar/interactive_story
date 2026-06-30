@@ -17,7 +17,6 @@ class StoryIndexItem(BaseModel):
 class SceneRef(BaseModel):
     id: int
     finished: bool
-    summary: list[str] | None = None
 
 
 class StoryMeta(BaseModel):
@@ -65,6 +64,7 @@ class SceneMetadata(BaseModel):
     finished: bool
     scene_description: SceneDescription
     scene_summary: list[str] | None = None
+    context: list[str] | None = None
 
 
 class Message(BaseModel):

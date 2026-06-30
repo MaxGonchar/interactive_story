@@ -64,8 +64,6 @@ async def test_get_story_scenes_have_correct_data(data_root):
     scene1 = result.scenes[0]
     assert scene1.id == 1
     assert scene1.finished is True
-    assert isinstance(scene1.summary, list)
-    assert len(scene1.summary) > 0
 
     scene2 = result.scenes[1]
     assert scene2.id == 2
@@ -105,7 +103,6 @@ async def test_update_scene_finished_sets_finished_and_summary(writable_data_roo
     result = await repo.get_story(FIXTURE_STORY_ID)
     scene2 = next(s for s in result.scenes if s.id == 2)
     assert scene2.finished is True
-    assert scene2.summary == [SUMMARY]
 
 
 @pytest.mark.asyncio
