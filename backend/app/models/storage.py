@@ -31,7 +31,6 @@ class StoriesIndex(BaseModel):
 class SceneRefYaml(BaseModel):
     id: int
     finished: bool
-    summary: list[str] | None = None
 
 
 class StoryYaml(BaseModel):
@@ -59,6 +58,7 @@ class SceneMetadataYaml(BaseModel):
     characters_ids: list[str]
     scene_description: SceneDescriptionYaml
     scene_summary: list[str] | None = None
+    context: list[str] | None = None
 
 
 # ---------------------------------------------------------------------------

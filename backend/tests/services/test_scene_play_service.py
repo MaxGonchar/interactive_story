@@ -4,89 +4,36 @@ from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFin
 from app.models.domain import Message, SceneDescription, SceneMetadata, SceneRef, StoryMeta
 from app.services.scene_play_service import ScenePlayService
 
-def _make_story_meta_with_finished_scenes():
-    return StoryMeta(
-        id="story-1",
-        title="Test Story",
-        user_character_id="max",
-        character_ids=["c1"],
-        scenes=[
-            SceneRef(id=0, finished=True, summary=["Scene zero happened.", "More context."]),
-            SceneRef(id=1, finished=True, summary=["Scene one happened."]),
-            SceneRef(id=2, finished=False, summary=None),  # current scene
-            SceneRef(id=3, finished=True, summary=["Should not be included."]),
-        ],
-        active_scene_id=2,
-    )
-
 @pytest.mark.asyncio
-async def test_play_populates_context_data_from_prior_finished_scenes():
-    story_meta = _make_story_meta_with_finished_scenes()
-    service, _, _, llm_client, _ = make_service(story_meta=story_meta)
-    # Patch llm_client to capture context
+async def test_play_context_data_uses_metadata_context():
+    metadata = make_scene_metadata(context=["Context line one.", "Context line two."])
+    service, _, _, llm_client, _ = make_service(metadata=metadata)
     captured_context = {}
     async def fake_invoke(context, *_):
         captured_context['context_data'] = context.context_data
         return "LLM reply"
     llm_client.invoke.side_effect = fake_invoke
-    await service.play(story_meta.id, 2, "Hello")
-    # Should include summaries from scenes 0 and 1 only
-    assert captured_context['context_data'] == ["Scene zero happened.", "More context.", "Scene one happened."]
+    await service.play(STORY_ID, SCENE_ID, "Hello")
+    assert captured_context['context_data'] == ["Context line one.", "Context line two."]
+
 
 @pytest.mark.asyncio
-async def test_play_context_data_empty_when_no_prior_finished():
-    from app.models.domain import SceneRef, StoryMeta
-    story_meta = StoryMeta(
-        id="story-2",
-        title="Test Story",
-        user_character_id="max",
-        character_ids=["c1"],
-        scenes=[
-            SceneRef(id=0, finished=False, summary=None),
-            SceneRef(id=1, finished=False, summary=None),  # current scene
-        ],
-        active_scene_id=1,
-    )
-    service, _, _, llm_client, _ = make_service(story_meta=story_meta)
+async def test_play_context_data_empty_when_metadata_context_none():
+    service, _, _, llm_client, _ = make_service()
     captured_context = {}
     async def fake_invoke(context, *_):
         captured_context['context_data'] = context.context_data
         return "LLM reply"
     llm_client.invoke.side_effect = fake_invoke
-    await service.play(story_meta.id, 1, "Hello")
+    await service.play(STORY_ID, SCENE_ID, "Hello")
     assert captured_context['context_data'] == []
-
-@pytest.mark.asyncio
-async def test_play_excludes_finished_scenes_after_current():
-    from app.models.domain import SceneRef, StoryMeta
-    story_meta = StoryMeta(
-        id="story-3",
-        title="Test Story",
-        user_character_id="max",
-        character_ids=["c1"],
-        scenes=[
-            SceneRef(id=0, finished=True, summary=["Scene zero happened."]),
-            SceneRef(id=1, finished=False, summary=None),  # current scene
-            SceneRef(id=2, finished=True, summary=["Should not be included."]),
-        ],
-        active_scene_id=1,
-    )
-    service, _, _, llm_client, _ = make_service(story_meta=story_meta)
-    captured_context = {}
-    async def fake_invoke(context, *_):
-        captured_context['context_data'] = context.context_data
-        return "LLM reply"
-    llm_client.invoke.side_effect = fake_invoke
-    await service.play(story_meta.id, 1, "Hello")
-    # Only scene 0 summary should be included
-    assert captured_context['context_data'] == ["Scene zero happened."]
 
 
 STORY_ID = "story-123"
 SCENE_ID = 1
 
 
-def make_scene_metadata(finished: bool = False) -> SceneMetadata:
+def make_scene_metadata(finished: bool = False, context: list[str] | None = None) -> SceneMetadata:
     return SceneMetadata(
         id=SCENE_ID,
         story_id=STORY_ID,
@@ -97,6 +44,7 @@ def make_scene_metadata(finished: bool = False) -> SceneMetadata:
             writing_style="Descriptive.",
         ),
         scene_summary=None,
+        context=context,
     )
 
 
@@ -135,7 +83,7 @@ def make_service(
             title="Test Story",
             user_character_id="max",
             character_ids=["c1"],
-            scenes=[SceneRef(id=SCENE_ID, finished=False, summary=None)],
+            scenes=[SceneRef(id=SCENE_ID, finished=False)],
             active_scene_id=SCENE_ID,
         )
     story_repo.get_story.return_value = story_meta

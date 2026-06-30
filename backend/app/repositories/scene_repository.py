@@ -27,6 +27,7 @@ class SceneRepository:
                 writing_style=raw.scene_description.writing_style,
             ),
             scene_summary=raw.scene_summary,
+            context=raw.context,
         )
 
     async def save_metadata(

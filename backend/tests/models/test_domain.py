@@ -37,15 +37,10 @@ def test_story_index_item_type_choice_driven():
     assert item.type == "choice_driven"
 
 
-def test_scene_ref_with_summary():
-    ref = SceneRef(id=1, finished=True, summary=["Scene one summary."])
-    assert ref.finished is True
-    assert ref.summary == ["Scene one summary."]
-
-
-def test_scene_ref_summary_defaults_none():
+def test_scene_ref_defaults():
     ref = SceneRef(id=2, finished=False)
-    assert ref.summary is None
+    assert ref.id == 2
+    assert ref.finished is False
 
 
 def test_story_meta():
@@ -173,6 +168,33 @@ def test_scene_metadata():
     )
     assert meta.scene_summary is None
     assert meta.characters_ids == ["mila", "bun"]
+
+
+def test_scene_metadata_context_defaults_none():
+    meta = SceneMetadata(
+        id=1,
+        story_id="abc",
+        characters_ids=["mila"],
+        finished=False,
+        scene_description=SceneDescription(
+            general_scene_guide="G.", writing_style="S."
+        ),
+    )
+    assert meta.context is None
+
+
+def test_scene_metadata_with_context():
+    meta = SceneMetadata(
+        id=1,
+        story_id="abc",
+        characters_ids=["mila"],
+        finished=False,
+        scene_description=SceneDescription(
+            general_scene_guide="G.", writing_style="S."
+        ),
+        context=["Context line one.", "Context line two."],
+    )
+    assert meta.context == ["Context line one.", "Context line two."]
 
 
 def test_scene_metadata_with_summary():

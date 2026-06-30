@@ -93,15 +93,10 @@ def test_story_yaml_parses_fixture():
     assert isinstance(story.scenes[0], SceneRefYaml)
 
 
-def test_scene_ref_yaml_with_summary():
-    ref = SceneRefYaml(id=1, finished=True, summary=["Line one.", "Line two."])
-    assert ref.finished is True
-    assert ref.summary == ["Line one.", "Line two."]
-
-
-def test_scene_ref_yaml_summary_defaults_none():
+def test_scene_ref_yaml_defaults():
     ref = SceneRefYaml(id=2, finished=False)
-    assert ref.summary is None
+    assert ref.id == 2
+    assert ref.finished is False
 
 
 def test_story_yaml_missing_id_raises():
@@ -138,6 +133,33 @@ def test_scene_metadata_scene_summary_is_optional_none():
         ),
     )
     assert meta.scene_summary is None
+
+
+def test_scene_metadata_yaml_context_defaults_none():
+    meta = SceneMetadataYaml(
+        id=1,
+        finished=False,
+        characters_ids=["mila"],
+        scene_description=SceneDescriptionYaml(
+            general_scene_guide="Guide.",
+            writing_style="Style.",
+        ),
+    )
+    assert meta.context is None
+
+
+def test_scene_metadata_yaml_accepts_context_list():
+    meta = SceneMetadataYaml(
+        id=1,
+        finished=False,
+        characters_ids=["mila"],
+        scene_description=SceneDescriptionYaml(
+            general_scene_guide="Guide.",
+            writing_style="Style.",
+        ),
+        context=["Context line one.", "Context line two."],
+    )
+    assert meta.context == ["Context line one.", "Context line two."]
 
 
 def test_scene_metadata_accepts_scene_summary_list():
