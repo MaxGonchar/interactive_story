@@ -1,7 +1,8 @@
 id: 1
-characters_ids:
+character_ids:
 - mila
 - bun
+user_character_id: max
 scene_description:
   general_scene_guide: 'Ren will not approach with words or overt actions. His focus
     will be a palpable, almost psychic force—a projection of raw, sexual energy directed

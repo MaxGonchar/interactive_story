@@ -30,7 +30,6 @@ async def get_story(
         "data": {
             "id": story.id,
             "title": story.title,
-            "user_character_id": story.user_character_id,
             "scenes": [{"id": s.id, "finished": s.finished} for s in story.scenes],
             "active_scene_id": story.active_scene_id,
         }

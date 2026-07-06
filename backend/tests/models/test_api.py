@@ -22,22 +22,12 @@ def test_regenerate_response_validates():
     assert resp.data.assistant_message.content == "x"
 
 
-def test_story_detail_includes_user_character_id():
+def test_story_detail_fields():
     detail = StoryDetail(
         id="8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         title="Mila and Bun",
-        user_character_id="max",
         scenes=[SceneListItem(id=1, finished=True)],
         active_scene_id=1,
     )
-    assert detail.user_character_id == "max"
-
-
-def test_story_detail_missing_user_character_id_raises():
-    with pytest.raises(ValidationError):
-        StoryDetail(
-            id="abc",
-            title="Test",
-            scenes=[],
-            active_scene_id=1,
-        )
+    assert detail.id == "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
+    assert detail.title == "Mila and Bun"

@@ -38,7 +38,7 @@ You are an Interactive Narrative Engine. Your purpose is to drive a specific sce
 2. Reference the Context Data and Character Profiles.
 3. Formulate a response that advances the scene according to the Development Direction.
 4. Resolve any actions initiated by the user.
-5. Output 2-3 paragraphs using the specified formatting.\
+5. Output 1-2 paragraphs using the specified formatting.\
 """)
 
 _SCENE_CONFIG_TEMPLATE = Template("""\

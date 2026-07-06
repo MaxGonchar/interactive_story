@@ -20,7 +20,8 @@ class SceneRepository:
         return SceneMetadata(
             id=raw.id,
             story_id=story_id,
-            characters_ids=raw.characters_ids,
+            character_ids=raw.character_ids,
+            user_character_id=raw.user_character_id,
             finished=raw.finished,
             scene_description=SceneDescription(
                 general_scene_guide=raw.scene_description.general_scene_guide,
