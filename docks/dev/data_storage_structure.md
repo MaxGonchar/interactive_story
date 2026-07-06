@@ -7,7 +7,7 @@ In MVP:
 - story and scene base content is prepared manually
 - app reads/writes scene messages and scene finished status during play
 - each story has its own character set (stored as separate character files)
-- each scene has its own subset of story characters
+- each scene defines its own character set (independent of story-level character lists)
 - each scene has scene description metadata
 - each finished scene has summary text
 - messages in the active scene can be edited and deleted
@@ -49,7 +49,7 @@ data/
 - data/stories/<story_id>/characters/<character_id>.yaml:
   - full character card for a story character
 - data/stories/<story_id>/scenes/<scene_id>/metadata.yaml:
-  - scene metadata (finished status, character subset, scene description, summary)
+  - scene metadata (finished status, character set, user character, scene description, summary)
 - data/stories/<story_id>/scenes/<scene_id>/messages.yaml:
   - scene message history only
 
@@ -86,9 +86,6 @@ Path: data/stories/<story_id>/story.yaml
 ```yaml
 id: "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
 title: "The Black Harbor"
-character_ids:
-  - "captain-mora"
-  - "dockmaster-elin"
 scenes:
   - id: 1
     finished: true
@@ -98,7 +95,6 @@ scenes:
 
 Constraints:
 - id must equal folder name <story_id>
-- each character_id must have matching file in characters/<character_id>.yaml
 - scenes must be sorted by order asc
 
 ### 3) Character Card
@@ -136,6 +132,7 @@ id: 3
 finished: false
 character_ids:
   - "captain-mora"
+user_character_id: "player"
 scene_description:
   general_scene_guide: "Keep tension rising with small discoveries and choices."
   writing_style: "Cinematic, sensory details, concise dialog turns."
@@ -149,7 +146,8 @@ Constraints:
 - id must equal parent folder name <scene_id>
 - story_id must equal parent folder story id
 - finished is boolean
-- each character_id must exist in story character_ids and have character file
+- each character_id must have a matching character file in characters/<character_id>.yaml
+- user_character_id must have a matching character file in characters/<user_character_id>.yaml
 - scene_description must include: general_scene_guide, writing_style
   
 ### 5) Scene Messages
@@ -178,7 +176,6 @@ Constraints:
 - Message edits and deletions are allowed only while scene is not finished.
 - Message ids are stable and are never re-numbered after edit or delete operations.
 - Every successful play operation appends one user message and one assistant message.
-- Scene character_ids must always be a subset of story character_ids.
 - On LLM failure, user message append behavior must follow API contract decision (to be finalized in endpoints doc).
 
 ## Atomic Write Strategy
