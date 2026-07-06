@@ -45,7 +45,6 @@ class SceneListItem(BaseModel):
 class StoryDetail(BaseModel):
     id: str
     title: str
-    user_character_id: str
     scenes: list[SceneListItem]
     active_scene_id: int
 

@@ -6,7 +6,6 @@ from app.llm.scene_llm_client import SceneLLMClient
 from app.models.domain import Message
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.scene_repository import SceneRepository
-from app.repositories.story_repository import StoryRepository
 
 
 class ScenePlayService:
@@ -15,12 +14,10 @@ class ScenePlayService:
         scene_repo: SceneRepository,
         character_repo: CharacterRepository,
         llm_client: SceneLLMClient,
-        story_repo: StoryRepository,
     ) -> None:
         self._scene_repo = scene_repo
         self._character_repo = character_repo
         self._llm_client = llm_client
-        self._story_repo = story_repo
 
     async def play(
         self, story_id: str, scene_id: int, user_content: str
@@ -32,7 +29,7 @@ class ScenePlayService:
 
         characters, messages = (
             await self._character_repo.get_characters(
-                story_id, metadata.characters_ids
+                story_id, metadata.character_ids
             ),
             await self._scene_repo.get_messages(story_id, scene_id),
         )
@@ -42,9 +39,8 @@ class ScenePlayService:
 
         context_data = metadata.context or []
 
-        story_meta = await self._story_repo.get_story(story_id)
         user_character = await self._character_repo.get_character(
-            story_id, story_meta.user_character_id
+            story_id, metadata.user_character_id
         )
 
         context = SceneContext(
@@ -83,10 +79,9 @@ class ScenePlayService:
         else:
             raise NoUserMessageError()
 
-        characters = await self._character_repo.get_characters(story_id, metadata.characters_ids)
-        story_meta = await self._story_repo.get_story(story_id)
+        characters = await self._character_repo.get_characters(story_id, metadata.character_ids)
         user_character = await self._character_repo.get_character(
-            story_id, story_meta.user_character_id
+            story_id, metadata.user_character_id
         )
         context = SceneContext(
             scene_description=metadata.scene_description,

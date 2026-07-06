@@ -22,8 +22,6 @@ class SceneRef(BaseModel):
 class StoryMeta(BaseModel):
     id: str
     title: str
-    user_character_id: str
-    character_ids: list[str]
     scenes: list[SceneRef]
     active_scene_id: int | None
 
@@ -60,7 +58,8 @@ class SceneDescription(BaseModel):
 class SceneMetadata(BaseModel):
     id: int
     story_id: str
-    characters_ids: list[str]
+    character_ids: list[str]
+    user_character_id: str
     finished: bool
     scene_description: SceneDescription
     scene_summary: list[str] | None = None

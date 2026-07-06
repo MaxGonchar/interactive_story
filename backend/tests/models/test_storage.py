@@ -88,7 +88,6 @@ def test_story_yaml_parses_fixture():
         data = yaml.safe_load(f)
     story = StoryYaml(**data)
     assert story.id == STORY_ID
-    assert story.user_character_id == "max"
     assert len(story.scenes) >= 1
     assert isinstance(story.scenes[0], SceneRefYaml)
 
@@ -101,12 +100,7 @@ def test_scene_ref_yaml_defaults():
 
 def test_story_yaml_missing_id_raises():
     with pytest.raises(ValidationError):
-        StoryYaml(title="X", user_character_id="max", character_ids=[], scenes=[])
-
-
-def test_story_yaml_missing_user_character_id_raises():
-    with pytest.raises(ValidationError):
-        StoryYaml(id="abc", title="X", character_ids=[], scenes=[])
+        StoryYaml(title="X", scenes=[])
 
 
 # ---------------------------------------------------------------------------
@@ -119,6 +113,7 @@ def test_scene_metadata_parses_fixture():
         data = yaml.safe_load(f)
     meta = SceneMetadataYaml(**data)
     assert meta.id == 1
+    assert meta.user_character_id == "max"
     assert isinstance(meta.scene_description, SceneDescriptionYaml)
 
 
@@ -126,7 +121,8 @@ def test_scene_metadata_scene_summary_is_optional_none():
     meta = SceneMetadataYaml(
         id=1,
         finished=False,
-        characters_ids=["mila"],
+        character_ids=["mila"],
+        user_character_id="max",
         scene_description=SceneDescriptionYaml(
             general_scene_guide="Guide.",
             writing_style="Style.",
@@ -139,7 +135,8 @@ def test_scene_metadata_yaml_context_defaults_none():
     meta = SceneMetadataYaml(
         id=1,
         finished=False,
-        characters_ids=["mila"],
+        character_ids=["mila"],
+        user_character_id="max",
         scene_description=SceneDescriptionYaml(
             general_scene_guide="Guide.",
             writing_style="Style.",
@@ -152,7 +149,8 @@ def test_scene_metadata_yaml_accepts_context_list():
     meta = SceneMetadataYaml(
         id=1,
         finished=False,
-        characters_ids=["mila"],
+        character_ids=["mila"],
+        user_character_id="max",
         scene_description=SceneDescriptionYaml(
             general_scene_guide="Guide.",
             writing_style="Style.",
@@ -166,7 +164,8 @@ def test_scene_metadata_accepts_scene_summary_list():
     meta = SceneMetadataYaml(
         id=1,
         finished=True,
-        characters_ids=["mila"],
+        character_ids=["mila"],
+        user_character_id="max",
         scene_description=SceneDescriptionYaml(
             general_scene_guide="G.",
             writing_style="S.",
@@ -176,11 +175,24 @@ def test_scene_metadata_accepts_scene_summary_list():
     assert meta.scene_summary == ["A brief summary of the scene."]
 
 
-def test_scene_metadata_missing_characters_ids_raises():
+def test_scene_metadata_missing_character_ids_raises():
     with pytest.raises(ValidationError):
         SceneMetadataYaml(
             id=1,
             finished=False,
+            user_character_id="max",
+            scene_description=SceneDescriptionYaml(
+                general_scene_guide="G.", writing_style="S."
+            ),
+        )
+
+
+def test_scene_metadata_missing_user_character_id_raises():
+    with pytest.raises(ValidationError):
+        SceneMetadataYaml(
+            id=1,
+            finished=False,
+            character_ids=["mila"],
             scene_description=SceneDescriptionYaml(
                 general_scene_guide="G.", writing_style="S."
             ),

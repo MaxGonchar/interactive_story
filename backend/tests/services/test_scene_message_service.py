@@ -16,7 +16,8 @@ def make_scene_metadata(finished: bool = False) -> SceneMetadata:
     return SceneMetadata(
         id=SCENE_ID,
         story_id=STORY_ID,
-        characters_ids=["c1"],
+        character_ids=["c1"],
+        user_character_id="max",
         finished=finished,
         scene_description=SceneDescription(
             general_scene_guide="Guide text.",

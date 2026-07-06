@@ -48,9 +48,8 @@ def get_scene_play_service(
     scene_repo: SceneRepository = Depends(get_scene_repository),
     character_repo: CharacterRepository = Depends(get_character_repository),
     llm_client: SceneLLMClient = Depends(get_scene_llm_client),
-    story_repo: StoryRepository = Depends(get_story_repository),
 ) -> ScenePlayService:
-    return ScenePlayService(scene_repo, character_repo, llm_client, story_repo)
+    return ScenePlayService(scene_repo, character_repo, llm_client)
 
 
 def get_scene_message_service(

@@ -36,8 +36,6 @@ class SceneRefYaml(BaseModel):
 class StoryYaml(BaseModel):
     id: str
     title: str
-    user_character_id: str
-    character_ids: list[str]
     scenes: list[SceneRefYaml]
 
 
@@ -55,7 +53,8 @@ class SceneMetadataYaml(BaseModel):
     id: int
     story_id: str | None = None
     finished: bool = False
-    characters_ids: list[str]
+    character_ids: list[str]
+    user_character_id: str
     scene_description: SceneDescriptionYaml
     scene_summary: list[str] | None = None
     context: list[str] | None = None

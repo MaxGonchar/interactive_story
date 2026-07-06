@@ -37,7 +37,8 @@ async def test_get_metadata_returns_scene_metadata(data_root):
 
     assert result.id == FIXTURE_SCENE_ID
     assert result.story_id == FIXTURE_STORY_ID
-    assert isinstance(result.characters_ids, list)
+    assert result.user_character_id == "max"
+    assert isinstance(result.character_ids, list)
     assert isinstance(result.scene_description, SceneDescription)
 
 
@@ -110,7 +111,8 @@ async def test_save_metadata_round_trip(writable_data_root):
     updated = SceneMetadata(
         id=original.id,
         story_id=original.story_id,
-        characters_ids=original.characters_ids,
+        character_ids=original.character_ids,
+        user_character_id=original.user_character_id,
         finished=True,
         scene_description=original.scene_description,
         scene_summary=["A summary line."],
