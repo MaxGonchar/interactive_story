@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { getScene, playScene, finishScene, editMessage, deleteMessage, regenerateLastAssistantMessage } from '../api/scenes'
 import SceneHeader from '../components/SceneHeader'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
-import SceneActions from '../components/SceneActions'
+import FinishModal from '../components/FinishModal'
 
 function ScenePage() {
+  const navigate = useNavigate()
 
     async function handleRegenerate() {
       setOpError(null)
@@ -32,6 +33,7 @@ function ScenePage() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [opError, setOpError] = useState(null)
+  const [showFinishModal, setShowFinishModal] = useState(false)
 
   useEffect(() => {
     getScene(storyId, sceneId)
@@ -58,16 +60,13 @@ function ScenePage() {
     }
   }
 
-  async function handleFinish(summary) {
+  async function handleFinish(items) {
     setOpError(null)
     setBusy(true)
     try {
-      const response = await finishScene(storyId, sceneId, summary)
-      setScene((prev) => ({
-        ...prev,
-        finished: response.data.finished,
-        scene_summary: response.data.scene_summary,
-      }))
+      await finishScene(storyId, sceneId, items)
+      setShowFinishModal(false)
+      navigate(`/stories/${storyId}`)
     } catch (err) {
       setOpError(err.message ?? 'Failed to finish scene')
     } finally {
@@ -147,11 +146,20 @@ function ScenePage() {
         onSend={handleSend}
         disabled={scene.finished || busy}
       />
-      <SceneActions
-        finished={scene.finished}
-        sceneSummary={scene.scene_summary}
-        onFinish={handleFinish}
-      />
+      {!scene.finished && (
+        <button
+          onClick={() => setShowFinishModal(true)}
+          disabled={busy}
+        >
+          Finish
+        </button>
+      )}
+      {showFinishModal && (
+        <FinishModal
+          onSubmit={handleFinish}
+          onCancel={() => setShowFinishModal(false)}
+        />
+      )}
     </>
   )
 }
