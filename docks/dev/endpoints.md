@@ -122,7 +122,7 @@ Get scene content: metadata and full message history.
 }
 ```
 
-`scene_summary` is `null` when scene is not finished, and a non-empty string when finished.
+`scene_summary` is `null` when scene is not finished, and a non-empty list of strings when finished.
 Messages are ordered by `id` ascending.
 
 **Response 404** – story or scene not found
@@ -265,12 +265,12 @@ Mark the scene as finished and record its summary.
 **Request**
 ```json
 {
-    "scene_summary": "The hero discovered the map and escaped the harbor."
+    "scene_summary": ["The hero discovered the map.", "He escaped the harbor."]
 }
 ```
 
 Validation:
-- `scene_summary`: required, non-empty string, max 2000 characters
+- `scene_summary`: required list of 1–100 non-empty strings
 
 **Response 200**
 ```json
@@ -278,7 +278,7 @@ Validation:
     "data": {
         "id": 3,
         "finished": true,
-        "scene_summary": "The hero discovered the map and escaped the harbor."
+        "scene_summary": ["The hero discovered the map.", "He escaped the harbor."]
     }
 }
 ```

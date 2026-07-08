@@ -192,13 +192,27 @@ class TestFinishScene:
         with TestClient(app) as client:
             resp = client.post(
                 f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}/finish",
-                json={"scene_summary": "The hero won."},
+                json={"scene_summary": ["The hero won."]},
             )
 
         app.dependency_overrides.clear()
 
         assert resp.status_code == 409
         assert resp.json()["error"]["code"] == "scene_finished"
+
+    def test_plain_string_summary_returns_422(self):
+        svc = _make_lifecycle_service()
+        app.dependency_overrides[get_scene_lifecycle_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.post(
+                f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}/finish",
+                json={"scene_summary": "The hero won."},
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 422
 
 
 # ---------------------------------------------------------------------------
