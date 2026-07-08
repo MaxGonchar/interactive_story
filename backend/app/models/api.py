@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 
 from app.models.domain import StoryType
@@ -73,7 +75,7 @@ class SceneDetail(BaseModel):
     id: int
     finished: bool
     scene_description: SceneDescriptionModel
-    scene_summary: str | None
+    scene_summary: list[str] | None
     messages: list[MessageModel]
 
 
@@ -138,13 +140,13 @@ class RegenerateResponse(BaseModel):
 
 
 class FinishSceneRequest(BaseModel):
-    scene_summary: str = Field(min_length=1, max_length=2000)
+    scene_summary: list[Annotated[str, Field(min_length=1)]] = Field(min_length=1, max_length=100)
 
 
 class FinishedSceneData(BaseModel):
     id: int
     finished: bool
-    scene_summary: str
+    scene_summary: list[str]
 
 
 class FinishSceneResponse(BaseModel):
