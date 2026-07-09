@@ -33,6 +33,16 @@ def test_story_detail_fields():
     assert detail.title == "Mila and Bun"
 
 
+def test_story_detail_active_scene_id_none():
+    detail = StoryDetail(
+        id="8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
+        title="Mila and Bun",
+        scenes=[SceneListItem(id=1, finished=True)],
+        active_scene_id=None,
+    )
+    assert detail.active_scene_id is None
+
+
 # ---------------------------------------------------------------------------
 # FinishSceneRequest
 # ---------------------------------------------------------------------------
