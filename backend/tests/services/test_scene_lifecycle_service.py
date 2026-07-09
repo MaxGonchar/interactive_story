@@ -9,7 +9,7 @@ from app.services.scene_lifecycle_service import SceneLifecycleService
 
 STORY_ID = "story-123"
 SCENE_ID = 1
-SUMMARY = "The hero escaped the dungeon."
+SUMMARY = ["The hero escaped the dungeon."]
 
 
 def make_scene_metadata(finished: bool = False) -> SceneMetadata:
@@ -44,7 +44,7 @@ async def test_finish_scene_returns_updated_metadata():
     result = await service.finish_scene(STORY_ID, SCENE_ID, SUMMARY)
 
     assert result.finished is True
-    assert result.scene_summary == [SUMMARY]
+    assert result.scene_summary == SUMMARY
 
 
 @pytest.mark.asyncio
