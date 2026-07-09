@@ -214,6 +214,20 @@ class TestFinishScene:
 
         assert resp.status_code == 422
 
+    def test_finish_scene_calls_service_with_summary_list(self):
+        svc = _make_lifecycle_service()
+        app.dependency_overrides[get_scene_lifecycle_service] = lambda: svc
+
+        with TestClient(app) as client:
+            client.post(
+                f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}/finish",
+                json={"scene_summary": ["The hero won."]},
+            )
+
+        app.dependency_overrides.clear()
+
+        svc.finish_scene.assert_awaited_once_with(_STORY_ID, _SCENE_ID, ["The hero won."])
+
 
 # ---------------------------------------------------------------------------
 # POST /api/stories/{story_id}/scenes/{scene_id}/regenerate

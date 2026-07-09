@@ -42,7 +42,7 @@ class StoryRepository:
         )
 
     async def update_scene_finished(
-        self, story_id: str, scene_id: int, summary: str
+        self, story_id: str, scene_id: int, summary: list[str]
     ) -> None:
         try:
             data = await yaml_storage.read_yaml(file_paths.story_file(story_id))

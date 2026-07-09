@@ -12,7 +12,7 @@ class SceneLifecycleService:
         self._story_repo = story_repo
 
     async def finish_scene(
-        self, story_id: str, scene_id: int, summary: str
+        self, story_id: str, scene_id: int, summary: list[str]
     ) -> SceneMetadata:
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
 
@@ -20,7 +20,7 @@ class SceneLifecycleService:
             raise SceneFinishedError()
 
         updated = metadata.model_copy(
-            update={"finished": True, "scene_summary": [summary]}
+            update={"finished": True, "scene_summary": summary}
         )
 
         await self._story_repo.update_scene_finished(story_id, scene_id, summary)
