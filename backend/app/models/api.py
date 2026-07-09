@@ -48,7 +48,7 @@ class StoryDetail(BaseModel):
     id: str
     title: str
     scenes: list[SceneListItem]
-    active_scene_id: int
+    active_scene_id: int | None
 
 
 class StoryDetailResponse(BaseModel):
