@@ -87,7 +87,6 @@ def test_story_yaml_parses_fixture():
     with open(f"{FIXTURE_ROOT}/{STORY_ID}/story.yaml") as f:
         data = yaml.safe_load(f)
     story = StoryYaml(**data)
-    assert story.id == STORY_ID
     assert len(story.scenes) >= 1
     assert isinstance(story.scenes[0], SceneRefYaml)
 
@@ -98,9 +97,9 @@ def test_scene_ref_yaml_defaults():
     assert ref.finished is False
 
 
-def test_story_yaml_missing_id_raises():
+def test_story_yaml_missing_title_raises():
     with pytest.raises(ValidationError):
-        StoryYaml(title="X", scenes=[])
+        StoryYaml(scenes=[])
 
 
 # ---------------------------------------------------------------------------
@@ -112,14 +111,12 @@ def test_scene_metadata_parses_fixture():
     with open(f"{FIXTURE_ROOT}/{STORY_ID}/scenes/1/meta.yaml") as f:
         data = yaml.safe_load(f)
     meta = SceneMetadataYaml(**data)
-    assert meta.id == 1
     assert meta.user_character_id == "max"
     assert isinstance(meta.scene_description, SceneDescriptionYaml)
 
 
 def test_scene_metadata_scene_summary_is_optional_none():
     meta = SceneMetadataYaml(
-        id=1,
         finished=False,
         character_ids=["mila"],
         user_character_id="max",
@@ -133,7 +130,6 @@ def test_scene_metadata_scene_summary_is_optional_none():
 
 def test_scene_metadata_yaml_context_defaults_none():
     meta = SceneMetadataYaml(
-        id=1,
         finished=False,
         character_ids=["mila"],
         user_character_id="max",
@@ -147,7 +143,6 @@ def test_scene_metadata_yaml_context_defaults_none():
 
 def test_scene_metadata_yaml_accepts_context_list():
     meta = SceneMetadataYaml(
-        id=1,
         finished=False,
         character_ids=["mila"],
         user_character_id="max",
@@ -162,7 +157,6 @@ def test_scene_metadata_yaml_accepts_context_list():
 
 def test_scene_metadata_accepts_scene_summary_list():
     meta = SceneMetadataYaml(
-        id=1,
         finished=True,
         character_ids=["mila"],
         user_character_id="max",
@@ -178,7 +172,6 @@ def test_scene_metadata_accepts_scene_summary_list():
 def test_scene_metadata_missing_character_ids_raises():
     with pytest.raises(ValidationError):
         SceneMetadataYaml(
-            id=1,
             finished=False,
             user_character_id="max",
             scene_description=SceneDescriptionYaml(
@@ -190,7 +183,6 @@ def test_scene_metadata_missing_character_ids_raises():
 def test_scene_metadata_missing_user_character_id_raises():
     with pytest.raises(ValidationError):
         SceneMetadataYaml(
-            id=1,
             finished=False,
             character_ids=["mila"],
             scene_description=SceneDescriptionYaml(
@@ -208,19 +200,17 @@ def test_character_yaml_parses_fixture():
     with open(f"{FIXTURE_ROOT}/{STORY_ID}/characters/mila.yaml") as f:
         data = yaml.safe_load(f)
     char = CharacterYaml(**data)
-    assert char.id == "mila"
     assert char.name == "Mila"
 
 
 def test_character_yaml_defaults():
-    char = CharacterYaml(id="bun", name="Bun")
+    char = CharacterYaml(name="Bun")
     assert char.features == {}
     assert char.memory == []
 
 
 def test_character_yaml_with_features_and_memory():
     char = CharacterYaml(
-        id="bun",
         name="Bun",
         features={"appearance": "Fluffy.", "traits": ["Curious", "Playful"]},
         memory=["Learned to use a toilet."],
@@ -232,7 +222,7 @@ def test_character_yaml_with_features_and_memory():
 
 def test_character_yaml_missing_name_raises():
     with pytest.raises(ValidationError):
-        CharacterYaml(id="bun")
+        CharacterYaml()
 
 
 # ---------------------------------------------------------------------------

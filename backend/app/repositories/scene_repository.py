@@ -18,7 +18,7 @@ class SceneRepository:
 
         raw = SceneMetadataYaml(**data)
         return SceneMetadata(
-            id=raw.id,
+            id=scene_id,
             story_id=story_id,
             character_ids=raw.character_ids,
             user_character_id=raw.user_character_id,

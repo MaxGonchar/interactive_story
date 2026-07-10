@@ -32,7 +32,7 @@ class StoryRepository:
                 break
 
         return StoryMeta(
-            id=story.id,
+            id=story_id,
             title=story.title,
             scenes=[
                 SceneRef(id=s.id, finished=s.finished)
