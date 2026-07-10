@@ -34,7 +34,6 @@ class SceneRefYaml(BaseModel):
 
 
 class StoryYaml(BaseModel):
-    id: str
     title: str
     scenes: list[SceneRefYaml]
 
@@ -50,7 +49,6 @@ class SceneDescriptionYaml(BaseModel):
 
 
 class SceneMetadataYaml(BaseModel):
-    id: int
     finished: bool = False
     character_ids: list[str]
     user_character_id: str
@@ -65,7 +63,6 @@ class SceneMetadataYaml(BaseModel):
 
 
 class CharacterYaml(BaseModel):
-    id: str
     name: str
     features: dict[str, str | list[str]] = {}
     memory: list[str] = []

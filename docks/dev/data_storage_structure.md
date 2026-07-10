@@ -54,9 +54,9 @@ data/
   - scene message history only
 
 ## ID Rules
-- story_id: UUID string
-- scene_id: integer, unique only within a story
-- character_id: kebab-case string, unique only within a story
+- story_id: UUID string — derived from the folder name `data/stories/<story_id>/`
+- scene_id: integer, unique only within a story — derived from the folder name `scenes/<scene_id>/`
+- character_id: kebab-case string, unique only within a story — derived from the filename `characters/<character_id>.yaml`
 - message_id: integer, unique only within a scene
 
 ID generation rules:
@@ -83,8 +83,9 @@ Constraints:
 ### 2) Story Metadata
 Path: data/stories/<story_id>/story.yaml
 
+> The story ID is derived from the enclosing folder name, not stored inside the file.
+
 ```yaml
-id: "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
 title: "The Black Harbor"
 scenes:
   - id: 1
@@ -94,14 +95,14 @@ scenes:
 ```
 
 Constraints:
-- id must equal folder name <story_id>
 - scenes must be sorted by order asc
 
 ### 3) Character Card
 Path: data/stories/<story_id>/characters/<character_id>.yaml
 
+> The character ID is derived from the filename, not stored inside the file.
+
 ```yaml
-id: "captain-mora"
 name: "Captain Mora"
 appearance: "Tall, sea-worn coat, scar over left eyebrow"
 traits:
@@ -121,14 +122,14 @@ memory:
 ```
 
 Constraints:
-- id must equal filename <character_id>.yaml
 - name must be non-empty string
 
 ### 4) Scene Metadata
 Path: data/stories/<story_id>/scenes/<scene_id>/metadata.yaml
 
+> The scene ID is derived from the enclosing folder name, not stored inside the file.
+
 ```yaml
-id: 3
 finished: false
 character_ids:
   - "captain-mora"
@@ -143,7 +144,6 @@ context:
 ```
 
 Constraints:
-- id must equal parent folder name <scene_id>
 - finished is boolean
 - each character_id must have a matching character file in characters/<character_id>.yaml
 - user_character_id must have a matching character file in characters/<user_character_id>.yaml
