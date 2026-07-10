@@ -51,7 +51,6 @@ class SceneDescriptionYaml(BaseModel):
 
 class SceneMetadataYaml(BaseModel):
     id: int
-    story_id: str | None = None
     finished: bool = False
     character_ids: list[str]
     user_character_id: str
@@ -67,7 +66,6 @@ class SceneMetadataYaml(BaseModel):
 
 class CharacterYaml(BaseModel):
     id: str
-    story_id: str | None = None
     name: str
     features: dict[str, str | list[str]] = {}
     memory: list[str] = []

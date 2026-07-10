@@ -65,7 +65,7 @@ def test_story_meta_active_scene_id_none():
 
 
 def test_character_card_defaults():
-    card = CharacterCard(id="bun", story_id="abc", name="Bun")
+    card = CharacterCard(id="bun", name="Bun")
     assert card.features == {}
     assert card.memory == []
 
@@ -73,7 +73,6 @@ def test_character_card_defaults():
 def test_character_card_with_features_and_memory():
     card = CharacterCard(
         id="mila",
-        story_id="8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         name="Mila",
         features={
             "appearance": "Tall and wiry.",
@@ -92,7 +91,7 @@ def test_character_card_with_features_and_memory():
 
 def test_to_prompt_text_string_feature_renders_as_plain_text():
     card = CharacterCard(
-        id="c", story_id="s", name="Ghost",
+        id="c", name="Ghost",
         features={"appearance": "Tall and pale."},
     )
     result = card.to_prompt_text()
@@ -102,7 +101,7 @@ def test_to_prompt_text_string_feature_renders_as_plain_text():
 
 def test_to_prompt_text_list_feature_renders_as_bullet_points():
     card = CharacterCard(
-        id="c", story_id="s", name="Ghost",
+        id="c", name="Ghost",
         features={"traits": ["Brave", "Curious"]},
     )
     result = card.to_prompt_text()
@@ -113,7 +112,7 @@ def test_to_prompt_text_list_feature_renders_as_bullet_points():
 
 def test_to_prompt_text_feature_key_is_title_cased():
     card = CharacterCard(
-        id="c", story_id="s", name="Ghost",
+        id="c", name="Ghost",
         features={"speech_patterns": ["Short sentences."]},
     )
     result = card.to_prompt_text()
@@ -122,7 +121,7 @@ def test_to_prompt_text_feature_key_is_title_cased():
 
 def test_to_prompt_text_memory_section_present_when_non_empty():
     card = CharacterCard(
-        id="c", story_id="s", name="Ghost",
+        id="c", name="Ghost",
         memory=["Encountered a stranger."],
     )
     result = card.to_prompt_text()
@@ -131,13 +130,13 @@ def test_to_prompt_text_memory_section_present_when_non_empty():
 
 
 def test_to_prompt_text_memory_section_omitted_when_empty():
-    card = CharacterCard(id="c", story_id="s", name="Ghost", memory=[])
+    card = CharacterCard(id="c", name="Ghost", memory=[])
     result = card.to_prompt_text()
     assert "### Memory" not in result
 
 
 def test_to_prompt_text_empty_features_produces_only_name_header():
-    card = CharacterCard(id="c", story_id="s", name="Ghost")
+    card = CharacterCard(id="c", name="Ghost")
     result = card.to_prompt_text()
     assert result == "## Ghost"
 

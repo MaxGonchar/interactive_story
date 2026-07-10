@@ -67,7 +67,7 @@ def make_service(
     character_repo.get_characters.return_value = []
     from app.models.domain import CharacterCard
     character_repo.get_character.return_value = CharacterCard(
-        id="user-char", story_id=STORY_ID, name="Hero"
+        id="user-char", name="Hero"
     )
 
     llm_client = AsyncMock()

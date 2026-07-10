@@ -20,8 +20,7 @@ class CharacterRepository:
         char = CharacterYaml(**data)
 
         return CharacterCard(
-            id=char.id,
-            story_id=char.story_id if char.story_id is not None else story_id,
+            id=character_id,
             name=char.name,
             features=char.features,
             memory=char.memory,

@@ -216,7 +216,6 @@ def test_character_yaml_defaults():
     char = CharacterYaml(id="bun", name="Bun")
     assert char.features == {}
     assert char.memory == []
-    assert char.story_id is None
 
 
 def test_character_yaml_with_features_and_memory():

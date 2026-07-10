@@ -144,7 +144,6 @@ context:
 
 Constraints:
 - id must equal parent folder name <scene_id>
-- story_id must equal parent folder story id
 - finished is boolean
 - each character_id must have a matching character file in characters/<character_id>.yaml
 - user_character_id must have a matching character file in characters/<user_character_id>.yaml
