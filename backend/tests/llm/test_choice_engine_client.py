@@ -8,7 +8,7 @@ from langchain_core.exceptions import OutputParserException
 from app.llm.choice_engine_client import ChoiceEngineClient, _DEFAULT_MODEL
 from app.models.domain import CharacterCard, Choice
 
-DEFAULT_CHARACTER = CharacterCard(id="c-1", story_id="s-1", name="Aria")
+DEFAULT_CHARACTER = CharacterCard(id="c-1", name="Aria")
 
 
 def _make_client() -> ChoiceEngineClient:

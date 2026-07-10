@@ -28,7 +28,6 @@ class StoryMeta(BaseModel):
 
 class CharacterCard(BaseModel):
     id: str
-    story_id: str
     name: str
     features: dict[str, str | list[str]] = {}
     memory: list[str] = []

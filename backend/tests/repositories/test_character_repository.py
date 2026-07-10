@@ -20,7 +20,6 @@ async def test_get_character_returns_character_card(data_root):
     result = await repo.get_character(FIXTURE_STORY_ID, "mila")
 
     assert result.id == "mila"
-    assert result.story_id == FIXTURE_STORY_ID
     assert result.name == "Mila"
 
 

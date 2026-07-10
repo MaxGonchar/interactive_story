@@ -6,7 +6,7 @@ import pytest
 from app.llm.story_engine_client import StoryEngineClient, _DEFAULT_MODEL
 from app.models.domain import CharacterCard
 
-DEFAULT_CHARACTER = CharacterCard(id="c-1", story_id="s-1", name="Aria")
+DEFAULT_CHARACTER = CharacterCard(id="c-1", name="Aria")
 
 
 def _make_client() -> StoryEngineClient:
