@@ -88,14 +88,13 @@ Path: data/stories/<story_id>/story.yaml
 ```yaml
 title: "The Black Harbor"
 scenes:
-  - id: 1
-    finished: true
-  - id: 2
-    finished: false
+  - 1
+  - 2
 ```
 
 Constraints:
-- scenes must be sorted by order asc
+- scenes is a plain list of integer scene IDs, sorted by order asc
+- the `finished` state for each scene is stored exclusively in that scene's `meta.yaml`
 
 ### 3) Character Card
 Path: data/stories/<story_id>/characters/<character_id>.yaml

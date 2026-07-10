@@ -29,17 +29,16 @@ def make_scene_metadata(finished: bool = False) -> SceneMetadata:
 
 def make_service(
     metadata: SceneMetadata | None = None,
-) -> tuple[SceneLifecycleService, AsyncMock, AsyncMock]:
+) -> tuple[SceneLifecycleService, AsyncMock]:
     scene_repo = AsyncMock()
     scene_repo.get_metadata.return_value = metadata or make_scene_metadata()
-    story_repo = AsyncMock()
-    service = SceneLifecycleService(scene_repo, story_repo)
-    return service, scene_repo, story_repo
+    service = SceneLifecycleService(scene_repo)
+    return service, scene_repo
 
 
 @pytest.mark.asyncio
 async def test_finish_scene_returns_updated_metadata():
-    service, _, _ = make_service(metadata=make_scene_metadata(finished=False))
+    service, _ = make_service(metadata=make_scene_metadata(finished=False))
 
     result = await service.finish_scene(STORY_ID, SCENE_ID, SUMMARY)
 
@@ -49,7 +48,7 @@ async def test_finish_scene_returns_updated_metadata():
 
 @pytest.mark.asyncio
 async def test_finish_scene_calls_save_metadata():
-    service, scene_repo, _ = make_service(metadata=make_scene_metadata(finished=False))
+    service, scene_repo = make_service(metadata=make_scene_metadata(finished=False))
 
     result = await service.finish_scene(STORY_ID, SCENE_ID, SUMMARY)
 
@@ -57,20 +56,10 @@ async def test_finish_scene_calls_save_metadata():
 
 
 @pytest.mark.asyncio
-async def test_finish_scene_calls_update_scene_finished():
-    service, _, story_repo = make_service(metadata=make_scene_metadata(finished=False))
-
-    await service.finish_scene(STORY_ID, SCENE_ID, SUMMARY)
-
-    story_repo.update_scene_finished.assert_awaited_once_with(STORY_ID, SCENE_ID, SUMMARY)
-
-
-@pytest.mark.asyncio
 async def test_finish_scene_raises_when_already_finished():
-    service, scene_repo, story_repo = make_service(metadata=make_scene_metadata(finished=True))
+    service, scene_repo = make_service(metadata=make_scene_metadata(finished=True))
 
     with pytest.raises(SceneFinishedError):
         await service.finish_scene(STORY_ID, SCENE_ID, SUMMARY)
 
     scene_repo.save_metadata.assert_not_awaited()
-    story_repo.update_scene_finished.assert_not_awaited()
