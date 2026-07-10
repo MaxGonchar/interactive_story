@@ -1,5 +1,4 @@
 from pathlib import Path
-import shutil
 
 import pytest
 
@@ -13,14 +12,6 @@ FIXTURE_DATA_ROOT = Path(__file__).parents[3] / "data-test"
 @pytest.fixture()
 def data_root(monkeypatch):
     monkeypatch.setenv("DATA_ROOT", str(FIXTURE_DATA_ROOT))
-
-
-@pytest.fixture()
-def writable_data_root(monkeypatch, tmp_path):
-    copy = tmp_path / "data-test"
-    shutil.copytree(FIXTURE_DATA_ROOT, copy)
-    monkeypatch.setenv("DATA_ROOT", str(copy))
-    return copy
 
 
 @pytest.mark.asyncio
@@ -83,30 +74,3 @@ async def test_get_story_nonexistent_raises_key_error(data_root):
 
     with pytest.raises(NotFoundError):
         await repo.get_story("nonexistent-id")
-
-
-# ---------------------------------------------------------------------------
-# update_scene_finished
-# ---------------------------------------------------------------------------
-
-
-SUMMARY = "Scene 2 concluded with a dramatic twist."
-
-
-@pytest.mark.asyncio
-async def test_update_scene_finished_sets_finished_and_summary(writable_data_root):
-    repo = StoryRepository()
-
-    await repo.update_scene_finished(FIXTURE_STORY_ID, 2, SUMMARY)
-
-    result = await repo.get_story(FIXTURE_STORY_ID)
-    scene2 = next(s for s in result.scenes if s.id == 2)
-    assert scene2.finished is True
-
-
-@pytest.mark.asyncio
-async def test_update_scene_finished_nonexistent_scene_raises_key_error(writable_data_root):
-    repo = StoryRepository()
-
-    with pytest.raises(NotFoundError):
-        await repo.update_scene_finished(FIXTURE_STORY_ID, 999, SUMMARY)

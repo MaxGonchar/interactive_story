@@ -13,7 +13,6 @@ from app.models.storage import (
     MessagesYaml,
     SceneDescriptionYaml,
     SceneMetadataYaml,
-    SceneRefYaml,
     StoriesIndex,
     StoriesIndexEntry,
     StepYaml,
@@ -88,13 +87,7 @@ def test_story_yaml_parses_fixture():
         data = yaml.safe_load(f)
     story = StoryYaml(**data)
     assert len(story.scenes) >= 1
-    assert isinstance(story.scenes[0], SceneRefYaml)
-
-
-def test_scene_ref_yaml_defaults():
-    ref = SceneRefYaml(id=2, finished=False)
-    assert ref.id == 2
-    assert ref.finished is False
+    assert isinstance(story.scenes[0], int)
 
 
 def test_story_yaml_missing_title_raises():

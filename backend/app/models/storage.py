@@ -28,14 +28,9 @@ class StoriesIndex(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class SceneRefYaml(BaseModel):
-    id: int
-    finished: bool
-
-
 class StoryYaml(BaseModel):
     title: str
-    scenes: list[SceneRefYaml]
+    scenes: list[int]
 
 
 # ---------------------------------------------------------------------------

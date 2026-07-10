@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import asyncio
+
 from app.exceptions import NotFoundError
 from app.models.domain import SceneRef, StoryIndexItem, StoryMeta
-from app.models.storage import StoriesIndex, StoryYaml
+from app.models.storage import SceneMetadataYaml, StoriesIndex, StoryYaml
 from app.utils import file_paths, yaml_storage
-from app.utils.atomic_write import atomic_write
 
 
 class StoryRepository:
@@ -25,8 +26,19 @@ class StoryRepository:
 
         story = StoryYaml(**data)
 
+        async def _read_scene_ref(scene_id: int) -> SceneRef:
+            meta_data = await yaml_storage.read_yaml(
+                file_paths.scene_metadata_file(story_id, scene_id)
+            )
+            meta = SceneMetadataYaml(**meta_data)
+            return SceneRef(id=scene_id, finished=meta.finished)
+
+        scene_refs: list[SceneRef] = await asyncio.gather(
+            *[_read_scene_ref(sid) for sid in story.scenes]
+        )
+
         active_scene_id: int | None = None
-        for scene in story.scenes:
+        for scene in scene_refs:
             if not scene.finished:
                 active_scene_id = scene.id
                 break
@@ -34,30 +46,6 @@ class StoryRepository:
         return StoryMeta(
             id=story_id,
             title=story.title,
-            scenes=[
-                SceneRef(id=s.id, finished=s.finished)
-                for s in story.scenes
-            ],
+            scenes=list(scene_refs),
             active_scene_id=active_scene_id,
-        )
-
-    async def update_scene_finished(
-        self, story_id: str, scene_id: int, summary: list[str]
-    ) -> None:
-        try:
-            data = await yaml_storage.read_yaml(file_paths.story_file(story_id))
-        except FileNotFoundError:
-            raise NotFoundError(f"Story '{story_id}' not found")
-
-        story = StoryYaml(**data)
-
-        scene = next((s for s in story.scenes if s.id == scene_id), None)
-        if scene is None:
-            raise NotFoundError(f"Scene '{scene_id}' not found")
-
-        scene.finished = True
-
-        await atomic_write(
-            file_paths.story_file(story_id),
-            yaml_storage.dump_yaml(story.model_dump()),
         )

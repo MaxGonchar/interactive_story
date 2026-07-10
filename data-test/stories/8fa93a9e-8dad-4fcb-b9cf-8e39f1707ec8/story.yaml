@@ -1,6 +1,4 @@
 title: "Mila and Bun"
 scenes:
-  - id: 1
-    finished: true
-  - id: 2
-    finished: false
+  - 1
+  - 2
