@@ -154,6 +154,19 @@ class FinishSceneResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Summarize scene  —  GET /api/stories/{story_id}/scenes/{scene_id}/summarize
+# ---------------------------------------------------------------------------
+
+
+class SummarizeSceneData(BaseModel):
+    summary: list[str]
+
+
+class SummarizeSceneResponse(BaseModel):
+    data: SummarizeSceneData
+
+
+# ---------------------------------------------------------------------------
 # Choice-Driven Play  —  GET /api/stories/{story_id}/choice-play
 # ---------------------------------------------------------------------------
 

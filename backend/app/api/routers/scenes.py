@@ -5,6 +5,7 @@ from app.api.dependencies import (
     get_scene_message_service,
     get_scene_play_service,
     get_scene_query_service,
+    get_scene_summarize_service,
 )
 from app.models.api import (
     DeleteMessageResponse,
@@ -13,6 +14,7 @@ from app.models.api import (
     PlayRequest,
     PlayResponse,
     SceneDetailResponse,
+    SummarizeSceneResponse,
     UpdateMessageRequest,
     UpdateMessageResponse,
     RegenerateResponse,
@@ -21,6 +23,7 @@ from app.services.scene_lifecycle_service import SceneLifecycleService
 from app.services.scene_message_service import SceneMessageService
 from app.services.scene_play_service import ScenePlayService
 from app.services.scene_query_service import SceneQueryService
+from app.services.scene_summarize_service import SceneSummarizeService
 
 router = APIRouter(prefix="/stories", tags=["scenes"])
 
@@ -95,6 +98,19 @@ async def delete_message(
 ):
     await svc.delete_message(story_id, scene_id, message_id)
     return {"success": True}
+
+
+@router.get(
+    "/{story_id}/scenes/{scene_id}/summarize",
+    response_model=SummarizeSceneResponse,
+)
+async def summarize_scene(
+    story_id: str,
+    scene_id: int,
+    svc: SceneSummarizeService = Depends(get_scene_summarize_service),
+):
+    summary = await svc.summarize(story_id, scene_id)
+    return {"data": {"summary": summary}}
 
 
 @router.post(
