@@ -53,3 +53,7 @@ export async function regenerateLastAssistantMessage(storyId, sceneId) {
     { method: "POST" }
   );
 }
+
+export async function generateSceneSummary(storyId, sceneId) {
+  return apiFetch(`/api/stories/${storyId}/scenes/${sceneId}/summarize`);
+}
