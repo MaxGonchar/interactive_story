@@ -1,0 +1,11 @@
+{% if previous_summary %}
+## Previous Summary
+
+{% for item in previous_summary %}
+* {{ item }}
+{% endfor %}
+
+{% endif %}
+## Scene Content
+
+{{ scene_content }}
