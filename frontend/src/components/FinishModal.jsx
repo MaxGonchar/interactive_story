@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { generateSceneSummary } from '../api/scenes'
 
 const BULLET = '- '
 
@@ -20,9 +21,25 @@ function normalisePaste(text) {
     .join('\n')
 }
 
-function FinishModal({ onSubmit, onCancel }) {
+function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
   const [text, setText] = useState(BULLET)
   const [validationError, setValidationError] = useState(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState(null)
+
+  async function handleGenerate() {
+    setIsGenerating(true)
+    setGenerateError(null)
+    try {
+      const data = await generateSceneSummary(storyId, sceneId)
+      const bulletText = data.summary.map((item) => BULLET + item).join('\n')
+      setText(bulletText)
+    } catch (err) {
+      setGenerateError(err.message ?? 'Failed to generate summary.')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') {
@@ -82,7 +99,7 @@ function FinishModal({ onSubmit, onCancel }) {
           border: '1px solid var(--border)',
           borderRadius: '8px',
           padding: '24px',
-          width: '480px',
+          width: '576px',
           maxWidth: '90vw',
           display: 'flex',
           flexDirection: 'column',
@@ -95,7 +112,8 @@ function FinishModal({ onSubmit, onCancel }) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          rows={10}
+          disabled={isGenerating}
+          rows={14}
           style={{
             resize: 'vertical',
             padding: '8px',
@@ -110,9 +128,17 @@ function FinishModal({ onSubmit, onCancel }) {
             {validationError}
           </p>
         )}
+        {generateError && (
+          <p style={{ margin: 0, color: 'red', fontSize: '14px' }}>
+            {generateError}
+          </p>
+        )}
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button onClick={onCancel}>Cancel</button>
-          <button onClick={handleSubmit}>Submit</button>
+          <button onClick={handleGenerate} disabled={isGenerating}>
+            {isGenerating ? 'Generating…' : 'Generate Summary'}
+          </button>
+          <button onClick={onCancel} disabled={isGenerating}>Cancel</button>
+          <button onClick={handleSubmit} disabled={isGenerating}>Submit</button>
         </div>
       </div>
     </div>
