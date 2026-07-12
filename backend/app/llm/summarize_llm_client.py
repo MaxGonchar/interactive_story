@@ -35,6 +35,13 @@ class SummarizeLLMClient:
             scene_content=scene_content,
         )
         messages = [SystemMessage(system_prompt), HumanMessage(user_message)]
+
+        print("Invoking LLM for summary...")
+        print("=== MESSAGES ===")
+        for m in messages:
+            print(f"{m.type.upper()}: {m.content}")
+        print("=== END MESSAGES ===")
+
         response = await self._model.ainvoke(messages)
         result = self._parser.parse(response.content)
         return result.items
