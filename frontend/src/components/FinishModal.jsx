@@ -32,7 +32,7 @@ function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
     setGenerateError(null)
     try {
       const data = await generateSceneSummary(storyId, sceneId)
-      const bulletText = data.summary.map((item) => BULLET + item).join('\n')
+      const bulletText = data.data.summary.map((item) => BULLET + item).join('\n')
       setText(bulletText)
     } catch (err) {
       setGenerateError(err.message ?? 'Failed to generate summary.')
