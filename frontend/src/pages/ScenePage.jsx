@@ -156,6 +156,8 @@ function ScenePage() {
       )}
       {showFinishModal && (
         <FinishModal
+          storyId={storyId}
+          sceneId={sceneId}
           onSubmit={handleFinish}
           onCancel={() => setShowFinishModal(false)}
         />
