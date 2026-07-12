@@ -9,6 +9,7 @@ from app.api.dependencies import (
     get_scene_lifecycle_service,
     get_scene_message_service,
     get_scene_play_service,
+    get_scene_summarize_service,
 )
 from app.exceptions import NoAssistantMessageError, NoUserMessageError, NotFoundError, SceneFinishedError, LLMError
 from app.main import app
@@ -284,6 +285,81 @@ class TestRegenerate:
         with TestClient(app) as client:
             resp = client.post(
                 f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}/regenerate",
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 502
+        assert resp.json()["error"]["code"] == "llm_error"
+
+
+# ---------------------------------------------------------------------------
+# GET /api/stories/{story_id}/scenes/{scene_id}/summarize
+# ---------------------------------------------------------------------------
+
+
+def _make_summarize_service(
+    side_effect: Exception | None = None,
+    return_value: list[str] | None = None,
+) -> MagicMock:
+    svc = MagicMock()
+    if side_effect is not None:
+        svc.summarize = AsyncMock(side_effect=side_effect)
+    else:
+        svc.summarize = AsyncMock(return_value=return_value or ["Item one", "Item two"])
+    return svc
+
+
+class TestSummarizeScene:
+    def test_success_returns_200(self):
+        svc = _make_summarize_service()
+        app.dependency_overrides[get_scene_summarize_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.get(
+                f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}/summarize",
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 200
+        assert resp.json() == {"data": {"summary": ["Item one", "Item two"]}}
+
+    def test_not_found_returns_404(self):
+        svc = _make_summarize_service(side_effect=NotFoundError("scene"))
+        app.dependency_overrides[get_scene_summarize_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.get(
+                f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}/summarize",
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 404
+        assert resp.json()["error"]["code"] == "not_found"
+
+    def test_scene_finished_returns_409(self):
+        svc = _make_summarize_service(side_effect=SceneFinishedError())
+        app.dependency_overrides[get_scene_summarize_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.get(
+                f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}/summarize",
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 409
+        assert resp.json()["error"]["code"] == "scene_finished"
+
+    def test_llm_error_returns_502(self):
+        svc = _make_summarize_service(side_effect=LLMError("boom"))
+        app.dependency_overrides[get_scene_summarize_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.get(
+                f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}/summarize",
             )
 
         app.dependency_overrides.clear()
