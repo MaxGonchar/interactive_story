@@ -16,7 +16,7 @@ class ChoiceDrivenStoryRepository:
 
         raw = ChoiceDrivenStoryYaml(**data)
         return ChoiceDrivenStoryMeta(
-            id=raw.id,
+            id=story_id,
             title=raw.title,
             writing_style=raw.writing_style,
             plot_directions=raw.plot_directions,

@@ -11,9 +11,9 @@ def fixed_root(monkeypatch, tmp_path):
     yield tmp_path
 
 
-def test_stories_index(fixed_root):
-    result = fp.stories_index()
-    assert str(result) == str(fixed_root / "stories" / "index.yaml")
+def test_stories_dir(fixed_root):
+    result = fp.stories_dir()
+    assert str(result) == str(fixed_root / "stories")
 
 
 def test_story_file(fixed_root):
@@ -38,7 +38,7 @@ def test_scene_messages_file(fixed_root):
 
 def test_all_functions_return_path_objects(fixed_root):
     from pathlib import Path
-    assert isinstance(fp.stories_index(), Path)
+    assert isinstance(fp.stories_dir(), Path)
     assert isinstance(fp.story_file("x"), Path)
     assert isinstance(fp.character_file("x", "y"), Path)
     assert isinstance(fp.scene_metadata_file("x", 1), Path)

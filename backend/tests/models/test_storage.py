@@ -13,68 +13,12 @@ from app.models.storage import (
     MessagesYaml,
     SceneDescriptionYaml,
     SceneMetadataYaml,
-    StoriesIndex,
-    StoriesIndexEntry,
     StepYaml,
     StoryYaml,
 )
 
 STORY_ID = "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
 FIXTURE_ROOT = Path(__file__).parents[3] / "data-test" / "stories"
-
-
-# ---------------------------------------------------------------------------
-# StoriesIndex
-# ---------------------------------------------------------------------------
-
-
-def test_stories_index_parses_fixture():
-    with open(f"{FIXTURE_ROOT}/index.yaml") as f:
-        data = yaml.safe_load(f)
-    index = StoriesIndex(**data)
-    assert len(index.stories) >= 1
-    assert isinstance(index.stories[0], StoriesIndexEntry)
-
-
-def test_stories_index_entry_fields():
-    entry = StoriesIndexEntry(
-        id=STORY_ID,
-        title="Mila and Bun",
-        created_at="2024-06-01T12:00:00Z",
-    )
-    assert entry.id == STORY_ID
-    assert entry.title == "Mila and Bun"
-
-
-def test_stories_index_entry_type_defaults_scene():
-    entry = StoriesIndexEntry(
-        id=STORY_ID,
-        title="Mila and Bun",
-        created_at="2024-06-01T12:00:00Z",
-    )
-    assert entry.type == "scene"
-
-
-def test_stories_index_entry_type_choice_driven():
-    entry = StoriesIndexEntry(
-        id=STORY_ID,
-        title="Mila and Bun",
-        created_at="2024-06-01T12:00:00Z",
-        type="choice_driven",
-    )
-    assert entry.type == "choice_driven"
-
-
-def test_stories_index_parses_fixture_entry_type_defaults_scene():
-    with open(f"{FIXTURE_ROOT}/index.yaml") as f:
-        data = yaml.safe_load(f)
-    index = StoriesIndex(**data)
-    assert index.stories[0].type == "scene"
-
-
-def test_stories_index_missing_stories_raises():
-    with pytest.raises(ValidationError):
-        StoriesIndex()
 
 
 # ---------------------------------------------------------------------------
@@ -87,6 +31,8 @@ def test_story_yaml_parses_fixture():
         data = yaml.safe_load(f)
     story = StoryYaml(**data)
     assert story.title == "Mila and Bun"
+    assert story.type == "scene"
+    assert story.created_at == "2024-06-01T12:00:00Z"
 
 
 def test_story_yaml_missing_title_raises():
@@ -254,14 +200,14 @@ def test_messages_yaml_missing_messages_raises():
 
 def test_choice_driven_story_yaml_fields():
     story = ChoiceDrivenStoryYaml(
-        id="abc",
         title="Fog City",
         type="choice_driven",
+        created_at="2024-06-01T12:00:00Z",
         character_ids=["john"],
         writing_style="Dark and suspenseful",
         plot_directions=["Romance", "Betrayal"],
     )
-    assert story.id == "abc"
+    assert story.created_at == "2024-06-01T12:00:00Z"
     assert story.type == "choice_driven"
     assert story.plot_directions == ["Romance", "Betrayal"]
 
@@ -269,9 +215,9 @@ def test_choice_driven_story_yaml_fields():
 def test_choice_driven_story_yaml_missing_writing_style_raises():
     with pytest.raises(ValidationError):
         ChoiceDrivenStoryYaml(
-            id="abc",
             title="Fog City",
             type="choice_driven",
+            created_at="2024-06-01T12:00:00Z",
             character_ids=[],
             plot_directions=[],
         )

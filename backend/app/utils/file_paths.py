@@ -29,8 +29,8 @@ def _data_root() -> Path:
     return (_BACKEND_DIR / p).resolve()
 
 
-def stories_index() -> Path:
-    return _data_root() / _STORIES_DIR / _INDEX_FILE
+def stories_dir() -> Path:
+    return _data_root() / _STORIES_DIR
 
 
 def story_file(story_id: str) -> Path:
