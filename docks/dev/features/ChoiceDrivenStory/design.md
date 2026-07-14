@@ -138,20 +138,11 @@ Response 200: { "data": { "step_id": 2 } }
 
 ## Data Changes
 
-### `data/stories/index.yaml` — add `type`
-```yaml
-stories:
-  - id: "..."
-    title: "..."
-    created_at: "..."
-    type: "choice_driven"   # "scene" for existing stories (default when absent)
-```
-
 ### `data/stories/<story_id>/story.yaml` — new shape for choice-driven stories
 ```yaml
-id: "..."
 title: "..."
 type: "choice_driven"
+created_at: "2024-06-01T12:00:00Z"
 character_ids:
   - "john"
 writing_style: "dark, suspenseful, first-person"
@@ -161,6 +152,7 @@ plot_directions:
   - "Escaping the City"
 ```
 No `scenes` list. `writing_style` and `plot_directions` are new fields specific to this type.
+The story ID is derived from the enclosing folder name, not stored in the file.
 
 ### `data/stories/<story_id>/history.yaml` — new file
 ```yaml
@@ -195,8 +187,7 @@ Constraints:
 - New `ChoiceDrivenStoryMeta`: `id`, `title`, `writing_style: str`, `plot_directions: list[str]`, `character_ids: list[str]`
 
 ### `app/models/storage.py`
-- `StoriesIndexEntry`: add `type: Literal["scene", "choice_driven"] = "scene"`
-- New `ChoiceDrivenStoryYaml`: `id`, `title`, `type`, `character_ids`, `writing_style`, `plot_directions`
+- New `ChoiceDrivenStoryYaml`: `title`, `type`, `created_at`, `character_ids`, `writing_style`, `plot_directions`
 - New `ChoiceYaml`: `action`, `consequence`
 - New `StepYaml`: `id`, `incoming_choice: ChoiceYaml | None`, `text`, `choices: list[ChoiceYaml]`
 - New `HistoryYaml`: `steps: list[StepYaml]`

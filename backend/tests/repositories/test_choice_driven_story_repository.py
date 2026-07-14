@@ -24,9 +24,9 @@ def story_root(monkeypatch, tmp_path):
     story_dir.mkdir(parents=True)
 
     story_data = {
-        "id": STORY_ID,
         "title": "Fog City",
         "type": "choice_driven",
+        "created_at": "2024-06-01T12:00:00Z",
         "character_ids": ["john"],
         "writing_style": "Dark and suspenseful",
         "plot_directions": ["Romance", "Betrayal"],

@@ -8,28 +8,14 @@ from app.models.domain import StoryType
 
 
 # ---------------------------------------------------------------------------
-# Stories index  —  data/stories/index.yaml
-# ---------------------------------------------------------------------------
-
-
-class StoriesIndexEntry(BaseModel):
-    id: str
-    title: str
-    created_at: str
-    type: StoryType = "scene"
-
-
-class StoriesIndex(BaseModel):
-    stories: list[StoriesIndexEntry]
-
-
-# ---------------------------------------------------------------------------
 # Story metadata  —  data/stories/<story_id>/story.yaml
 # ---------------------------------------------------------------------------
 
 
 class StoryYaml(BaseModel):
     title: str
+    type: StoryType
+    created_at: str
 
 
 # ---------------------------------------------------------------------------
@@ -83,9 +69,9 @@ class MessagesYaml(BaseModel):
 
 
 class ChoiceDrivenStoryYaml(BaseModel):
-    id: str
     title: str
     type: Literal["choice_driven"]
+    created_at: str
     character_ids: list[str]
     writing_style: str
     plot_directions: list[str]

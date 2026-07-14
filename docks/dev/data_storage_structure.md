@@ -27,7 +27,6 @@ Out of MVP:
 ```text
 data/
   stories/
-    index.yaml
     <story_id>/
       story.yaml
       characters/
@@ -39,9 +38,6 @@ data/
 ```
 
 ## File Responsibilities
-- data/stories/index.yaml:
-  - lightweight list for stories index page
-  - source for ordered story listing
 - data/stories/<story_id>/story.yaml:
   - story-level metadata
   - ordered scene ids for story page
@@ -66,21 +62,7 @@ ID generation rules:
 
 ## YAML Schemas
 
-### 1) Stories Index
-Path: data/stories/index.yaml
-
-```yaml
-stories:
-  - id: "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
-    title: "The Black Harbor"
-    created_at: "2024-06-01T12:00:00Z"
-```
-
-Constraints:
-- stories must be sorted by created_at desc when returned
-- id must exist as folder data/stories/<id>/
-
-### 2) Story Metadata
+### 1) Story Metadata
 Path: data/stories/<story_id>/story.yaml
 
 > The story ID is derived from the enclosing folder name, not stored inside the file.
@@ -88,9 +70,15 @@ Path: data/stories/<story_id>/story.yaml
 
 ```yaml
 title: "The Black Harbor"
+type: "scene"
+created_at: "2024-06-01T12:00:00Z"
 ```
 
 Constraints:
+- `type` is required; valid values: `"scene"` | `"choice_driven"`
+- `created_at` is required; ISO 8601 string
+- stories are discovered by scanning `data/stories/` for subdirectories; IDs are derived from folder names
+- stories are sorted by `created_at` desc when returned from list
 - scene IDs are discovered by listing `scenes/<scene_id>/` subfolder names (integer, sorted ascending)
 - the `finished` state for each scene is stored exclusively in that scene's `meta.yaml`
 
@@ -194,7 +182,9 @@ Why same directory:
 
 ## Read/Write Mapping to MVP Operations
 - list stories:
-  - read data/stories/index.yaml
+  - scan data/stories/ for story subdirectories
+  - read each story.yaml concurrently
+  - sort by created_at desc
 - get story and scenes list:
   - read story.yaml
   - read each scene meta.yaml for finished status

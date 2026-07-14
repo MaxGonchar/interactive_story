@@ -4,19 +4,32 @@ import asyncio
 
 from app.exceptions import NotFoundError
 from app.models.domain import SceneRef, StoryIndexItem, StoryMeta
-from app.models.storage import SceneMetadataYaml, StoriesIndex, StoryYaml
+from app.models.storage import SceneMetadataYaml, StoryYaml
 from app.utils import file_paths, yaml_storage
 
 
 class StoryRepository:
     async def list_stories(self) -> list[StoryIndexItem]:
-        data = await yaml_storage.read_yaml(file_paths.stories_index())
-        index = StoriesIndex(**data)
-        sorted_entries = sorted(index.stories, key=lambda e: e.created_at, reverse=True)
-        return [
-            StoryIndexItem(id=e.id, title=e.title, created_at=e.created_at, type=e.type)
-            for e in sorted_entries
-        ]
+        def _scan_story_ids() -> list[str]:
+            d = file_paths.stories_dir()
+            return [p.name for p in d.iterdir() if p.is_dir()]
+
+        story_ids = await asyncio.to_thread(_scan_story_ids)
+
+        async def _read_story_item(story_id: str) -> StoryIndexItem:
+            data = await yaml_storage.read_yaml(file_paths.story_file(story_id))
+            story = StoryYaml(**data)
+            return StoryIndexItem(
+                id=story_id,
+                title=story.title,
+                created_at=story.created_at,
+                type=story.type,
+            )
+
+        items: list[StoryIndexItem] = await asyncio.gather(
+            *[_read_story_item(sid) for sid in story_ids]
+        )
+        return sorted(items, key=lambda e: e.created_at, reverse=True)
 
     async def get_story(self, story_id: str) -> StoryMeta:
         try:
