@@ -30,7 +30,6 @@ class StoriesIndex(BaseModel):
 
 class StoryYaml(BaseModel):
     title: str
-    scenes: list[int]
 
 
 # ---------------------------------------------------------------------------

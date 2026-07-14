@@ -84,16 +84,14 @@ Constraints:
 Path: data/stories/<story_id>/story.yaml
 
 > The story ID is derived from the enclosing folder name, not stored inside the file.
+> Scene IDs are derived from subfolder names under `scenes/`, not stored in this file.
 
 ```yaml
 title: "The Black Harbor"
-scenes:
-  - 1
-  - 2
 ```
 
 Constraints:
-- scenes is a plain list of integer scene IDs, sorted by order asc
+- scene IDs are discovered by listing `scenes/<scene_id>/` subfolder names (integer, sorted ascending)
 - the `finished` state for each scene is stored exclusively in that scene's `meta.yaml`
 
 ### 3) Character Card

@@ -86,13 +86,12 @@ def test_story_yaml_parses_fixture():
     with open(f"{FIXTURE_ROOT}/{STORY_ID}/story.yaml") as f:
         data = yaml.safe_load(f)
     story = StoryYaml(**data)
-    assert len(story.scenes) >= 1
-    assert isinstance(story.scenes[0], int)
+    assert story.title == "Mila and Bun"
 
 
 def test_story_yaml_missing_title_raises():
     with pytest.raises(ValidationError):
-        StoryYaml(scenes=[])
+        StoryYaml()
 
 
 # ---------------------------------------------------------------------------

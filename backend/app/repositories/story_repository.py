@@ -26,6 +26,12 @@ class StoryRepository:
 
         story = StoryYaml(**data)
 
+        def _scan_scene_ids() -> list[int]:
+            d = file_paths.scenes_dir(story_id)
+            return sorted(int(p.name) for p in d.iterdir() if p.is_dir() and p.name.isdigit())
+
+        scene_ids = await asyncio.to_thread(_scan_scene_ids)
+
         async def _read_scene_ref(scene_id: int) -> SceneRef:
             meta_data = await yaml_storage.read_yaml(
                 file_paths.scene_metadata_file(story_id, scene_id)
@@ -34,7 +40,7 @@ class StoryRepository:
             return SceneRef(id=scene_id, finished=meta.finished)
 
         scene_refs: list[SceneRef] = await asyncio.gather(
-            *[_read_scene_ref(sid) for sid in story.scenes]
+            *[_read_scene_ref(sid) for sid in scene_ids]
         )
 
         active_scene_id: int | None = None

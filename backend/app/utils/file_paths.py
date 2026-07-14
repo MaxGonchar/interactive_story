@@ -41,6 +41,10 @@ def character_file(story_id: str, character_id: str) -> Path:
     return _data_root() / _STORIES_DIR / story_id / _CHARACTERS_DIR / f"{character_id}.yaml"
 
 
+def scenes_dir(story_id: str) -> Path:
+    return _data_root() / _STORIES_DIR / story_id / _SCENES_DIR
+
+
 def scene_metadata_file(story_id: str, scene_id: int) -> Path:
     return _data_root() / _STORIES_DIR / story_id / _SCENES_DIR / str(scene_id) / _METADATA_FILE
 
