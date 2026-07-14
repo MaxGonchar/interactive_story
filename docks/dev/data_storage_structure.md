@@ -34,7 +34,7 @@ data/
         <character_id>.yaml
       scenes/
         <scene_id>/
-          metadata.yaml
+          meta.yaml
           messages.yaml
 ```
 
@@ -48,7 +48,7 @@ data/
   - active scene pointer
 - data/stories/<story_id>/characters/<character_id>.yaml:
   - full character card for a story character
-- data/stories/<story_id>/scenes/<scene_id>/metadata.yaml:
+- data/stories/<story_id>/scenes/<scene_id>/meta.yaml:
   - scene metadata (finished status, character set, user character, scene description, summary)
 - data/stories/<story_id>/scenes/<scene_id>/messages.yaml:
   - scene message history only
@@ -124,7 +124,7 @@ Constraints:
 - name must be non-empty string
 
 ### 4) Scene Metadata
-Path: data/stories/<story_id>/scenes/<scene_id>/metadata.yaml
+Path: data/stories/<story_id>/scenes/<scene_id>/meta.yaml
 
 > The scene ID is derived from the enclosing folder name, not stored inside the file.
 
@@ -199,34 +199,34 @@ Why same directory:
   - read data/stories/index.yaml
 - get story and scenes list:
   - read story.yaml
-  - read each scene metadata.yaml for finished status
+  - read each scene meta.yaml for finished status
 - open last scene:
   - read story.yaml -> active_scene_id
-  - read scene metadata.yaml
+  - read scene meta.yaml
   - read scene messages.yaml
 - play scene:
-  - read scene metadata.yaml
+  - read scene meta.yaml
   - validate not finished
   - read scene messages.yaml
   - append user + assistant messages
   - atomic write messages.yaml
 - edit message:
-  - read scene metadata.yaml
+  - read scene meta.yaml
   - validate not finished
   - read scene messages.yaml
   - update target message content in place
   - atomic write messages.yaml
 - delete message:
-  - read scene metadata.yaml
+  - read scene meta.yaml
   - validate not finished
   - read scene messages.yaml
   - remove target message without re-numbering remaining ids
   - atomic write messages.yaml
 - finish scene:
-  - read scene metadata.yaml
+  - read scene meta.yaml
   - set finished=true
   - persist scene_summary
-  - atomic write metadata.yaml
+  - atomic write meta.yaml
 
 ## Validation Rules at Repository Boundary
 - reject malformed YAML as repository error

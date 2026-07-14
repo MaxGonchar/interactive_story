@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+import yaml
 
 from app.exceptions import NotFoundError
 from app.models.domain import Message, SceneDescription, SceneMetadata
@@ -123,6 +124,26 @@ async def test_save_metadata_round_trip(writable_data_root):
 
     assert result.finished is True
     assert result.scene_summary == ["A summary line."]
+
+
+@pytest.mark.asyncio
+async def test_save_metadata_does_not_write_id_or_story_id(writable_data_root):
+    repo = SceneRepository()
+    original = await repo.get_metadata(FIXTURE_STORY_ID, FIXTURE_SCENE_ID)
+
+    await repo.save_metadata(FIXTURE_STORY_ID, FIXTURE_SCENE_ID, original)
+
+    meta_path = (
+        writable_data_root
+        / "stories"
+        / FIXTURE_STORY_ID
+        / "scenes"
+        / str(FIXTURE_SCENE_ID)
+        / "meta.yaml"
+    )
+    raw = yaml.safe_load(meta_path.read_text())
+    assert "id" not in raw
+    assert "story_id" not in raw
 
 
 # ---------------------------------------------------------------------------

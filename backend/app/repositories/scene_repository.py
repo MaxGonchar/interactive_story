@@ -34,7 +34,7 @@ class SceneRepository:
     async def save_metadata(
         self, story_id: str, scene_id: int, metadata: SceneMetadata
     ) -> None:
-        data = metadata.model_dump()
+        data = metadata.model_dump(exclude={"id", "story_id"})
         await atomic_write(
             file_paths.scene_metadata_file(story_id, scene_id),
             yaml_storage.dump_yaml(data),
