@@ -34,6 +34,13 @@ class NoStepsError(DomainError):
     message = "Story has no steps yet"
 
 
+class ActiveSceneExistsError(DomainError):
+    """Scene creation rejected: story already has an active (unfinished) scene."""
+
+    error_code = "active_scene_exists"
+    message = "Story already has an active scene"
+
+
 class NotFoundError(DomainError):
     """Raised by repositories when a requested record does not exist."""
 

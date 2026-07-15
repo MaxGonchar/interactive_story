@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.models.domain import StoryType
 
@@ -146,6 +146,32 @@ class RegenerateData(BaseModel):
 
 class RegenerateResponse(BaseModel):
     data: RegenerateData
+
+
+# ---------------------------------------------------------------------------
+# Scene creation  —  POST /api/stories/{story_id}/scenes
+# ---------------------------------------------------------------------------
+
+
+class CreateSceneRequest(BaseModel):
+    user_character_id: str
+    character_ids: list[str] = []
+    context: list[str] = Field(min_length=1)
+    general_scene_guide: str
+    writing_style: str
+    first_message: str
+
+    @model_validator(mode="after")
+    def user_character_not_in_character_ids(self) -> "CreateSceneRequest":
+        if self.user_character_id in self.character_ids:
+            raise ValueError(
+                "user_character_id must not appear in character_ids"
+            )
+        return self
+
+
+class CreateSceneResponse(BaseModel):
+    data: SceneListItem
 
 
 # ---------------------------------------------------------------------------
