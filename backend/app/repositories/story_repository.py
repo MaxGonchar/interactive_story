@@ -41,6 +41,8 @@ class StoryRepository:
 
         def _scan_scene_ids() -> list[int]:
             d = file_paths.scenes_dir(story_id)
+            if not d.exists():
+                return []
             return sorted(int(p.name) for p in d.iterdir() if p.is_dir() and p.name.isdigit())
 
         scene_ids = await asyncio.to_thread(_scan_scene_ids)

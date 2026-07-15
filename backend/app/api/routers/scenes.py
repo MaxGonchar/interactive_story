@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import (
+    get_scene_creation_service,
     get_scene_lifecycle_service,
     get_scene_message_service,
     get_scene_play_service,
@@ -8,6 +9,8 @@ from app.api.dependencies import (
     get_scene_summarize_service,
 )
 from app.models.api import (
+    CreateSceneRequest,
+    CreateSceneResponse,
     DeleteMessageResponse,
     FinishSceneRequest,
     FinishSceneResponse,
@@ -19,6 +22,7 @@ from app.models.api import (
     UpdateMessageResponse,
     RegenerateResponse,
 )
+from app.services.scene_creation_service import SceneCreationService
 from app.services.scene_lifecycle_service import SceneLifecycleService
 from app.services.scene_message_service import SceneMessageService
 from app.services.scene_play_service import ScenePlayService
@@ -26,6 +30,28 @@ from app.services.scene_query_service import SceneQueryService
 from app.services.scene_summarize_service import SceneSummarizeService
 
 router = APIRouter(prefix="/stories", tags=["scenes"])
+
+
+@router.post(
+    "/{story_id}/scenes",
+    response_model=CreateSceneResponse,
+    status_code=201,
+)
+async def create_scene(
+    story_id: str,
+    request: CreateSceneRequest,
+    svc: SceneCreationService = Depends(get_scene_creation_service),
+):
+    scene_ref = await svc.create(
+        story_id=story_id,
+        user_character_id=request.user_character_id,
+        character_ids=request.character_ids,
+        context=request.context,
+        general_scene_guide=request.general_scene_guide,
+        writing_style=request.writing_style,
+        first_message=request.first_message,
+    )
+    return {"data": {"id": scene_ref.id, "finished": scene_ref.finished}}
 
 
 @router.get(

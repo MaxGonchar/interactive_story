@@ -85,6 +85,12 @@ class SceneRepository:
             story_id, scene_id, [m for m in messages if m.id != message_id]
         )
 
+    async def create_scene(
+        self, story_id: str, scene_id: int, metadata: SceneMetadata, first_message: Message
+    ) -> None:
+        await self.save_metadata(story_id, scene_id, metadata)
+        await self._save_messages(story_id, scene_id, [first_message])
+
     async def _save_messages(
         self, story_id: str, scene_id: int, messages: list[Message]
     ) -> None:
