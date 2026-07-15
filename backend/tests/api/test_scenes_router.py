@@ -6,14 +6,15 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.dependencies import (
+    get_scene_creation_service,
     get_scene_lifecycle_service,
     get_scene_message_service,
     get_scene_play_service,
     get_scene_summarize_service,
 )
-from app.exceptions import NoAssistantMessageError, NoUserMessageError, NotFoundError, SceneFinishedError, LLMError
+from app.exceptions import ActiveSceneExistsError, NoAssistantMessageError, NoUserMessageError, NotFoundError, SceneFinishedError, LLMError
 from app.main import app
-from app.models.domain import Message
+from app.models.domain import Message, SceneRef
 
 _STORY_ID = "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
 _SCENE_ID = 1
@@ -366,3 +367,96 @@ class TestSummarizeScene:
 
         assert resp.status_code == 502
         assert resp.json()["error"]["code"] == "llm_error"
+
+
+# ---------------------------------------------------------------------------
+# POST /api/stories/{story_id}/scenes
+# ---------------------------------------------------------------------------
+
+_VALID_CREATE_PAYLOAD = {
+    "user_character_id": "hero",
+    "character_ids": ["villain"],
+    "context": ["Previously in the story..."],
+    "general_scene_guide": "Build tension.",
+    "writing_style": "Cinematic.",
+    "first_message": "You enter a dark corridor.",
+}
+
+
+def _make_creation_service(
+    side_effect: Exception | None = None,
+    return_value: SceneRef | None = None,
+) -> MagicMock:
+    svc = MagicMock()
+    if side_effect is not None:
+        svc.create = AsyncMock(side_effect=side_effect)
+    else:
+        svc.create = AsyncMock(return_value=return_value or SceneRef(id=3, finished=False))
+    return svc
+
+
+class TestCreateScene:
+    def test_success_returns_201(self):
+        svc = _make_creation_service()
+        app.dependency_overrides[get_scene_creation_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.post(
+                f"/api/stories/{_STORY_ID}/scenes",
+                json=_VALID_CREATE_PAYLOAD,
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 201
+        data = resp.json()["data"]
+        assert data["id"] == 3
+        assert data["finished"] is False
+
+    def test_not_found_returns_404(self):
+        svc = _make_creation_service(side_effect=NotFoundError("Story not found"))
+        app.dependency_overrides[get_scene_creation_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.post(
+                f"/api/stories/{_STORY_ID}/scenes",
+                json=_VALID_CREATE_PAYLOAD,
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 404
+        assert resp.json()["error"]["code"] == "not_found"
+
+    def test_active_scene_exists_returns_409(self):
+        svc = _make_creation_service(side_effect=ActiveSceneExistsError())
+        app.dependency_overrides[get_scene_creation_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.post(
+                f"/api/stories/{_STORY_ID}/scenes",
+                json=_VALID_CREATE_PAYLOAD,
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 409
+        assert resp.json()["error"]["code"] == "active_scene_exists"
+
+    def test_user_character_id_in_character_ids_returns_422(self):
+        svc = _make_creation_service()
+        app.dependency_overrides[get_scene_creation_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.post(
+                f"/api/stories/{_STORY_ID}/scenes",
+                json={
+                    **_VALID_CREATE_PAYLOAD,
+                    "character_ids": ["hero"],  # same as user_character_id
+                },
+            )
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 422
+        assert resp.json()["error"]["code"] == "validation_error"

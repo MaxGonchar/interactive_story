@@ -200,3 +200,92 @@ async def test_delete_message_nonexistent_raises_key_error(writable_data_root):
 
     with pytest.raises(NotFoundError):
         await repo.delete_message(FIXTURE_STORY_ID, FIXTURE_SCENE_ID, message_id=999)
+
+
+# ---------------------------------------------------------------------------
+# create_scene
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_create_scene_writes_metadata(writable_data_root):
+    repo = SceneRepository()
+    new_scene_id = 99
+    metadata = SceneMetadata(
+        id=new_scene_id,
+        story_id=FIXTURE_STORY_ID,
+        character_ids=["c1"],
+        user_character_id="max",
+        finished=False,
+        scene_description=SceneDescription(
+            general_scene_guide="A new guide.",
+            writing_style="Terse.",
+        ),
+        context=["Context line one."],
+    )
+    first_msg = Message(id=1, role="assistant", content="Welcome to the new scene.")
+
+    await repo.create_scene(FIXTURE_STORY_ID, new_scene_id, metadata, first_msg)
+
+    result = await repo.get_metadata(FIXTURE_STORY_ID, new_scene_id)
+    assert result.id == new_scene_id
+    assert result.finished is False
+    assert result.character_ids == ["c1"]
+    assert result.user_character_id == "max"
+    assert result.scene_description.general_scene_guide == "A new guide."
+    assert result.context == ["Context line one."]
+
+
+@pytest.mark.asyncio
+async def test_create_scene_writes_first_message_with_id_1(writable_data_root):
+    repo = SceneRepository()
+    new_scene_id = 98
+    metadata = SceneMetadata(
+        id=new_scene_id,
+        story_id=FIXTURE_STORY_ID,
+        character_ids=[],
+        user_character_id="max",
+        finished=False,
+        scene_description=SceneDescription(
+            general_scene_guide="Guide.",
+            writing_style="Style.",
+        ),
+        context=["ctx"],
+    )
+    first_msg = Message(id=1, role="assistant", content="First message content.")
+
+    await repo.create_scene(FIXTURE_STORY_ID, new_scene_id, metadata, first_msg)
+
+    messages = await repo.get_messages(FIXTURE_STORY_ID, new_scene_id)
+    assert len(messages) == 1
+    assert messages[0].id == 1
+    assert messages[0].role == "assistant"
+    assert messages[0].content == "First message content."
+
+
+@pytest.mark.asyncio
+async def test_create_scene_creates_directory(writable_data_root):
+    repo = SceneRepository()
+    new_scene_id = 97
+    metadata = SceneMetadata(
+        id=new_scene_id,
+        story_id=FIXTURE_STORY_ID,
+        character_ids=[],
+        user_character_id="max",
+        finished=False,
+        scene_description=SceneDescription(
+            general_scene_guide="Guide.",
+            writing_style="Style.",
+        ),
+        context=["ctx"],
+    )
+    first_msg = Message(id=1, role="assistant", content="Hello.")
+
+    scene_dir = writable_data_root / "stories" / FIXTURE_STORY_ID / "scenes" / str(new_scene_id)
+    assert not scene_dir.exists()
+
+    await repo.create_scene(FIXTURE_STORY_ID, new_scene_id, metadata, first_msg)
+
+    assert scene_dir.exists()
+    assert (scene_dir / "meta.yaml").exists()
+    assert (scene_dir / "messages.yaml").exists()

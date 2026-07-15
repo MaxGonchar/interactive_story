@@ -9,6 +9,7 @@ from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 from app.llm.summarize_llm_client import SummarizeLLMClient
+from app.services.scene_creation_service import SceneCreationService
 from app.services.scene_lifecycle_service import SceneLifecycleService
 from app.services.scene_message_service import SceneMessageService
 from app.services.scene_play_service import ScenePlayService
@@ -64,6 +65,13 @@ def get_scene_lifecycle_service(
     scene_repo: SceneRepository = Depends(get_scene_repository),
 ) -> SceneLifecycleService:
     return SceneLifecycleService(scene_repo)
+
+
+def get_scene_creation_service(
+    story_repo: StoryRepository = Depends(get_story_repository),
+    scene_repo: SceneRepository = Depends(get_scene_repository),
+) -> SceneCreationService:
+    return SceneCreationService(story_repo, scene_repo)
 
 
 def get_summarize_llm_client() -> SummarizeLLMClient:
