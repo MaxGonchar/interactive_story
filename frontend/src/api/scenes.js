@@ -57,3 +57,11 @@ export async function regenerateLastAssistantMessage(storyId, sceneId) {
 export async function generateSceneSummary(storyId, sceneId) {
   return apiFetch(`/api/stories/${storyId}/scenes/${sceneId}/summarize`);
 }
+
+export async function createScene(storyId, payload) {
+  return apiFetch(`/api/stories/${storyId}/scenes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}

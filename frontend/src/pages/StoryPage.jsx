@@ -33,6 +33,12 @@ function StoryPage() {
         activeSceneId={story.active_scene_id}
         onSelect={(sceneId) => navigate(`/stories/${storyId}/scenes/${sceneId}`)}
       />
+      <button
+        disabled={story.active_scene_id !== null}
+        onClick={() => navigate(`/stories/${storyId}/scenes/new`)}
+      >
+        Create new scene
+      </button>
     </>
   )
 }
