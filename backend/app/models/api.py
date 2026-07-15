@@ -35,6 +35,20 @@ class StoryListResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Character list  —  GET /api/stories/{story_id}/characters
+# ---------------------------------------------------------------------------
+
+
+class CharacterListItem(BaseModel):
+    id: str
+    name: str
+
+
+class CharacterListResponse(BaseModel):
+    data: list[CharacterListItem]
+
+
+# ---------------------------------------------------------------------------
 # Story detail  —  GET /api/stories/{story_id}
 # ---------------------------------------------------------------------------
 

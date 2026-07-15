@@ -37,6 +37,10 @@ def story_file(story_id: str) -> Path:
     return _data_root() / _STORIES_DIR / story_id / _STORY_FILE
 
 
+def characters_dir(story_id: str) -> Path:
+    return _data_root() / _STORIES_DIR / story_id / _CHARACTERS_DIR
+
+
 def character_file(story_id: str, character_id: str) -> Path:
     return _data_root() / _STORIES_DIR / story_id / _CHARACTERS_DIR / f"{character_id}.yaml"
 
