@@ -29,7 +29,7 @@ function BulletTextarea({ value, onChange, ...rest }) {
   const prevValueRef = useRef(value)
 
   useEffect(() => {
-    if (value !== prevValueRef.current) {
+    if (JSON.stringify(value) !== JSON.stringify(prevValueRef.current)) {
       prevValueRef.current = value
       setText(toText(value))
     }
