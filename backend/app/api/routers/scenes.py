@@ -46,7 +46,7 @@ async def get_scene(
                 "general_scene_guide": metadata.scene_description.general_scene_guide,
                 "writing_style": metadata.scene_description.writing_style,
             },
-            "scene_summary": "\n".join(metadata.scene_summary) if metadata.scene_summary else None,
+            "scene_summary": metadata.scene_summary or None,
             "messages": [{"id": m.id, "role": m.role, "content": m.content} for m in messages],
         }
     }

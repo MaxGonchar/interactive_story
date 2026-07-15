@@ -1,7 +1,7 @@
 ---
 name: implement-task
-description: "Implement changes from a specific task. Use when: implementing a task, working on a ticket, executing a TODO item, starting work on a feature, fixing a bug from a task card. Tasks can be GitHub Project board items or local task files. Produces a feature branch, a reviewed implementation plan, code changes, tests run, and an open PR."
-argument-hint: "Title, item ID, or item URL of the board task to implement (e.g. 'Add scene router'); or path to a local task file (e.g. docks/dev/TODO/001-backend-package-layout.md)"
+description: "Implement changes from a task description passed as prompt text. Use when: implementing a task, executing a TODO item, starting work on a feature, fixing a bug. Produces a feature branch, a reviewed implementation plan, code changes, tests run, and an open PR."
+argument-hint: "Plain-text description of the task to implement (e.g. 'Add a GET /scenes endpoint that returns all scenes for a story')"
 ---
 
 # Implement Task
@@ -9,28 +9,13 @@ argument-hint: "Title, item ID, or item URL of the board task to implement (e.g.
 End-to-end workflow for implementing a single task: branch → understand → plan → review → code → test → PR.
 
 ## When to Use
-- Starting work on any task on the GitHub Project board (`interactive-story`, project **3**, owner `MaxGonchar`)
-- Starting work on a local task file in `docks/dev/TODO/`
-- Implementing a specific feature, fix, or refactor described in a task
-- Executing a ticket when the task title, item ID, or file path is known
-
-## GitHub Project Board
-
-| Field | Value |
-|-------|-------|
-| Owner | `MaxGonchar` |
-| Project number | `3` |
-| Project ID | `PVT_kwHOA7xGXs4BX8zb` |
-| Status field ID | `PVTSSF_lAHOA7xGXs4BX8zbzhTGDQE` |
-| Status option IDs | `f75ad846` = Backlog · `61e4505c` = Ready · `47fc9ee4` = In progress · `df73e18b` = In review · `98236657` = Done |
+- Implementing a specific feature, fix, or refactor described in the prompt
 
 ## Procedure
 
 ### 0. Verify GitHub CLI (`gh`)
 
-Before any git or GitHub operation, confirm `gh` is available and authenticated.
-
-Run this check in the terminal:
+Before any GitHub operation, confirm `gh` is available and authenticated.
 
 ```bash
 if ! command -v gh &>/dev/null; then
@@ -75,40 +60,9 @@ Verify success with `gh auth status` before continuing.
 
 ---
 
-### 1. Locate and Read the Task
+### 1. Read the Task
 
-Determine the task source:
-
-**A — GitHub Project board item** (preferred)
-
-If given a title or URL, first find the item ID:
-```bash
-GH_PAGER= gh project item-list 3 --owner MaxGonchar --format json \
-  --jq '.items[] | select(.title | test("<search term>"; "i")) | {id, title}'
-```
-
-Then fetch the full body (content) of the item:
-```bash
-GH_PAGER= gh project item-list 3 --owner MaxGonchar --format json \
-  --jq '.items[] | select(.id == "<ITEM_ID>") | {id, title, body: .content.body}'
-```
-
-Mark the item **In progress** immediately:
-```bash
-GH_PAGER= gh project item-edit --id <ITEM_ID> \
-  --project-id PVT_kwHOA7xGXs4BX8zb \
-  --field-id PVTSSF_lAHOA7xGXs4BX8zbzhTGDQE \
-  --single-select-option-id 47fc9ee4
-```
-
-**B — Local task file**
-
-Read the file directly. If it is in `docks/dev/TODO/`, move it to `docks/dev/IN_PROGRESS/`:
-```bash
-mv docks/dev/TODO/<task-file>.md docks/dev/IN_PROGRESS/<task-file>.md
-```
-
-From either source, extract:
+The task description is provided directly as prompt text. Extract:
 - **Goal**: what problem this solves or feature it delivers
 - **Scope**: which files/modules are touched
 - **Deliverable**: the concrete artifact to produce
@@ -117,11 +71,11 @@ From either source, extract:
 
 ### 2. Create and Switch to Branch
 
-Determine the branch name from the task title — derive 2–4 words in kebab-case (e.g. `add-scene-router`):
+Determine the branch name from the task description — derive 2–4 words in kebab-case (e.g. `add-scene-router`):
 
 ```bash
-gh repo sync          # sync local main with remote
 git checkout main
+git pull
 git checkout -b <branch-name>
 ```
 
@@ -175,10 +129,7 @@ Work step-by-step through the approved plan:
 
 If tests exist or the task specifies them:
 ```bash
-# Adjust to the project's actual test command
-pytest          # backend
-# or
-npm test        # frontend
+make test-be    # backend
 ```
 
 Report results. Fix failures before proceeding. If no tests exist and the task doesn't require them, note this explicitly.
@@ -215,8 +166,6 @@ Commit message format: `add-scene-router: wire play endpoint to ScenePlayService
 
 ### 10. Push Branch
 
-`gh` manages authentication, so no separate credential setup is needed:
-
 ```bash
 git push -u origin <branch-name>
 ```
@@ -232,37 +181,17 @@ gh pr create \
 Changes:
 - <file or module changed and why>
 
-How to test: <steps>
-
-Board item: <ITEM_ID or task title>" \
+How to test: <steps>" \
   --base main
 ```
 
 Include in the PR body:
-- Reference to the board item title (or local task file path)
 - Summary of changes made
 - How to test / verify
-
-### 12. Mark Board Item Done
-
-If the task came from the GitHub Project board, set its status to **Done**:
-```bash
-GH_PAGER= gh project item-edit --id <ITEM_ID> \
-  --project-id PVT_kwHOA7xGXs4BX8zb \
-  --field-id PVTSSF_lAHOA7xGXs4BX8zbzhTGDQE \
-  --single-select-option-id 98236657
-```
-
-If the task came from a local file, move it to `docks/dev/DONE/`:
-```bash
-mv docks/dev/IN_PROGRESS/<task-file>.md docks/dev/DONE/<task-file>.md
-```
 
 ## Completion Checklist
 
 - [ ] `gh` installed and authenticated (`gh auth status` passes)
-- [ ] Task located (board item fetched or local file read)
-- [ ] Board item (or local file) marked **In progress**
 - [ ] Branch created from up-to-date `main`
 - [ ] Task fully read and understood
 - [ ] Architecture docs read
@@ -273,4 +202,3 @@ mv docks/dev/IN_PROGRESS/<task-file>.md docks/dev/DONE/<task-file>.md
 - [ ] Commit message follows convention
 - [ ] Branch pushed
 - [ ] PR open with description
-- [ ] Board item marked **Done** (or local file moved to `DONE/`)
