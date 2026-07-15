@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import StoriesPage from './pages/StoriesPage'
 import StoryPage from './pages/StoryPage'
 import ScenePage from './pages/ScenePage'
+import NewScenePage from './pages/NewScenePage'
 import ChoiceDrivenStoryPage from './pages/ChoiceDrivenStoryPage'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route path="/stories" element={<StoriesPage />} />
         <Route path="/stories/:storyId" element={<StoryPage />} />
         <Route path="/stories/:storyId/play" element={<ChoiceDrivenStoryPage />} />
+        <Route path="/stories/:storyId/scenes/new" element={<NewScenePage />} />
         <Route path="/stories/:storyId/scenes/:sceneId" element={<ScenePage />} />
       </Routes>
     </BrowserRouter>
