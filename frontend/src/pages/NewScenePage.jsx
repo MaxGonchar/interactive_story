@@ -135,16 +135,57 @@ function NewScenePage() {
     return <p>{loadError}</p>
   }
 
+  const fieldStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  }
+
+  const labelStyle = {
+    color: 'var(--text-h)',
+    fontFamily: 'var(--sans)',
+    fontWeight: 600,
+    alignSelf: 'flex-start',
+  }
+
+  const inputBaseStyle = {
+    fontFamily: 'var(--sans)',
+    fontSize: '16px',
+    border: '1px solid var(--border)',
+    borderRadius: '4px',
+    padding: '8px',
+    resize: 'vertical',
+    color: 'var(--text)',
+    background: 'var(--bg)',
+  }
+
+  const errorStyle = {
+    margin: 0,
+    color: 'red',
+    fontSize: '14px',
+    alignSelf: 'flex-start',
+  }
+
   return (
     <>
-      <h1>New Scene</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="userCharacter">User character</label>
+      <h1 style={{ color: 'var(--text-h)' }}>New Scene</h1>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '24px',
+          paddingBottom: '40px',
+        }}
+      >
+        <div style={fieldStyle}>
+          <label htmlFor="userCharacter" style={labelStyle}>User character</label>
           <select
             id="userCharacter"
             value={userCharacterId}
             onChange={(e) => handleUserCharacterChange(e.target.value)}
+            style={{ ...inputBaseStyle, width: '300px' }}
           >
             <option value="">— select —</option>
             {characters.map((c) => (
@@ -154,80 +195,94 @@ function NewScenePage() {
             ))}
           </select>
           {validationErrors.userCharacterId && (
-            <span>{validationErrors.userCharacterId}</span>
+            <p style={errorStyle}>{validationErrors.userCharacterId}</p>
           )}
         </div>
 
-        <div>
-          <fieldset>
-            <legend>Scene characters</legend>
-            {characters.map((c) => (
-              <label key={c.id}>
-                <input
-                  type="checkbox"
-                  checked={sceneCharacterIds.includes(c.id)}
-                  disabled={c.id === userCharacterId}
-                  onChange={() => handleSceneCharacterToggle(c.id)}
-                />
-                {c.name}
-              </label>
-            ))}
+        <div style={fieldStyle}>
+          <fieldset
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              padding: '12px 16px',
+              fontFamily: 'var(--sans)',
+              color: 'var(--text)',
+            }}
+          >
+            <legend style={{ color: 'var(--text-h)', fontWeight: 600 }}>Scene characters</legend>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {characters.map((c) => (
+                <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={sceneCharacterIds.includes(c.id)}
+                    disabled={c.id === userCharacterId}
+                    onChange={() => handleSceneCharacterToggle(c.id)}
+                  />
+                  {c.name}
+                </label>
+              ))}
+            </div>
           </fieldset>
         </div>
 
-        <div>
-          <label htmlFor="context">Context</label>
+        <div style={fieldStyle}>
+          <label htmlFor="context" style={labelStyle}>Context</label>
           <BulletTextarea
             id="context"
             value={context}
             onChange={setContext}
-            rows={6}
+            rows={20}
+            style={{ ...inputBaseStyle, width: '800px' }}
           />
           {validationErrors.context && (
-            <span>{validationErrors.context}</span>
+            <p style={errorStyle}>{validationErrors.context}</p>
           )}
         </div>
 
-        <div>
-          <label htmlFor="generalSceneGuide">General scene guide</label>
+        <div style={fieldStyle}>
+          <label htmlFor="generalSceneGuide" style={labelStyle}>General scene guide</label>
           <textarea
             id="generalSceneGuide"
             value={generalSceneGuide}
             onChange={(e) => setGeneralSceneGuide(e.target.value)}
-            rows={4}
+            rows={6}
+            style={{ ...inputBaseStyle, width: '600px' }}
           />
           {validationErrors.generalSceneGuide && (
-            <span>{validationErrors.generalSceneGuide}</span>
+            <p style={errorStyle}>{validationErrors.generalSceneGuide}</p>
           )}
         </div>
 
-        <div>
-          <label htmlFor="writingStyle">Writing style</label>
+        <div style={fieldStyle}>
+          <label htmlFor="writingStyle" style={labelStyle}>Writing style</label>
           <textarea
             id="writingStyle"
             value={writingStyle}
             onChange={(e) => setWritingStyle(e.target.value)}
-            rows={3}
+            rows={6}
+            style={{ ...inputBaseStyle, width: '600px' }}
           />
           {validationErrors.writingStyle && (
-            <span>{validationErrors.writingStyle}</span>
+            <p style={errorStyle}>{validationErrors.writingStyle}</p>
           )}
         </div>
 
-        <div>
-          <label htmlFor="firstMessage">First message</label>
+        <div style={fieldStyle}>
+          <label htmlFor="firstMessage" style={labelStyle}>First message</label>
           <textarea
             id="firstMessage"
             value={firstMessage}
             onChange={(e) => setFirstMessage(e.target.value)}
-            rows={5}
+            rows={8}
+            style={{ ...inputBaseStyle, width: '600px' }}
           />
           {validationErrors.firstMessage && (
-            <span>{validationErrors.firstMessage}</span>
+            <p style={errorStyle}>{validationErrors.firstMessage}</p>
           )}
         </div>
 
-        {submitError && <p>{submitError}</p>}
+        {submitError && <p style={{ margin: 0, color: 'red', fontSize: '14px' }}>{submitError}</p>}
 
         <button type="submit" disabled={busy}>
           {busy ? 'Creating…' : 'Create scene'}
