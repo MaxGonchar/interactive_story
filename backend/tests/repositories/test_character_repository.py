@@ -68,3 +68,30 @@ async def test_get_characters_missing_id_raises_key_error(data_root):
 
     with pytest.raises(NotFoundError):
         await repo.get_characters(FIXTURE_STORY_ID, ["mila", "nonexistent-character"])
+
+
+@pytest.mark.asyncio
+async def test_list_characters_returns_all_characters(data_root):
+    repo = CharacterRepository()
+    result = await repo.list_characters(FIXTURE_STORY_ID)
+
+    ids = {c.id for c in result}
+    assert ids == {"mila", "bun", "max"}
+
+
+@pytest.mark.asyncio
+async def test_list_characters_returns_character_cards(data_root):
+    repo = CharacterRepository()
+    result = await repo.list_characters(FIXTURE_STORY_ID)
+
+    for card in result:
+        assert card.id
+        assert card.name
+
+
+@pytest.mark.asyncio
+async def test_list_characters_unknown_story_raises_not_found(data_root):
+    repo = CharacterRepository()
+
+    with pytest.raises(NotFoundError):
+        await repo.list_characters("nonexistent-story-id")

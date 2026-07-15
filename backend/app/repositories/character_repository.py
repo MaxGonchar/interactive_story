@@ -34,3 +34,16 @@ class CharacterRepository:
                 *[self.get_character(story_id, cid) for cid in character_ids]
             )
         )
+
+    async def list_characters(self, story_id: str) -> list[CharacterCard]:
+        try:
+            await yaml_storage.read_yaml(file_paths.story_file(story_id))
+        except FileNotFoundError:
+            raise NotFoundError(f"Story '{story_id}' not found")
+
+        def _scan_character_ids() -> list[str]:
+            d = file_paths.characters_dir(story_id)
+            return [p.stem for p in d.iterdir() if p.suffix == ".yaml"]
+
+        character_ids = await asyncio.to_thread(_scan_character_ids)
+        return await self.get_characters(story_id, character_ids)
