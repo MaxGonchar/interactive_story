@@ -1,6 +1,16 @@
 import pytest
 from pydantic import ValidationError
-from app.models.api import FinishSceneRequest, RegenerateData, RegenerateResponse, MessageModel, StoryDetail, SceneListItem, StoryListItem
+from app.models.api import (
+    CreateSceneRequest,
+    CreateSceneResponse,
+    FinishSceneRequest,
+    MessageModel,
+    RegenerateData,
+    RegenerateResponse,
+    SceneListItem,
+    StoryDetail,
+    StoryListItem,
+)
 
 
 def test_story_list_item_has_type_field():
@@ -76,3 +86,114 @@ def test_finish_scene_request_plain_string_rejected():
 def test_finish_scene_request_empty_string_item_rejected():
     with pytest.raises(ValidationError):
         FinishSceneRequest(scene_summary=[""])
+
+
+# ---------------------------------------------------------------------------
+# CreateSceneRequest
+# ---------------------------------------------------------------------------
+
+VALID_CREATE_SCENE = dict(
+    user_character_id="char-1",
+    character_ids=["char-2", "char-3"],
+    context=["It was a dark night."],
+    general_scene_guide="A tense encounter",
+    writing_style="noir",
+    first_message="Hello, stranger.",
+)
+
+
+def test_create_scene_request_valid():
+    req = CreateSceneRequest(**VALID_CREATE_SCENE)
+    assert req.user_character_id == "char-1"
+    assert req.character_ids == ["char-2", "char-3"]
+    assert req.context == ["It was a dark night."]
+
+
+def test_create_scene_request_character_ids_defaults_to_empty():
+    req = CreateSceneRequest(
+        user_character_id="char-1",
+        context=["Context."],
+        general_scene_guide="Guide",
+        writing_style="style",
+        first_message="Hello",
+    )
+    assert req.character_ids == []
+
+
+def test_create_scene_request_user_character_id_in_character_ids_rejected():
+    with pytest.raises(ValidationError):
+        CreateSceneRequest(
+            user_character_id="char-1",
+            character_ids=["char-1", "char-2"],
+            context=["Context."],
+            general_scene_guide="Guide",
+            writing_style="style",
+            first_message="Hello",
+        )
+
+
+def test_create_scene_request_missing_user_character_id_rejected():
+    with pytest.raises(ValidationError):
+        CreateSceneRequest(
+            context=["Context."],
+            general_scene_guide="Guide",
+            writing_style="style",
+            first_message="Hello",
+        )
+
+
+def test_create_scene_request_missing_context_rejected():
+    with pytest.raises(ValidationError):
+        CreateSceneRequest(
+            user_character_id="char-1",
+            general_scene_guide="Guide",
+            writing_style="style",
+            first_message="Hello",
+        )
+
+
+def test_create_scene_request_empty_context_rejected():
+    with pytest.raises(ValidationError):
+        CreateSceneRequest(
+            user_character_id="char-1",
+            context=[],
+            general_scene_guide="Guide",
+            writing_style="style",
+            first_message="Hello",
+        )
+
+
+def test_create_scene_request_missing_general_scene_guide_rejected():
+    with pytest.raises(ValidationError):
+        CreateSceneRequest(
+            user_character_id="char-1",
+            context=["Context."],
+            writing_style="style",
+            first_message="Hello",
+        )
+
+
+def test_create_scene_request_missing_writing_style_rejected():
+    with pytest.raises(ValidationError):
+        CreateSceneRequest(
+            user_character_id="char-1",
+            context=["Context."],
+            general_scene_guide="Guide",
+            first_message="Hello",
+        )
+
+
+def test_create_scene_request_missing_first_message_rejected():
+    with pytest.raises(ValidationError):
+        CreateSceneRequest(
+            user_character_id="char-1",
+            context=["Context."],
+            general_scene_guide="Guide",
+            writing_style="style",
+        )
+
+
+def test_create_scene_response_wraps_scene_list_item():
+    resp = CreateSceneResponse(data=SceneListItem(id=1, finished=False))
+    assert resp.data.id == 1
+    assert resp.data.finished is False
