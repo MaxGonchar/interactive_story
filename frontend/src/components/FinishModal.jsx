@@ -1,28 +1,9 @@
 import { useState } from 'react'
 import { generateSceneSummary } from '../api/scenes'
-
-const BULLET = '- '
-
-function parseItems(text) {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith(BULLET))
-    .map((line) => line.slice(BULLET.length).trim())
-    .filter((item) => item.length > 0)
-}
-
-function normalisePaste(text) {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .map((line) => (line.startsWith(BULLET) ? line : BULLET + line))
-    .join('\n')
-}
+import BulletTextarea from './BulletTextarea'
 
 function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
-  const [text, setText] = useState(BULLET)
+  const [items, setItems] = useState([])
   const [validationError, setValidationError] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generateError, setGenerateError] = useState(null)
@@ -32,8 +13,7 @@ function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
     setGenerateError(null)
     try {
       const data = await generateSceneSummary(storyId, sceneId)
-      const bulletText = data.data.summary.map((item) => BULLET + item).join('\n')
-      setText(bulletText)
+      setItems(data.data.summary)
     } catch (err) {
       setGenerateError(err.message ?? 'Failed to generate summary.')
     } finally {
@@ -41,34 +21,7 @@ function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
     }
   }
 
-  function handleKeyDown(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      const { selectionStart, selectionEnd } = e.target
-      const before = text.slice(0, selectionStart)
-      const after = text.slice(selectionEnd)
-      const newText = before + '\n' + BULLET + after
-      setText(newText)
-      // place cursor after the inserted bullet
-      requestAnimationFrame(() => {
-        e.target.selectionStart = selectionStart + 1 + BULLET.length
-        e.target.selectionEnd = selectionStart + 1 + BULLET.length
-      })
-    }
-  }
-
-  function handlePaste(e) {
-    e.preventDefault()
-    const pasted = e.clipboardData.getData('text')
-    const { selectionStart, selectionEnd } = e.target
-    const before = text.slice(0, selectionStart)
-    const after = text.slice(selectionEnd)
-    const normalised = normalisePaste(pasted)
-    setText(before + normalised + after)
-  }
-
   function handleSubmit() {
-    const items = parseItems(text)
     if (items.length === 0) {
       setValidationError('Please add at least 1 summary item.')
       return
@@ -107,11 +60,9 @@ function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
         }}
       >
         <h3 style={{ margin: 0, color: 'var(--text-h)' }}>Finish Scene</h3>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
+        <BulletTextarea
+          value={items}
+          onChange={setItems}
           disabled={isGenerating}
           rows={14}
           style={{
