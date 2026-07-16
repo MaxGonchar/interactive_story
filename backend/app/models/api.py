@@ -90,6 +90,7 @@ class SceneDetail(BaseModel):
     finished: bool
     scene_description: SceneDescriptionModel
     scene_summary: list[str] | None
+    context: list[str] | None
     messages: list[MessageModel]
 
 

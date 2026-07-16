@@ -73,6 +73,7 @@ async def get_scene(
                 "writing_style": metadata.scene_description.writing_style,
             },
             "scene_summary": metadata.scene_summary or None,
+            "context": metadata.context,
             "messages": [{"id": m.id, "role": m.role, "content": m.content} for m in messages],
         }
     }

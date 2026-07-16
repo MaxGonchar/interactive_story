@@ -10,11 +10,12 @@ from app.api.dependencies import (
     get_scene_lifecycle_service,
     get_scene_message_service,
     get_scene_play_service,
+    get_scene_query_service,
     get_scene_summarize_service,
 )
 from app.exceptions import ActiveSceneExistsError, NoAssistantMessageError, NoUserMessageError, NotFoundError, SceneFinishedError, LLMError
 from app.main import app
-from app.models.domain import Message, SceneRef
+from app.models.domain import Message, SceneDescription, SceneMetadata, SceneRef
 
 _STORY_ID = "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
 _SCENE_ID = 1
@@ -460,3 +461,84 @@ class TestCreateScene:
 
         assert resp.status_code == 422
         assert resp.json()["error"]["code"] == "validation_error"
+
+
+# ---------------------------------------------------------------------------
+# GET /api/stories/{story_id}/scenes/{scene_id}
+# ---------------------------------------------------------------------------
+
+_SCENE_DESCRIPTION = SceneDescription(
+    general_scene_guide="Keep tension rising.",
+    writing_style="Cinematic.",
+)
+
+_SCENE_METADATA = SceneMetadata(
+    id=_SCENE_ID,
+    story_id=_STORY_ID,
+    character_ids=["villain"],
+    user_character_id="hero",
+    finished=False,
+    scene_description=_SCENE_DESCRIPTION,
+    scene_summary=None,
+    context=["Previously...", "And then..."],
+)
+
+
+def _make_query_service(
+    side_effect: Exception | None = None,
+    metadata: SceneMetadata | None = None,
+    messages: list[Message] | None = None,
+) -> MagicMock:
+    svc = MagicMock()
+    if side_effect is not None:
+        svc.get_scene = AsyncMock(side_effect=side_effect)
+    else:
+        svc.get_scene = AsyncMock(
+            return_value=(metadata or _SCENE_METADATA, messages or [_ASSISTANT_MSG])
+        )
+    return svc
+
+
+class TestGetScene:
+    def test_success_returns_context_and_fields(self):
+        svc = _make_query_service()
+        app.dependency_overrides[get_scene_query_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.get(f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}")
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["id"] == _SCENE_ID
+        assert data["finished"] is False
+        assert data["context"] == ["Previously...", "And then..."]
+        assert data["scene_summary"] is None
+        assert data["scene_description"]["general_scene_guide"] == "Keep tension rising."
+        assert len(data["messages"]) == 1
+
+    def test_scene_without_context_returns_null(self):
+        metadata = _SCENE_METADATA.model_copy(update={"context": None})
+        svc = _make_query_service(metadata=metadata)
+        app.dependency_overrides[get_scene_query_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.get(f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}")
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 200
+        assert resp.json()["data"]["context"] is None
+
+    def test_not_found_returns_404(self):
+        svc = _make_query_service(side_effect=NotFoundError("scene"))
+        app.dependency_overrides[get_scene_query_service] = lambda: svc
+
+        with TestClient(app) as client:
+            resp = client.get(f"/api/stories/{_STORY_ID}/scenes/{_SCENE_ID}")
+
+        app.dependency_overrides.clear()
+
+        assert resp.status_code == 404
+        assert resp.json()["error"]["code"] == "not_found"
