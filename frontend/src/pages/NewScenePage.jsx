@@ -40,7 +40,9 @@ function NewScenePage() {
           const sceneData = sceneResponse.data
 
           if (sceneData.scene_summary) {
-            setContext(sceneData.scene_summary)
+            const previousContext = sceneData.context ?? []
+            const summary = sceneData.scene_summary ?? []
+            setContext([...previousContext, ...summary])
           }
           if (sceneData.scene_description?.writing_style) {
             setWritingStyle(sceneData.scene_description.writing_style)
