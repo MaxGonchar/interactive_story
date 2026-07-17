@@ -56,7 +56,9 @@ async def test_invoke_with_empty_previous_summary():
     client._model = types.SimpleNamespace(ainvoke=_mock_ainvoke)
     await client.invoke(previous_summary=[], scene_content=_SCENE_CONTENT)
 
+    system_msg = captured[0][0].content
     user_msg = captured[0][1].content
+    assert "Story So Far" not in system_msg
     assert "Previous Summary" not in user_msg
 
 
@@ -75,9 +77,11 @@ async def test_invoke_with_previous_summary():
         scene_content=_SCENE_CONTENT,
     )
 
+    system_msg = captured[0][0].content
     user_msg = captured[0][1].content
-    assert "Previous Summary" in user_msg
-    assert "Earlier, the hero found a map." in user_msg
+    assert "Story So Far" in system_msg
+    assert "Earlier, the hero found a map." in system_msg
+    assert "Earlier, the hero found a map." not in user_msg
 
 
 @pytest.mark.asyncio

@@ -28,10 +28,10 @@ class SummarizeLLMClient:
 
     async def invoke(self, previous_summary: list[str], scene_content: str) -> list[str]:
         system_prompt = self._system_template.render(
-            format_instructions=self._parser.get_format_instructions()
+            format_instructions=self._parser.get_format_instructions(),
+            previous_summary=previous_summary,
         )
         user_message = self._user_template.render(
-            previous_summary=previous_summary,
             scene_content=scene_content,
         )
         messages = [SystemMessage(system_prompt), HumanMessage(user_message)]
