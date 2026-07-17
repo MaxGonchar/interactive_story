@@ -6,7 +6,7 @@ from app.exceptions import LLMError
 class VeniceClient:
     def __init__(self, api_key: str) -> None:
         self.base_url = "https://api.venice.ai/api/v1"
-        self.timeout = 180.0
+        self.timeout = 300.0
         self.headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",

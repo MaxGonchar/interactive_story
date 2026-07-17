@@ -36,9 +36,10 @@ You are an Interactive Narrative Engine. Your purpose is to drive a specific sce
 # Execution Protocol
 1. Read the user's input describing their character's action or speech.
 2. Reference the Context Data and Character Profiles.
-3. Formulate a response that advances the scene according to the Development Direction.
-4. Resolve any actions initiated by the user.
-5. Output 1-2 paragraphs using the specified formatting.\
+3. Strictly follow the Character Profiles when determining NPC reactions and dialogue.
+4. Formulate a response that advances the scene according to the Development Direction.
+5. Resolve any actions initiated by the user.
+6. Output 1-2 paragraphs using the specified formatting.\
 """)
 
 _SCENE_CONFIG_TEMPLATE = Template("""\
