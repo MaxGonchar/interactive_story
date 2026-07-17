@@ -15,7 +15,15 @@ Process:
 - Extract key events, dialogue, and interactions.
 - Format them into a clear, bulleted list ensuring clear subject attribution.
 - Verify that the tone matches the source material and no content is censored.
+{% if previous_summary %}
+## Story So Far (Previous Summary)
 
+The following events have already been summarized from earlier scenes. Do NOT re-summarize or repeat these items. Your output must cover only the new scene content provided in the user message.
+
+{% for item in previous_summary %}
+* {{ item }}
+{% endfor %}
+{% endif %}
 ## Output Format
 
 {{ format_instructions }}
