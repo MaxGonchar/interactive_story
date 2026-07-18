@@ -1,10 +1,10 @@
 function ChoicesGrid({ choices, onSelect, onRegenerate, disabled = false }) {
   return (
-    <div style={{ marginTop: '16px' }}>
+    <div style={{ marginTop: 'var(--space-lg)' }}>
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '12px',
+        gap: 'var(--space-md)',
       }}>
         {choices.map((choice, i) => (
           <button
@@ -12,7 +12,7 @@ function ChoicesGrid({ choices, onSelect, onRegenerate, disabled = false }) {
             onClick={() => onSelect(choice.action, choice.consequence)}
             disabled={disabled}
             style={{
-              padding: '12px',
+              padding: 'var(--space-md)',
               borderRadius: '8px',
               background: 'var(--accent-bg)',
               border: '1px solid var(--accent-border)',
@@ -29,7 +29,7 @@ function ChoicesGrid({ choices, onSelect, onRegenerate, disabled = false }) {
       <button
         onClick={onRegenerate}
         disabled={disabled}
-        style={{ marginTop: '12px' }}
+        style={{ marginTop: 'var(--space-md)' }}
       >
         Regenerate
       </button>
