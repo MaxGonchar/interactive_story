@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { generateSceneSummary } from '../api/scenes'
 import BulletTextarea from './BulletTextarea'
+import { inputBase } from '../styles'
 
 function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
   const [items, setItems] = useState([])
@@ -35,44 +36,15 @@ function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.4)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-    >
-      <div
-        style={{
-          background: 'var(--bg)',
-          border: '1px solid var(--border)',
-          borderRadius: '8px',
-          padding: '24px',
-          width: '576px',
-          maxWidth: '90vw',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-        }}
-      >
+    <div className="modal-overlay">
+      <div className="modal-panel">
         <h3 style={{ margin: 0, color: 'var(--text-h)' }}>Finish Scene</h3>
         <BulletTextarea
           value={items}
           onChange={setItems}
           disabled={isGenerating}
           rows={14}
-          style={{
-            resize: 'vertical',
-            padding: '8px',
-            fontFamily: 'var(--sans)',
-            fontSize: '16px',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-          }}
+          style={{ ...inputBase, resize: 'vertical' }}
         />
         {validationError && (
           <p style={{ margin: 0, color: 'var(--error)', fontSize: '14px' }}>

@@ -4,6 +4,27 @@ import { getStory } from '../api/stories'
 import { getScene, createScene } from '../api/scenes'
 import { getCharacters } from '../api/characters'
 import BulletTextarea from '../components/BulletTextarea'
+import { inputBase } from '../styles'
+
+const fieldStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+}
+
+const labelStyle = {
+  color: 'var(--text-h)',
+  fontFamily: 'var(--sans)',
+  fontWeight: 600,
+  alignSelf: 'flex-start',
+}
+
+const errorStyle = {
+  margin: 0,
+  color: 'var(--error)',
+  fontSize: '14px',
+  alignSelf: 'flex-start',
+}
 
 function NewScenePage() {
   const { storyId } = useParams()
@@ -137,37 +158,6 @@ function NewScenePage() {
     return <p>{loadError}</p>
   }
 
-  const fieldStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  }
-
-  const labelStyle = {
-    color: 'var(--text-h)',
-    fontFamily: 'var(--sans)',
-    fontWeight: 600,
-    alignSelf: 'flex-start',
-  }
-
-  const inputBaseStyle = {
-    fontFamily: 'var(--sans)',
-    fontSize: '16px',
-    border: '1px solid var(--border)',
-    borderRadius: '4px',
-    padding: '8px',
-    resize: 'vertical',
-    color: 'var(--text)',
-    background: 'var(--bg)',
-  }
-
-  const errorStyle = {
-    margin: 0,
-    color: 'var(--error)',
-    fontSize: '14px',
-    alignSelf: 'flex-start',
-  }
-
   return (
     <>
       <h1 style={{ color: 'var(--text-h)' }}>New Scene</h1>
@@ -187,7 +177,7 @@ function NewScenePage() {
             id="userCharacter"
             value={userCharacterId}
             onChange={(e) => handleUserCharacterChange(e.target.value)}
-            style={{ ...inputBaseStyle, width: '300px' }}
+            style={{ ...inputBase, width: '300px' }}
           >
             <option value="">— select —</option>
             {characters.map((c) => (
@@ -235,7 +225,7 @@ function NewScenePage() {
             value={context}
             onChange={setContext}
             rows={20}
-            style={{ ...inputBaseStyle, width: '800px' }}
+            style={{ ...inputBase, resize: 'vertical', width: '800px' }}
           />
           {validationErrors.context && (
             <p style={errorStyle}>{validationErrors.context}</p>
@@ -249,7 +239,7 @@ function NewScenePage() {
             value={generalSceneGuide}
             onChange={(e) => setGeneralSceneGuide(e.target.value)}
             rows={6}
-            style={{ ...inputBaseStyle, width: '600px' }}
+            style={{ ...inputBase, resize: 'vertical', width: '600px' }}
           />
           {validationErrors.generalSceneGuide && (
             <p style={errorStyle}>{validationErrors.generalSceneGuide}</p>
@@ -263,7 +253,7 @@ function NewScenePage() {
             value={writingStyle}
             onChange={(e) => setWritingStyle(e.target.value)}
             rows={6}
-            style={{ ...inputBaseStyle, width: '600px' }}
+            style={{ ...inputBase, resize: 'vertical', width: '600px' }}
           />
           {validationErrors.writingStyle && (
             <p style={errorStyle}>{validationErrors.writingStyle}</p>
@@ -277,7 +267,7 @@ function NewScenePage() {
             value={firstMessage}
             onChange={(e) => setFirstMessage(e.target.value)}
             rows={8}
-            style={{ ...inputBaseStyle, width: '600px' }}
+            style={{ ...inputBase, resize: 'vertical', width: '600px' }}
           />
           {validationErrors.firstMessage && (
             <p style={errorStyle}>{validationErrors.firstMessage}</p>
