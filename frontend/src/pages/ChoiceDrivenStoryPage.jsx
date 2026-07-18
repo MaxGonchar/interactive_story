@@ -110,7 +110,7 @@ function ChoiceDrivenStoryPage() {
   return (
     <>
       <h1>{title}</h1>
-      {opError && <p style={{ color: 'var(--error, red)' }}>{opError}</p>}
+      {opError && <p style={{ margin: 0, color: 'var(--error)', fontSize: '14px' }}>{opError}</p>}
       <div>
         {steps.map((step) => (
           <StepItem

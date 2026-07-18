@@ -75,12 +75,12 @@ function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
           }}
         />
         {validationError && (
-          <p style={{ margin: 0, color: 'red', fontSize: '14px' }}>
+          <p style={{ margin: 0, color: 'var(--error)', fontSize: '14px' }}>
             {validationError}
           </p>
         )}
         {generateError && (
-          <p style={{ margin: 0, color: 'red', fontSize: '14px' }}>
+          <p style={{ margin: 0, color: 'var(--error)', fontSize: '14px' }}>
             {generateError}
           </p>
         )}

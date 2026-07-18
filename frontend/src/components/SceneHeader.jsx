@@ -1,6 +1,6 @@
 function SceneHeader({ scene }) {
   return (
-    <div>
+    <div className="scene-header">
       <h2>Scene {scene.id}</h2>
       <span>{scene.finished ? 'Finished' : 'Active'}</span>
     </div>

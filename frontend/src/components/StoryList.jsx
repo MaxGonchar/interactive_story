@@ -4,7 +4,7 @@ function StoryList({ stories = [], onSelect }) {
   }
 
   return (
-    <ul>
+    <ul className="story-list">
       {stories.map((story) => (
         <li key={story.id} className="clickable" onClick={() => onSelect(story)}>
           {story.title}

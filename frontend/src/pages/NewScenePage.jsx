@@ -163,7 +163,7 @@ function NewScenePage() {
 
   const errorStyle = {
     margin: 0,
-    color: 'red',
+    color: 'var(--error)',
     fontSize: '14px',
     alignSelf: 'flex-start',
   }
@@ -284,7 +284,7 @@ function NewScenePage() {
           )}
         </div>
 
-        {submitError && <p style={{ margin: 0, color: 'red', fontSize: '14px' }}>{submitError}</p>}
+        {submitError && <p style={{ margin: 0, color: 'var(--error)', fontSize: '14px' }}>{submitError}</p>}
 
         <button type="submit" disabled={busy}>
           {busy ? 'Creating…' : 'Create scene'}
