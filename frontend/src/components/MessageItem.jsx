@@ -84,7 +84,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
                 padding: '0',
               }}
             />
-            <div>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button onClick={handleSave} disabled={saveDisabled}>Save</button>
               <button onClick={handleCancel}>Cancel</button>
             </div>

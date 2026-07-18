@@ -7,6 +7,7 @@
   --accent: #aa3bff;
   --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
+  --error: #dc2626;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -37,6 +38,7 @@
     --accent: #c084fc;
     --accent-bg: rgba(192, 132, 252, 0.15);
     --accent-border: rgba(192, 132, 252, 0.5);
+    --error: #f87171;
   }
 
 }
@@ -106,6 +108,16 @@ code {
   background: var(--accent-bg);
 }
 
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
 .message-bubble {
   position: relative;
   text-align: left;
@@ -118,6 +130,7 @@ code {
   border: none;
   color: var(--accent);
   cursor: pointer;
+  padding: 0;
 }
 
 .message-bubble:hover .edit-btn {
@@ -131,6 +144,7 @@ code {
   border: none;
   color: var(--accent);
   cursor: pointer;
+  padding: 0;
   margin-left: 4px;
 }
 
@@ -146,11 +160,37 @@ code {
   border: none;
   color: var(--accent);
   cursor: pointer;
+  padding: 0;
 }
 
 .message-bubble:hover .msg-action-btn,
 .step-item:hover .msg-action-btn {
   opacity: 1;
+}
+
+.scene-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.story-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.story-type-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
 }
 
 .message-md {
