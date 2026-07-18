@@ -139,7 +139,7 @@ code {
 }
 
 /* Regenerate button hover rules */
-.message-bubble .msg-action-btn {
+.msg-action-btn {
   opacity: 0;
   transition: opacity 0.15s;
   background: transparent;
@@ -148,7 +148,8 @@ code {
   cursor: pointer;
 }
 
-.message-bubble:hover .msg-action-btn {
+.message-bubble:hover .msg-action-btn,
+.step-item:hover .msg-action-btn {
   opacity: 1;
 }
 
