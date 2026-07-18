@@ -32,7 +32,7 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
   const saveDisabled = saving || draft.trim() === '' || draft === step.text
 
   return (
-    <div style={{ margin: '12px 0', padding: '12px', borderRadius: '8px', background: 'var(--code-bg)', border: '1px solid var(--border)' }}>
+    <div className="step-item" style={{ margin: '12px 0', padding: '12px', borderRadius: '8px', background: 'var(--code-bg)', border: '1px solid var(--border)' }}>
       {editing ? (
         <>
           <textarea
