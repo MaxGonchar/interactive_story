@@ -35,3 +35,16 @@
 - `docks/dev/endpoints.md` — API contract
 - `docks/dev/data_storage_structure.md` — YAML storage format
 - `docks/dev/progect_structure.md` — package layout and module responsibilities
+
+## Frontend Styles
+
+Full reference: [`docks/dev/frontend_styles_guide.md`](../docks/dev/frontend_styles_guide.md)
+
+Four rules — follow them for every component you create or modify:
+
+1. **No magic values.** Every color, spacing size, font, and radius must reference a CSS variable token (e.g. `var(--accent)`, `var(--space-sm)`). Never write raw hex, raw `px` sizes for spacing/radius, or raw color names.
+2. **CSS classes for static styles.** Layout, spacing, color, and typography that don't depend on runtime props or state belong in a CSS class in `frontend/src/index.css`.
+3. **Inline `style={{}}` only for dynamic values.** Use inline styles exclusively for values computed from props or state (e.g. `alignItems: isUser ? 'flex-end' : 'flex-start'`).
+4. **`styles.js` for shared JS-side style objects.** If the same style object is needed in two or more components, export it from `frontend/src/styles.js` and import it — do not duplicate.
+
+Do not introduce CSS Modules, styled-components, Tailwind, or any other styling tooling.
