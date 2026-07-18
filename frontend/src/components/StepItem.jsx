@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { inlineEditTextarea } from '../styles'
 
 function StepItem({ step, onEdit, onReturn, disabled = false }) {
   const [editing, setEditing] = useState(false)
@@ -39,19 +40,7 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
             ref={textareaRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: '1px solid var(--border)',
-              outline: 'none',
-              resize: 'none',
-              overflow: 'hidden',
-              font: 'inherit',
-              color: 'inherit',
-              padding: '0',
-            }}
+            style={inlineEditTextarea}
           />
           <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
             <button onClick={handleSave} disabled={saveDisabled}>Save</button>

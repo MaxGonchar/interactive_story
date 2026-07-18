@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { inlineEditTextarea } from '../styles'
 
 function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false }) {
   const isUser = message.role === 'user'
@@ -37,32 +38,10 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
 
   const saveDisabled = saving || draft.trim() === '' || draft === message.content
 
-  const wrapperStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: isUser ? 'flex-end' : 'flex-start',
-    margin: '8px 0',
-  }
-
-  const bubbleStyle = {
-    maxWidth: '70%',
-    width: editing ? '70%' : undefined,
-    padding: '8px 12px',
-    borderRadius: '8px',
-    background: isUser ? 'var(--accent-bg)' : 'var(--code-bg)',
-    border: `1px solid ${isUser ? 'var(--accent-border)' : 'var(--border)'}`,
-  }
-
-  const labelStyle = {
-    fontSize: '0.75em',
-    color: 'var(--text)',
-    marginBottom: '4px',
-  }
-
   return (
-    <div style={wrapperStyle}>
-      <span style={labelStyle}>{label}</span>
-      <div className="message-bubble" style={bubbleStyle}>
+    <div className="message-wrapper" style={{ alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+      <span className="message-label">{label}</span>
+      <div className={`message-bubble ${isUser ? 'message-bubble--user' : 'message-bubble--narrator'}`} style={{ width: editing ? '70%' : undefined }}>
         {editing ? (
           <>
             <textarea
@@ -70,19 +49,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               maxLength={4000}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                background: 'transparent',
-                border: 'none',
-                borderBottom: '1px solid var(--border)',
-                outline: 'none',
-                resize: 'none',
-                overflow: 'hidden',
-                font: 'inherit',
-                color: 'inherit',
-                padding: '0',
-              }}
+              style={inlineEditTextarea}
             />
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button onClick={handleSave} disabled={saveDisabled}>Save</button>
