@@ -23,7 +23,7 @@ This document is the input backlog for `create-tasks`. Each section is a logical
 
 ---
 
-## P1 — High-value shared components
+## ✅ P1 — High-value shared components
 
 ### Task: Tests for `MessageItem`
 
@@ -92,7 +92,7 @@ Pure fetch wrappers — straightforward to cover completely.
 
 ---
 
-## P2 — Secondary shared components and API modules
+## ✅ P2 — Secondary shared components and API modules
 
 ### Task: Tests for `SceneActions`
 
