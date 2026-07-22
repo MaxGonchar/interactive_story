@@ -10,7 +10,7 @@ This document is the input backlog for `create-tasks`. Each section is a logical
 
 ## P0 — Infrastructure (prerequisite for everything else)
 
-### Task: Set up Vitest + RTL test infrastructure
+### ✅ Task: Set up Vitest + RTL test infrastructure
 
 **Files to change:**
 - `frontend/package.json` — add dev deps, add `test` / `test:watch` scripts
