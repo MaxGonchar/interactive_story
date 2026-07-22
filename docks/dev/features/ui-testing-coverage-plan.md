@@ -158,7 +158,7 @@ Used inside `FinishModal`. Custom multi-line bullet input.
 
 ---
 
-## P3 — Page smoke tests (deferred)
+## ✅ P3 — Page smoke tests (deferred)
 
 Low priority. Mount each page with mocked API, assert it renders without crashing through its loading → data states.
 
