@@ -54,17 +54,32 @@ Break down the "scene replay" feature into tasks and add them to the board.
 
 ---
 
-### implement-task
-**File:** `skills/implement-task/SKILL.md`
+### implement-be-task
+**File:** `skills/implement-be-task/SKILL.md`
 
-End-to-end task implementation workflow: creates a branch, reads the task, produces an implementation plan, writes code, runs tests, and opens a PR.
+End-to-end **backend** task implementation workflow: creates a branch, reads the task, produces an implementation plan, writes Python/FastAPI code, runs `make test-be`, and opens a PR.
 
-**Use when:** starting work on a board task or a local task file in `docks/dev/TODO/`.
+**Use when:** implementing a backend feature, fix, or refactor — Python, FastAPI, pytest.
 
 **Example prompt:**
 ```
 Implement task "Add scene router" from the project board.
-Implement task from docks/dev/TODO/011-add-scene-router.md
+Implement backend task from docks/dev/TODO/011-add-scene-router.md
+```
+
+---
+
+### implement-fe-task
+**File:** `skills/implement-fe-task/SKILL.md`
+
+End-to-end **frontend** task implementation workflow: creates a branch, reads the task, produces an implementation plan, writes React/Vite code, writes RTL tests (tests are part of done), runs `make test-fe`, and opens a PR.
+
+**Use when:** implementing a frontend feature, fix, or refactor — React components, API modules, pages.
+
+**Example prompt:**
+```
+Implement task "Add edit button to MessageItem".
+Implement frontend task from docks/dev/TODO/025-message-edit.md
 ```
 
 ---
@@ -81,6 +96,28 @@ Reads and reasons about the Python backend code across three dimensions: general
 Review the backend code quality.
 Review backend code quality for app/services.
 ```
+
+---
+
+### review-fe
+**File:** `skills/review-fe/SKILL.md`
+
+Reads and reasons about the React frontend code across three dimensions: style convention violations (CSS variables, inline styles), React/component anti-patterns (prop drilling, key props, stale closures), and test coverage gaps. Produces a structured report file.
+
+**Use when:** reviewing frontend code quality, checking style convention compliance, auditing component responsibility, finding missing RTL test coverage.
+
+**Example prompt:**
+```
+Review the frontend code quality.
+Review frontend code quality for components/MessageItem.
+```
+
+---
+
+### implement-task _(legacy)_
+**File:** `skills/implement-task/SKILL.md`
+
+Original unified task implementation skill. Superseded by `implement-be-task` and `implement-fe-task`. Kept for backward compatibility — prefer the split variants for new work.
 
 ---
 
