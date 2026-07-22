@@ -91,11 +91,11 @@ Read the following docs **before** planning. Do not skip.
 | [data_storage_structure.md](../../../../docks/dev/data_storage_structure.md) | Data models and storage layout |
 | [endpoints.md](../../../../docks/dev/endpoints.md) | API contract and route conventions |
 | [requirements.md](../../../../docks/dev/requirements.md) | Functional and non-functional requirements |
+| [be-conventions.md](./be-conventions.md) | Layered architecture, DI, models, error handling, LLM templates, test patterns |
 
 Also scan the relevant source files to identify:
 - Existing utilities, helpers, and base classes that can be reused
-- Patterns already in use (error handling, response shapes, naming conventions)
-- Style (import order, type annotations, docstring style, test structure)
+- Patterns already in use that may not yet be captured in `be-conventions.md`
 
 ### 4. Draft an Implementation Plan
 
