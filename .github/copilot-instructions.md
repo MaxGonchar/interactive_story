@@ -36,6 +36,17 @@
 - `docks/dev/data_storage_structure.md` — YAML storage format
 - `docks/dev/progect_structure.md` — package layout and module responsibilities
 
+## BE Tests
+
+Full reference: [`.github/skills/implement-be-task/be-conventions.md`](.github/skills/implement-be-task/be-conventions.md) (§ BE Tests)
+
+Four rules — follow them for every test you create or modify:
+
+1. **Functions over classes.** Use standalone `def test_*` functions; group related tests with a `# --- endpoint ---` comment separator instead of a class.
+2. **AAA pattern.** Separate Arrange / Act / Assert with blank lines.
+3. **Structured assertions.** Compare the full expected dict/list rather than asserting individual fields.
+4. **`autouse` fixture for overrides.** Never call `app.dependency_overrides.clear()` manually — the `clear_dependency_overrides` fixture in `tests/conftest.py` handles it.
+
 ## Frontend Styles
 
 Full reference: [`docks/dev/frontend_styles_guide.md`](../docks/dev/frontend_styles_guide.md)
