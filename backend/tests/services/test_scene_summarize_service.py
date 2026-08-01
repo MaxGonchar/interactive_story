@@ -1,39 +1,15 @@
+from __future__ import annotations
+
 import pytest
 from unittest.mock import AsyncMock
 
 from app.exceptions import SceneFinishedError
-from app.models.domain import Message, SceneDescription, SceneMetadata
+from app.models.domain import Message
 from app.services.scene_summarize_service import SceneSummarizeService
+from tests.factories import make_messages, make_scene_metadata
 
 STORY_ID = "story-abc"
 SCENE_ID = 1
-
-
-def make_metadata(
-    finished: bool = False,
-    context: list[str] | None = None,
-) -> SceneMetadata:
-    return SceneMetadata(
-        id=SCENE_ID,
-        story_id=STORY_ID,
-        character_ids=["c1"],
-        user_character_id="u1",
-        finished=finished,
-        scene_description=SceneDescription(
-            general_scene_guide="Guide.",
-            writing_style="Concise.",
-        ),
-        scene_summary=None,
-        context=context,
-    )
-
-
-def make_messages(n: int = 2) -> list[Message]:
-    msgs = []
-    for i in range(n):
-        role = "user" if i % 2 == 0 else "assistant"
-        msgs.append(Message(id=i + 1, role=role, content=f"Message {i + 1}"))
-    return msgs
 
 
 def make_service(
@@ -43,9 +19,8 @@ def make_service(
     llm_side_effect: Exception | None = None,
 ) -> tuple[SceneSummarizeService, AsyncMock, AsyncMock]:
     scene_repo = AsyncMock()
-    scene_repo.get_metadata.return_value = metadata or make_metadata()
+    scene_repo.get_metadata.return_value = metadata or make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID)
     scene_repo.get_messages.return_value = messages if messages is not None else make_messages()
-
     llm_client = AsyncMock()
     if llm_side_effect is not None:
         llm_client.invoke.side_effect = llm_side_effect
@@ -64,7 +39,7 @@ async def test_summarize_happy_path():
     ]
     context = ["Previous point 1.", "Previous point 2."]
     service, _, llm_client = make_service(
-        metadata=make_metadata(context=context),
+        metadata=make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID, context=context),
         messages=messages,
         llm_return=["Summary A", "Summary B"],
     )
@@ -81,7 +56,7 @@ async def test_summarize_happy_path():
 @pytest.mark.asyncio
 async def test_summarize_previous_summary_capped_at_50():
     context = [f"item {i}" for i in range(60)]
-    service, _, llm_client = make_service(metadata=make_metadata(context=context))
+    service, _, llm_client = make_service(metadata=make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID, context=context))
 
     await service.summarize(STORY_ID, SCENE_ID)
 
@@ -92,7 +67,7 @@ async def test_summarize_previous_summary_capped_at_50():
 
 @pytest.mark.asyncio
 async def test_summarize_empty_context_passes_empty_list():
-    service, _, llm_client = make_service(metadata=make_metadata(context=None))
+    service, _, llm_client = make_service(metadata=make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID, context=None))
 
     await service.summarize(STORY_ID, SCENE_ID)
 
@@ -112,7 +87,7 @@ async def test_summarize_no_messages_passes_empty_scene_content():
 
 @pytest.mark.asyncio
 async def test_summarize_raises_scene_finished_error():
-    service, _, llm_client = make_service(metadata=make_metadata(finished=True))
+    service, _, llm_client = make_service(metadata=make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID, finished=True))
 
     with pytest.raises(SceneFinishedError):
         await service.summarize(STORY_ID, SCENE_ID)

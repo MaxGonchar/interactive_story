@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from unittest.mock import AsyncMock
 
 import pytest
 
 from app.exceptions import SceneFinishedError
-from app.models.domain import SceneDescription, SceneMetadata
 from app.services.scene_lifecycle_service import SceneLifecycleService
+from tests.factories import make_scene_metadata
 
 
 STORY_ID = "story-123"
@@ -12,26 +14,11 @@ SCENE_ID = 1
 SUMMARY = ["The hero escaped the dungeon."]
 
 
-def make_scene_metadata(finished: bool = False) -> SceneMetadata:
-    return SceneMetadata(
-        id=SCENE_ID,
-        story_id=STORY_ID,
-        character_ids=["c1"],
-        user_character_id="max",
-        finished=finished,
-        scene_description=SceneDescription(
-            general_scene_guide="Guide text.",
-            writing_style="Descriptive.",
-        ),
-        scene_summary=None,
-    )
-
-
 def make_service(
     metadata: SceneMetadata | None = None,
 ) -> tuple[SceneLifecycleService, AsyncMock]:
     scene_repo = AsyncMock()
-    scene_repo.get_metadata.return_value = metadata or make_scene_metadata()
+    scene_repo.get_metadata.return_value = metadata or make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID)
     service = SceneLifecycleService(scene_repo)
     return service, scene_repo
 

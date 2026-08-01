@@ -7,6 +7,7 @@ import pytest
 from app.exceptions import NoStepsError
 from app.models.domain import Choice, ChoiceDrivenStoryMeta, Step
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
+from tests.factories import make_step
 
 _STORY_ID = "story-1"
 
@@ -24,19 +25,16 @@ _META = ChoiceDrivenStoryMeta(
 )
 
 
-def _make_steps(n: int = 3) -> list[Step]:
-    return [
-        Step(id=i + 1, incoming_choice=None, text=f"Paragraph {i + 1}.", choices=[])
-        for i in range(n)
-    ]
+def make_steps(n: int = 3) -> list[Step]:
+    return [make_step(i + 1) for i in range(n)]
 
 
-def _make_service(
+def make_service(
     meta: ChoiceDrivenStoryMeta = _META,
     steps: list[Step] | None = None,
 ) -> tuple[ChoiceDrivenPlayService, MagicMock, MagicMock]:
     if steps is None:
-        steps = _make_steps()
+        steps = make_steps()
 
     repo = MagicMock()
     repo.get_story_meta = AsyncMock(return_value=meta)
@@ -60,8 +58,8 @@ def _make_service(
 
 @pytest.mark.asyncio
 async def test_get_play_state_returns_history():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     result = await service.get_play_state(_STORY_ID)
 
@@ -76,8 +74,8 @@ async def test_get_play_state_returns_history():
 
 @pytest.mark.asyncio
 async def test_generate_choices_creates_one_client_per_direction():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     mock_client = MagicMock()
     mock_client.invoke = AsyncMock(return_value=[_CHOICE_A, _CHOICE_B])
@@ -98,8 +96,8 @@ async def test_generate_choices_creates_one_client_per_direction():
 
 @pytest.mark.asyncio
 async def test_generate_choices_persists_to_latest_step():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     mock_client = MagicMock()
     mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
@@ -115,8 +113,8 @@ async def test_generate_choices_persists_to_latest_step():
 
 @pytest.mark.asyncio
 async def test_generate_choices_passes_full_story_text():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     captured_texts: list[str] = []
     mock_client = MagicMock()
@@ -139,7 +137,7 @@ async def test_generate_choices_passes_full_story_text():
 
 @pytest.mark.asyncio
 async def test_generate_choices_raises_when_no_steps():
-    service, _, _ = _make_service(steps=[])
+    service, _, _ = make_service(steps=[])
 
     with pytest.raises(NoStepsError):
         await service.generate_choices(_STORY_ID)
@@ -152,8 +150,8 @@ async def test_generate_choices_raises_when_no_steps():
 
 @pytest.mark.asyncio
 async def test_regenerate_choices_clears_then_generates():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     mock_client = MagicMock()
     mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
@@ -186,7 +184,7 @@ async def test_regenerate_choices_clears_then_generates():
 
 @pytest.mark.asyncio
 async def test_regenerate_choices_raises_when_no_steps():
-    service, _, _ = _make_service(steps=[])
+    service, _, _ = make_service(steps=[])
 
     with pytest.raises(NoStepsError):
         await service.regenerate_choices(_STORY_ID)
@@ -199,8 +197,8 @@ async def test_regenerate_choices_raises_when_no_steps():
 
 @pytest.mark.asyncio
 async def test_select_choice_appends_new_step():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     mock_engine = MagicMock()
     mock_engine.invoke = AsyncMock(return_value="New paragraph text.")
@@ -222,8 +220,8 @@ async def test_select_choice_appends_new_step():
 
 @pytest.mark.asyncio
 async def test_select_choice_passes_action_and_consequence():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     mock_engine = MagicMock()
     mock_engine.invoke = AsyncMock(return_value="reply")
@@ -243,8 +241,8 @@ async def test_select_choice_passes_action_and_consequence():
 @pytest.mark.asyncio
 async def test_select_choice_uses_last_10_paragraphs():
     # 12 steps — only the last 10 should be passed to StoryEngineClient
-    steps = _make_steps(12)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(12)
+    service, repo, _ = make_service(steps=steps)
 
     captured_story_text: list[str] = []
     mock_engine = MagicMock()
@@ -267,8 +265,8 @@ async def test_select_choice_uses_last_10_paragraphs():
 
 @pytest.mark.asyncio
 async def test_select_choice_window_not_exceeded_when_fewer_than_10_steps():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     captured_story_text: list[str] = []
     mock_engine = MagicMock()
@@ -296,9 +294,9 @@ async def test_select_choice_window_not_exceeded_when_fewer_than_10_steps():
 
 @pytest.mark.asyncio
 async def test_edit_step_text_delegates_and_returns_updated_step():
-    steps = _make_steps(3)
+    steps = make_steps(3)
     target = steps[1]
-    service, repo, _ = _make_service(steps=steps)
+    service, repo, _ = make_service(steps=steps)
 
     result = await service.edit_step_text(_STORY_ID, target.id, "Updated text.")
 
@@ -313,8 +311,8 @@ async def test_edit_step_text_delegates_and_returns_updated_step():
 
 @pytest.mark.asyncio
 async def test_return_to_step_delegates_truncate_and_returns_step_id():
-    steps = _make_steps(3)
-    service, repo, _ = _make_service(steps=steps)
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
 
     result = await service.return_to_step(_STORY_ID, step_id=2)
 

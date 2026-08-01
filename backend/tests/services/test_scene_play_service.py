@@ -1,74 +1,31 @@
-import pytest
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFinishedError
-from app.models.domain import Message, SceneDescription, SceneMetadata, SceneRef, StoryMeta
+from app.models.domain import CharacterCard, Message
 from app.services.scene_play_service import ScenePlayService
-
-
-@pytest.mark.asyncio
-async def test_play_context_data_uses_metadata_context():
-    metadata = make_scene_metadata(context=["Context line one.", "Context line two."])
-    service, _, _, llm_client = make_service(metadata=metadata)
-    captured_context = {}
-    async def fake_invoke(context, *_):
-        captured_context['context_data'] = context.context_data
-        return "LLM reply"
-    llm_client.invoke.side_effect = fake_invoke
-    await service.play(STORY_ID, SCENE_ID, "Hello")
-    assert captured_context['context_data'] == ["Context line one.", "Context line two."]
-
-
-@pytest.mark.asyncio
-async def test_play_context_data_empty_when_metadata_context_none():
-    service, _, _, llm_client = make_service()
-    captured_context = {}
-    async def fake_invoke(context, *_):
-        captured_context['context_data'] = context.context_data
-        return "LLM reply"
-    llm_client.invoke.side_effect = fake_invoke
-    await service.play(STORY_ID, SCENE_ID, "Hello")
-    assert captured_context['context_data'] == []
-
+from tests.factories import make_scene_metadata
 
 STORY_ID = "story-123"
 SCENE_ID = 1
 
 
-def make_scene_metadata(finished: bool = False, context: list[str] | None = None) -> SceneMetadata:
-    return SceneMetadata(
-        id=SCENE_ID,
-        story_id=STORY_ID,
-        character_ids=["c1"],
-        user_character_id="max",
-        finished=finished,
-        scene_description=SceneDescription(
-            general_scene_guide="Guide text.",
-            writing_style="Descriptive.",
-        ),
-        scene_summary=None,
-        context=context,
-    )
-
-
-from app.models.domain import SceneRef, StoryMeta
-from unittest.mock import AsyncMock, MagicMock
-
 def make_service(
-    metadata: SceneMetadata | None = None,
-    messages: list[Message] | None = None,
+    metadata=None,
+    messages=None,
     llm_reply: str = "Assistant reply",
-    llm_side_effect: Exception | None = None,
+    llm_side_effect=None,
 ) -> tuple[ScenePlayService, AsyncMock, AsyncMock, MagicMock]:
     scene_repo = AsyncMock()
-    scene_repo.get_metadata.return_value = metadata or make_scene_metadata()
+    scene_repo.get_metadata.return_value = metadata or make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID)
     scene_repo.get_messages.return_value = messages if messages is not None else []
 
     character_repo = AsyncMock()
     character_repo.get_characters.return_value = []
-    from app.models.domain import CharacterCard
-    character_repo.get_character.return_value = CharacterCard(
-        id="user-char", name="Hero"
-    )
+    character_repo.get_character.return_value = CharacterCard(id="user-char", name="Hero")
 
     llm_client = AsyncMock()
     if llm_side_effect is not None:
@@ -81,14 +38,46 @@ def make_service(
 
 
 @pytest.mark.asyncio
+async def test_play_context_data_uses_metadata_context():
+    metadata = make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID, context=["Context line one.", "Context line two."])
+    service, _, _, llm_client = make_service(metadata=metadata)
+    captured_context = {}
+
+    async def fake_invoke(context, *_):
+        captured_context["context_data"] = context.context_data
+        return "LLM reply"
+
+    llm_client.invoke.side_effect = fake_invoke
+    await service.play(STORY_ID, SCENE_ID, "Hello")
+
+    assert captured_context["context_data"] == ["Context line one.", "Context line two."]
+
+
+@pytest.mark.asyncio
+async def test_play_context_data_empty_when_metadata_context_none():
+    service, _, _, llm_client = make_service()
+    captured_context = {}
+
+    async def fake_invoke(context, *_):
+        captured_context["context_data"] = context.context_data
+        return "LLM reply"
+
+    llm_client.invoke.side_effect = fake_invoke
+    await service.play(STORY_ID, SCENE_ID, "Hello")
+
+    assert captured_context["context_data"] == []
+
+
+@pytest.mark.asyncio
 async def test_play_includes_user_character_in_context():
     service, _, character_repo, llm_client = make_service()
     captured = {}
+
     async def fake_invoke(context, *_):
         captured["user_character"] = context.user_character
         return "reply"
-    llm_client.invoke.side_effect = fake_invoke
 
+    llm_client.invoke.side_effect = fake_invoke
     await service.play(STORY_ID, SCENE_ID, "Hello")
 
     assert captured["user_character"].id == "user-char"
@@ -99,16 +88,15 @@ async def test_play_includes_user_character_in_context():
 async def test_regenerate_includes_user_character_in_context():
     user_msg = Message(id=1, role="user", content="Hi")
     assistant_msg = Message(id=2, role="assistant", content="Old reply")
-    service, scene_repo, character_repo, llm_client = make_service(
-        messages=[user_msg, assistant_msg]
-    )
+    service, scene_repo, character_repo, llm_client = make_service(messages=[user_msg, assistant_msg])
     scene_repo.update_message.return_value = Message(id=2, role="assistant", content="New reply")
     captured = {}
+
     async def fake_invoke(context, *_):
         captured["user_character"] = context.user_character
         return "New reply"
-    llm_client.invoke.side_effect = fake_invoke
 
+    llm_client.invoke.side_effect = fake_invoke
     await service.regenerate(STORY_ID, SCENE_ID)
 
     assert captured["user_character"].id == "user-char"
@@ -131,7 +119,7 @@ async def test_play_returns_both_messages():
 
 @pytest.mark.asyncio
 async def test_play_raises_when_scene_finished():
-    service, scene_repo, _, _ = make_service(metadata=make_scene_metadata(finished=True))
+    service, scene_repo, _, _ = make_service(metadata=make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID, finished=True))
 
     with pytest.raises(SceneFinishedError):
         await service.play(STORY_ID, SCENE_ID, "Hello")
@@ -182,10 +170,14 @@ async def test_regenerate_replaces_last_assistant_message():
 async def test_regenerate_raises_when_scene_finished():
     user_msg = Message(id=1, role="user", content="Hi")
     assistant_msg = Message(id=2, role="assistant", content="Old reply")
-    service, scene_repo, _, _ = make_service(metadata=make_scene_metadata(finished=True), messages=[user_msg, assistant_msg])
+    service, scene_repo, _, _ = make_service(
+        metadata=make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID, finished=True),
+        messages=[user_msg, assistant_msg],
+    )
 
     with pytest.raises(SceneFinishedError):
         await service.regenerate(STORY_ID, SCENE_ID)
+
     scene_repo.update_message.assert_not_awaited()
 
 
@@ -195,6 +187,7 @@ async def test_regenerate_raises_when_no_messages():
 
     with pytest.raises(NoAssistantMessageError):
         await service.regenerate(STORY_ID, SCENE_ID)
+
     scene_repo.update_message.assert_not_awaited()
 
 
@@ -205,6 +198,7 @@ async def test_regenerate_raises_when_last_message_is_user():
 
     with pytest.raises(NoAssistantMessageError):
         await service.regenerate(STORY_ID, SCENE_ID)
+
     scene_repo.update_message.assert_not_awaited()
 
 
@@ -216,6 +210,7 @@ async def test_regenerate_does_not_persist_on_llm_failure():
 
     with pytest.raises(RuntimeError, match="LLM fail"):
         await service.regenerate(STORY_ID, SCENE_ID)
+
     scene_repo.update_message.assert_not_awaited()
 
 
@@ -227,4 +222,5 @@ async def test_regenerate_raises_no_user_message_when_only_assistant():
 
     with pytest.raises(NoUserMessageError):
         await service.regenerate(STORY_ID, SCENE_ID)
+
     scene_repo.update_message.assert_not_awaited()

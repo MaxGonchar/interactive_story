@@ -1,30 +1,18 @@
+from __future__ import annotations
+
 from unittest.mock import AsyncMock
 
 import pytest
 
 from app.exceptions import NotFoundError, SceneFinishedError
-from app.models.domain import Message, SceneDescription, SceneMetadata
+from app.models.domain import Message
 from app.services.scene_message_service import SceneMessageService
+from tests.factories import make_scene_metadata
 
 
 STORY_ID = "story-123"
 SCENE_ID = 1
 MESSAGE_ID = 42
-
-
-def make_scene_metadata(finished: bool = False) -> SceneMetadata:
-    return SceneMetadata(
-        id=SCENE_ID,
-        story_id=STORY_ID,
-        character_ids=["c1"],
-        user_character_id="max",
-        finished=finished,
-        scene_description=SceneDescription(
-            general_scene_guide="Guide text.",
-            writing_style="Descriptive.",
-        ),
-        scene_summary=None,
-    )
 
 
 def make_service(
@@ -34,7 +22,7 @@ def make_service(
     delete_side_effect: Exception | None = None,
 ) -> tuple[SceneMessageService, AsyncMock]:
     scene_repo = AsyncMock()
-    scene_repo.get_metadata.return_value = make_scene_metadata(finished=finished)
+    scene_repo.get_metadata.return_value = make_scene_metadata(finished=finished, story_id=STORY_ID, scene_id=SCENE_ID)
 
     if update_side_effect is not None:
         scene_repo.update_message.side_effect = update_side_effect

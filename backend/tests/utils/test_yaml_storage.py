@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 import app.utils.yaml_storage as ys
