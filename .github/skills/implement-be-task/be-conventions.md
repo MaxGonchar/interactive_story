@@ -173,20 +173,21 @@ backend/tests/api/test_scenes_router.py
 
 ### Router tests
 
-Use `fastapi.testclient.TestClient`, override dependencies via `app.dependency_overrides`, and reset overrides after each test.
+Use `fastapi.testclient.TestClient` and override dependencies via `app.dependency_overrides`. Overrides are cleared automatically by the autouse `clear_dependency_overrides` fixture in `tests/conftest.py` — never call `.clear()` manually.
 
 ```python
 from fastapi.testclient import TestClient
 from app.main import app
 
-def test_something():
-    svc = MagicMock()
-    svc.my_method = AsyncMock(return_value=...)
-    app.dependency_overrides[get_my_service] = lambda: svc
+# --- POST /play ---
+
+def test_play_success():
+    svc = _make_play_service(play_return=(user_msg, assistant_msg))
+    app.dependency_overrides[get_scene_play_service] = lambda: svc
     client = TestClient(app)
-    response = client.get("/api/...")
+    response = client.post("/api/stories/s1/scenes/1/play", json={"content": "hi"})
     assert response.status_code == 200
-    app.dependency_overrides.clear()
+    assert response.json() == {"data": {...}}
 ```
 
 Use private factory functions to build mock services:
@@ -198,12 +199,10 @@ def _make_play_service(play_side_effect=None, play_return=None) -> MagicMock:
     return svc
 ```
 
-Group tests by endpoint in classes (`class TestPlay`, `class TestEditMessage`).
-
 ### Service tests
 
 Use `@pytest.mark.asyncio` and `AsyncMock` for all repository and LLM client dependencies.  
-Use factory functions to build domain objects and service instances:
+Use factory functions from `tests/factories.py` to build domain objects and service instances:
 
 ```python
 def make_scene_metadata(finished: bool = False, ...) -> SceneMetadata:
@@ -223,3 +222,150 @@ make test-be
 ```
 
 Always run from the project root via `make test-be`. Never run `pytest` directly.
+
+---
+
+## BE Tests
+
+This section is the authoritative reference for backend test conventions. See also: `docks/dev/features/be_tests_conventions.md` for the full rationale.
+
+---
+
+### Support Files
+
+```
+tests/
+  conftest.py          # pytest fixtures shared by all unit tests
+  factories.py         # pure make_*() functions building domain objects — no pytest dependency
+  utils.py             # shared helpers (custom assertions, data loaders, etc.)
+  api/
+  services/
+  repositories/
+  llm/
+  models/
+  utils/
+  functional/
+    conftest.py        # functional-test-only fixtures (temp data dir, LLM mock, TestClient)
+    test_scene_play_flow.py
+    test_scene_finish_flow.py
+```
+
+| File | Role |
+|---|---|
+| `tests/conftest.py` | Autouse fixtures shared by all unit tests. At minimum the `clear_dependency_overrides` fixture. |
+| `tests/factories.py` | Pure `make_*()` functions that build domain objects. No pytest dependency — importable anywhere. |
+| `tests/utils.py` | Shared helpers that are neither factories nor fixtures (e.g. assert standard error shape, load YAML fixtures). |
+| `tests/functional/conftest.py` | Functional-test environment: temp data dir, repos wired to it, LLM client mocked, `TestClient` ready. |
+
+#### `tests/conftest.py` — minimum content
+
+```python
+import pytest
+from app.main import app
+
+@pytest.fixture(autouse=True)
+def clear_dependency_overrides():
+    yield
+    app.dependency_overrides.clear()
+```
+
+#### `tests/factories.py` — pattern
+
+```python
+def make_scene_metadata(finished: bool = False, context: list[str] | None = None) -> SceneMetadata:
+    ...
+
+def make_message(id: int = 1, role: str = "user", content: str = "Hello") -> Message:
+    ...
+```
+
+---
+
+### Conventions
+
+#### Functions over classes
+
+Use standalone `def test_*` functions. Do **not** group tests in classes. Use a comment separator to group related tests instead:
+
+```python
+# --- POST /play ---
+
+def test_play_success(): ...
+def test_play_scene_finished_returns_409(): ...
+
+# --- GET /scenes ---
+
+def test_list_scenes_success(): ...
+```
+
+#### One file per resource / service
+
+- API tests: one file per REST resource (e.g. `test_scenes.py` covers all `/scenes` endpoints).
+- Service tests: one file per service class.
+
+#### AAA pattern
+
+All tests follow Arrange → Act → Assert. Separate each phase with a blank line:
+
+```python
+def test_play_success():
+    svc = _make_play_service(play_return=(user_msg, assistant_msg))
+    app.dependency_overrides[get_scene_play_service] = lambda: svc
+
+    response = TestClient(app).post("/api/.../play", json={"content": "hi"})
+
+    assert response.status_code == 200
+    assert response.json() == {"data": {...}}
+```
+
+#### Structured assertions
+
+Compare the full expected structure rather than asserting individual fields. This makes failures self-describing and merges multiple narrow tests into one:
+
+```python
+# Avoid
+assert resp.status_code == 200
+body = resp.json()
+assert "data" in body
+assert len(body["data"]) == 3
+
+# Prefer
+expected = {"data": [{"id": "mila"}, {"id": "bun"}, {"id": "max"}]}
+assert resp.status_code == 200
+assert resp.json() == expected
+```
+
+#### Parametrized tests
+
+Use `@pytest.mark.parametrize` when multiple inputs produce structurally similar outcomes (e.g. multiple error cases that all return 4xx). Avoid near-identical separate test functions:
+
+```python
+@pytest.mark.parametrize("exc,expected_status", [
+    (NotFoundError(), 404),
+    (SceneFinishedError(), 409),
+])
+def test_play_errors(exc, expected_status):
+    svc = _make_play_service(play_side_effect=exc)
+    app.dependency_overrides[get_scene_play_service] = lambda: svc
+    response = TestClient(app).post("/api/.../play", json={"content": "hi"})
+    assert response.status_code == expected_status
+```
+
+---
+
+### Functional Tests
+
+**Intent:** verify usage flows through HTTP endpoints. All assertions go through subsequent endpoint calls — never assert against storage directly.
+
+**LLM handling:** mock LLM clients at the client level (in `functional/conftest.py`) to return deterministic strings. Functional tests do not test LLM behavior.
+
+**Example flow — scene play:**
+
+```
+POST /api/stories/{id}/scenes/{id}/play  → assert 200, response has user_message + assistant_message
+GET  /api/stories/{id}/scenes/{id}       → assert messages appear in scene data
+```
+
+**Flows to cover (first iteration):**
+- Scene play: send a message, verify response and scene state.
+- Scene finish: finish a scene, verify it can no longer be played.
