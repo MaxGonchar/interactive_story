@@ -1,34 +1,22 @@
+from __future__ import annotations
+
 from unittest.mock import AsyncMock
 
 import pytest
 
 from app.exceptions import NotFoundError
-from app.models.domain import Message, SceneDescription, SceneMetadata
+from app.models.domain import Message
 from app.services.scene_query_service import SceneQueryService
+from tests.factories import make_scene_metadata
 
 
 STORY_ID = "story-123"
 SCENE_ID = 1
 
 
-def make_scene_metadata() -> SceneMetadata:
-    return SceneMetadata(
-        id=SCENE_ID,
-        story_id=STORY_ID,
-        character_ids=["c1"],
-        user_character_id="max",
-        finished=False,
-        scene_description=SceneDescription(
-            general_scene_guide="Guide text.",
-            writing_style="Descriptive.",
-        ),
-        scene_summary=None,
-    )
-
-
 @pytest.mark.asyncio
 async def test_get_scene_returns_metadata_and_messages():
-    metadata = make_scene_metadata()
+    metadata = make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID)
     messages = [Message(id=1, role="user", content="Hello")]
 
     story_repo = AsyncMock()

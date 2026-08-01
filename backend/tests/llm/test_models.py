@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from app.llm.models import SceneContext
 from app.models.domain import CharacterCard, Message, SceneDescription
 

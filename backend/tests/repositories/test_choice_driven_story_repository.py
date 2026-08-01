@@ -7,6 +7,7 @@ from app.exceptions import NotFoundError
 
 from app.models.domain import Choice, ChoiceDrivenStoryMeta, Step
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
+from tests.factories import make_step
 
 STORY_ID = "cds-test-story"
 
@@ -35,15 +36,6 @@ def story_root(monkeypatch, tmp_path):
         yaml.safe_dump(story_data, allow_unicode=True), encoding="utf-8"
     )
     return tmp_path
-
-
-def _make_step(step_id: int, incoming_choice: Choice | None = None) -> Step:
-    return Step(
-        id=step_id,
-        incoming_choice=incoming_choice,
-        text=f"Paragraph {step_id}.",
-        choices=[],
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -93,7 +85,7 @@ async def test_get_history_returns_empty_list_when_file_missing(story_root):
 @pytest.mark.asyncio
 async def test_append_step_then_get_history_round_trip(story_root):
     repo = ChoiceDrivenStoryRepository()
-    step = _make_step(1)
+    step = make_step(1)
 
     await repo.append_step(STORY_ID, step)
     history = await repo.get_history(STORY_ID)
@@ -110,9 +102,9 @@ async def test_append_multiple_steps_preserves_order(story_root):
     repo = ChoiceDrivenStoryRepository()
     choice = Choice(action="Enter fog", consequence="Figure appears")
 
-    await repo.append_step(STORY_ID, _make_step(1))
-    await repo.append_step(STORY_ID, _make_step(2, incoming_choice=choice))
-    await repo.append_step(STORY_ID, _make_step(3, incoming_choice=choice))
+    await repo.append_step(STORY_ID, make_step(1))
+    await repo.append_step(STORY_ID, make_step(2, incoming_choice=choice))
+    await repo.append_step(STORY_ID, make_step(3, incoming_choice=choice))
 
     history = await repo.get_history(STORY_ID)
 
@@ -128,7 +120,7 @@ async def test_append_multiple_steps_preserves_order(story_root):
 @pytest.mark.asyncio
 async def test_update_step_choices_replaces_choices(story_root):
     repo = ChoiceDrivenStoryRepository()
-    await repo.append_step(STORY_ID, _make_step(1))
+    await repo.append_step(STORY_ID, make_step(1))
 
     new_choices = [
         Choice(action="A", consequence="Outcome A"),
@@ -145,7 +137,7 @@ async def test_update_step_choices_replaces_choices(story_root):
 @pytest.mark.asyncio
 async def test_update_step_choices_nonexistent_step_raises_key_error(story_root):
     repo = ChoiceDrivenStoryRepository()
-    await repo.append_step(STORY_ID, _make_step(1))
+    await repo.append_step(STORY_ID, make_step(1))
 
     with pytest.raises(NotFoundError):
         await repo.update_step_choices(STORY_ID, step_id=99, choices=[])
@@ -159,7 +151,7 @@ async def test_update_step_choices_nonexistent_step_raises_key_error(story_root)
 @pytest.mark.asyncio
 async def test_update_step_text_changes_text(story_root):
     repo = ChoiceDrivenStoryRepository()
-    await repo.append_step(STORY_ID, _make_step(1))
+    await repo.append_step(STORY_ID, make_step(1))
 
     await repo.update_step_text(STORY_ID, step_id=1, text="Corrected paragraph.")
     history = await repo.get_history(STORY_ID)
@@ -170,7 +162,7 @@ async def test_update_step_text_changes_text(story_root):
 @pytest.mark.asyncio
 async def test_update_step_text_nonexistent_step_raises_key_error(story_root):
     repo = ChoiceDrivenStoryRepository()
-    await repo.append_step(STORY_ID, _make_step(1))
+    await repo.append_step(STORY_ID, make_step(1))
 
     with pytest.raises(NotFoundError):
         await repo.update_step_text(STORY_ID, step_id=99, text="New text.")
@@ -187,7 +179,7 @@ async def test_truncate_from_removes_steps_after_given_id(story_root):
     choice = Choice(action="Go", consequence="Arrive")
 
     for i in range(1, 5):
-        await repo.append_step(STORY_ID, _make_step(i, None if i == 1 else choice))
+        await repo.append_step(STORY_ID, make_step(i, None if i == 1 else choice))
 
     await repo.truncate_from(STORY_ID, step_id=2)
     history = await repo.get_history(STORY_ID)
@@ -200,7 +192,7 @@ async def test_truncate_from_keeps_all_when_step_id_is_last(story_root):
     repo = ChoiceDrivenStoryRepository()
 
     for i in range(1, 4):
-        await repo.append_step(STORY_ID, _make_step(i))
+        await repo.append_step(STORY_ID, make_step(i))
 
     await repo.truncate_from(STORY_ID, step_id=3)
     history = await repo.get_history(STORY_ID)
@@ -213,7 +205,7 @@ async def test_truncate_from_removes_all_when_step_id_is_zero(story_root):
     repo = ChoiceDrivenStoryRepository()
 
     for i in range(1, 4):
-        await repo.append_step(STORY_ID, _make_step(i))
+        await repo.append_step(STORY_ID, make_step(i))
 
     await repo.truncate_from(STORY_ID, step_id=0)
     history = await repo.get_history(STORY_ID)
@@ -229,7 +221,7 @@ async def test_truncate_from_removes_all_when_step_id_is_zero(story_root):
 @pytest.mark.asyncio
 async def test_history_file_is_valid_yaml_after_append(story_root):
     repo = ChoiceDrivenStoryRepository()
-    await repo.append_step(STORY_ID, _make_step(1))
+    await repo.append_step(STORY_ID, make_step(1))
 
     from app.utils.file_paths import history_file
 
