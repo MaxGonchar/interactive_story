@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getScene, playScene, finishScene, editMessage, deleteMessage, regenerateLastAssistantMessage } from '../api/scenes'
 import SceneHeader from '../components/SceneHeader'
@@ -8,6 +8,7 @@ import FinishModal from '../components/FinishModal'
 
 function ScenePage() {
   const navigate = useNavigate()
+  const messageEndRef = useRef(null)
 
     async function handleRegenerate() {
       setOpError(null)
@@ -41,6 +42,10 @@ function ScenePage() {
       .catch((err) => setError(err.message ?? 'Failed to load scene'))
       .finally(() => setLoading(false))
   }, [storyId, sceneId])
+
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({ block: 'end' })
+  }, [scene?.messages])
 
   async function handleSend(content) {
     setOpError(null)
@@ -132,28 +137,36 @@ function ScenePage() {
   }
 
   return (
-    <>
+    <div className="scene-page">
       <SceneHeader scene={scene} />
-      <MessageList
-        messages={scene.messages}
-        onEdit={handleEditMessage}
-        onDelete={handleDeleteLastExchange}
-        onRegenerate={handleRegenerate}
-        disabled={scene.finished || busy}
-      />
-      {opError && <p>{opError}</p>}
-      <MessageComposer
-        onSend={handleSend}
-        disabled={scene.finished || busy}
-      />
-      {!scene.finished && (
-        <button
-          onClick={() => setShowFinishModal(true)}
-          disabled={busy}
-        >
-          Finish
-        </button>
-      )}
+      <div className="scene-page__messages" role="log" aria-label="Scene messages">
+        <MessageList
+          className="scene-message-list"
+          messages={scene.messages}
+          onEdit={handleEditMessage}
+          onDelete={handleDeleteLastExchange}
+          onRegenerate={handleRegenerate}
+          disabled={scene.finished || busy}
+          endSlot={<div ref={messageEndRef} aria-hidden="true" className="scene-message-list__end-anchor" />}
+        />
+      </div>
+      <div className="scene-page__footer" role="group" aria-label="Scene composer area">
+        {opError && <p className="scene-page__error">{opError}</p>}
+        <MessageComposer
+          onSend={handleSend}
+          disabled={scene.finished || busy}
+        />
+        {!scene.finished && (
+          <div className="scene-page__actions">
+            <button
+              onClick={() => setShowFinishModal(true)}
+              disabled={busy}
+            >
+              Finish
+            </button>
+          </div>
+        )}
+      </div>
       {showFinishModal && (
         <FinishModal
           storyId={storyId}
@@ -162,7 +175,7 @@ function ScenePage() {
           onCancel={() => setShowFinishModal(false)}
         />
       )}
-    </>
+    </div>
   )
 }
 

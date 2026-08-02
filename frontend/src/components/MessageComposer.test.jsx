@@ -15,6 +15,11 @@ describe('MessageComposer', () => {
     expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument()
   })
 
+  it('renders an accessible composer group for footer integration', () => {
+    render(<MessageComposer onSend={vi.fn()} />)
+    expect(screen.getByRole('group', { name: 'Message composer' })).toBeInTheDocument()
+  })
+
   it('Send button is disabled when textarea is empty', () => {
     render(<MessageComposer onSend={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
