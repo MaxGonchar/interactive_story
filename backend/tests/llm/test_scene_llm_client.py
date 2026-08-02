@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import os
+import logging
+import types
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
-import types
 from app.llm.models import SceneContext
 from app.llm.scene_llm_client import SceneLLMClient, _DEFAULT_MODEL
 from app.models.domain import CharacterCard, SceneDescription, Message
@@ -91,6 +90,7 @@ async def test_invoke_forwards_all_message_history(monkeypatch):
     client = SceneLLMClient.__new__(SceneLLMClient)
     client._model = mock_model
     client._prompt_builder = SceneLLMClient()._prompt_builder
+    client._logger = logging.getLogger("test.scene_llm_client")
     await client.invoke(context, "Second user turn")
     call_args = mock_model.ainvoke.call_args[0][0]
     # system + 3 history + current user = 5 messages
@@ -113,6 +113,7 @@ async def test_invoke_empty_history_sends_two_messages(monkeypatch):
     client = SceneLLMClient.__new__(SceneLLMClient)
     client._model = mock_model
     client._prompt_builder = SceneLLMClient()._prompt_builder
+    client._logger = logging.getLogger("test.scene_llm_client")
     await client.invoke(context, "Hello")
     call_args = mock_model.ainvoke.call_args[0][0]
     assert len(call_args) == 2

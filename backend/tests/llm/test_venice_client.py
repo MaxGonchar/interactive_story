@@ -6,12 +6,44 @@ import httpx
 import pytest
 
 from app.exceptions import LLMError
-from app.llm.venice_client import VeniceClient
+from app.llm.venice_client import VeniceClient, _DEFAULT_TIMEOUT_SECONDS
 
 
 def test_headers_contain_bearer_token():
     client = VeniceClient(api_key="test-key")
     assert client.headers["Authorization"] == "Bearer test-key"
+
+
+def test_default_timeout_used_when_env_absent(monkeypatch):
+    monkeypatch.delenv("VENICE_TIMEOUT_SECONDS", raising=False)
+
+    client = VeniceClient(api_key="test-key")
+
+    assert client.timeout == _DEFAULT_TIMEOUT_SECONDS
+
+
+def test_custom_timeout_from_env(monkeypatch):
+    monkeypatch.setenv("VENICE_TIMEOUT_SECONDS", "42.5")
+
+    client = VeniceClient(api_key="test-key")
+
+    assert client.timeout == 42.5
+
+
+def test_invalid_timeout_falls_back_to_default(monkeypatch):
+    monkeypatch.setenv("VENICE_TIMEOUT_SECONDS", "not-a-number")
+
+    client = VeniceClient(api_key="test-key")
+
+    assert client.timeout == _DEFAULT_TIMEOUT_SECONDS
+
+
+def test_non_positive_timeout_falls_back_to_default(monkeypatch):
+    monkeypatch.setenv("VENICE_TIMEOUT_SECONDS", "0")
+
+    client = VeniceClient(api_key="test-key")
+
+    assert client.timeout == _DEFAULT_TIMEOUT_SECONDS
 
 
 def _make_mock_response(json_data: dict, status_code: int = 200) -> MagicMock:

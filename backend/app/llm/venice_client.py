@@ -1,12 +1,32 @@
+import os
+
 import httpx
 
 from app.exceptions import LLMError
+
+_DEFAULT_TIMEOUT_SECONDS = 300.0
+
+
+def _load_timeout_seconds() -> float:
+    raw_timeout = os.getenv("VENICE_TIMEOUT_SECONDS")
+    if raw_timeout is None:
+        return _DEFAULT_TIMEOUT_SECONDS
+
+    try:
+        timeout = float(raw_timeout)
+    except ValueError:
+        return _DEFAULT_TIMEOUT_SECONDS
+
+    if timeout <= 0:
+        return _DEFAULT_TIMEOUT_SECONDS
+
+    return timeout
 
 
 class VeniceClient:
     def __init__(self, api_key: str) -> None:
         self.base_url = "https://api.venice.ai/api/v1"
-        self.timeout = 300.0
+        self.timeout = _load_timeout_seconds()
         self.headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",

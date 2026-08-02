@@ -106,6 +106,17 @@ async def test_llm_error_propagates():
         await client.invoke(previous_summary=[], scene_content=_SCENE_CONTENT)
 
 
+@pytest.mark.asyncio
+async def test_invoke_raises_on_non_text_response_content():
+    client = _make_client()
+    client._model = types.SimpleNamespace(
+        ainvoke=AsyncMock(return_value=_ai_response([{"type": "text", "text": "hello"}]))
+    )
+
+    with pytest.raises(TypeError, match="non-text"):
+        await client.invoke(previous_summary=[], scene_content=_SCENE_CONTENT)
+
+
 def test_default_model_used_when_env_absent():
     client = _make_client()
     assert client._model.model == _DEFAULT_MODEL

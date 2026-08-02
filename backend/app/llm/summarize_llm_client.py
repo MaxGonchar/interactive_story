@@ -6,6 +6,11 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
 
+from app.llm.logging_config import (
+    configure_llm_logger,
+    log_prompt_messages,
+    log_response_content,
+)
 from app.llm.venice_ai import VeniceAIChatModel
 
 _DEFAULT_MODEL = "llama-3.3-70b"
@@ -25,6 +30,7 @@ class SummarizeLLMClient:
         env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), keep_trailing_newline=True)
         self._system_template = env.get_template("summary_system.j2")
         self._user_template = env.get_template("summary_user.j2")
+        self._logger = configure_llm_logger("app.llm.summary")
 
     async def invoke(self, previous_summary: list[str], scene_content: str) -> list[str]:
         system_prompt = self._system_template.render(
@@ -35,13 +41,12 @@ class SummarizeLLMClient:
             scene_content=scene_content,
         )
         messages = [SystemMessage(system_prompt), HumanMessage(user_message)]
-
-        print("Invoking LLM for summary...")
-        print("=== MESSAGES ===")
-        for m in messages:
-            print(f"{m.type.upper()}: {m.content}")
-        print("=== END MESSAGES ===")
+        log_prompt_messages(self._logger, messages)
 
         response = await self._model.ainvoke(messages)
+        if not isinstance(response.content, str):
+            raise TypeError("Summary model returned non-text content.")
+
+        log_response_content(self._logger, response.content)
         result = self._parser.parse(response.content)
         return result.items

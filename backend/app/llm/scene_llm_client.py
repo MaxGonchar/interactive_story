@@ -2,6 +2,11 @@
 import os
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
+from app.llm.logging_config import (
+    configure_llm_logger,
+    log_prompt_messages,
+    log_response_content,
+)
 from app.llm.models import SceneContext
 from app.llm.prompt_builder import PromptBuilder
 from app.llm.venice_ai import VeniceAIChatModel
@@ -15,6 +20,7 @@ class SceneLLMClient:
         model = os.environ.get("VENICE_MODEL", _DEFAULT_MODEL)
         self._model = VeniceAIChatModel(model=model, api_key=api_key)
         self._prompt_builder = PromptBuilder()
+        self._logger = configure_llm_logger("app.llm.scene")
 
     async def invoke(self, context: SceneContext, user_message: str) -> str:
         system_prompt = self._prompt_builder.build_system_prompt(context)
@@ -24,11 +30,8 @@ class SceneLLMClient:
             for m in history_msgs
         ]
         messages = [SystemMessage(system_prompt)] + history + [HumanMessage(user_message)]
-
-        print("=== MESSAGES ===")
-        for m in messages:
-            print(f"{m.type.upper()}: {m.content}")
-        print("=== END MESSAGES ===")
+        log_prompt_messages(self._logger, messages)
 
         response = await self._model.ainvoke(messages)
+        log_response_content(self._logger, response.content)
         return response.content
