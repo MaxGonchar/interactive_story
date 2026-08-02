@@ -38,6 +38,10 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
   }
 
   const saveDisabled = saving || draft.trim() === '' || draft === message.content
+  const showRegenerate = message.role === 'assistant' && Boolean(onRegenerate)
+  const showEdit = !disabled && Boolean(onEdit)
+  const showDelete = Boolean(onDelete)
+  const hasActions = showRegenerate || showEdit || showDelete
 
   return (
     <div className="message-wrapper" style={{ alignItems: isUser ? 'flex-end' : 'flex-start' }}>
@@ -60,35 +64,37 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
         ) : (
           <>
             <div className="message-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown></div>
-            {/* Regenerate button: only for assistant messages, only if onRegenerate is provided */}
-            {message.role === 'assistant' && onRegenerate && (
-              <button
-                className="msg-action-btn"
-                onClick={onRegenerate}
-                aria-label="Regenerate message"
-                type="button"
-              >
-                <RefreshIcon style={{ width: '1rem', height: '1rem' }} />
-              </button>
-            )}
-            {/* Existing edit/delete buttons */}
-            {!disabled && onEdit && (
-              <button
-                className="edit-btn"
-                onClick={() => setEditing(true)}
-                aria-label="Edit message"
-              >
-                <EditIcon style={{ width: '1rem', height: '1rem' }} />
-              </button>
-            )}
-            {onDelete && (
-              <button
-                className="delete-btn"
-                onClick={() => onDelete(message.id)}
-                aria-label="Delete message"
-              >
-                <DeleteIcon style={{ width: '1rem', height: '1rem' }} />
-              </button>
+            {hasActions && (
+              <div className="message-actions" role="group" aria-label="Message actions">
+                {showRegenerate && (
+                  <button
+                    className="msg-action-btn"
+                    onClick={onRegenerate}
+                    aria-label="Regenerate message"
+                    type="button"
+                  >
+                    <RefreshIcon style={{ width: '1rem', height: '1rem' }} />
+                  </button>
+                )}
+                {showEdit && (
+                  <button
+                    className="msg-action-btn"
+                    onClick={() => setEditing(true)}
+                    aria-label="Edit message"
+                  >
+                    <EditIcon style={{ width: '1rem', height: '1rem' }} />
+                  </button>
+                )}
+                {showDelete && (
+                  <button
+                    className="msg-action-btn"
+                    onClick={() => onDelete(message.id)}
+                    aria-label="Delete message"
+                  >
+                    <DeleteIcon style={{ width: '1rem', height: '1rem' }} />
+                  </button>
+                )}
+              </div>
             )}
           </>
         )}

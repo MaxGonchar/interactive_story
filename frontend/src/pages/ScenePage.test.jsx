@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -59,6 +59,10 @@ describe('ScenePage', () => {
     expect(screen.getByRole('group', { name: 'Scene composer area' })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Message composer' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument()
+
+    const actions = screen.getByRole('group', { name: 'Message composer actions' })
+    expect(within(actions).getByRole('button', { name: 'Finish' })).toBeInTheDocument()
+    expect(within(actions).getByRole('button', { name: 'Send' })).toBeInTheDocument()
   })
 
   it('renders error message on API failure', async () => {

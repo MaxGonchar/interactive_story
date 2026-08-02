@@ -137,7 +137,7 @@ function ScenePage() {
   }
 
   return (
-    <div className="scene-page">
+    <div className="scene-page scene-page--fixed-frame">
       <SceneHeader scene={scene} />
       <div className="scene-page__messages" role="log" aria-label="Scene messages">
         <MessageList
@@ -155,17 +155,15 @@ function ScenePage() {
         <MessageComposer
           onSend={handleSend}
           disabled={scene.finished || busy}
-        />
-        {!scene.finished && (
-          <div className="scene-page__actions">
+          leadingAction={!scene.finished ? (
             <button
               onClick={() => setShowFinishModal(true)}
               disabled={busy}
             >
               Finish
             </button>
-          </div>
-        )}
+          ) : null}
+        />
       </div>
       {showFinishModal && (
         <FinishModal

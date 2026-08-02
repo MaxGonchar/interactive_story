@@ -157,36 +157,12 @@ button {
   border: 1px solid var(--border);
 }
 
-.message-bubble .edit-btn {
-  opacity: 0;
-  transition: opacity 0.15s;
-  background: transparent;
-  border: none;
-  color: var(--accent);
-  cursor: pointer;
-  padding: 0;
+.message-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
-.message-bubble:hover .edit-btn {
-  opacity: 1;
-}
-
-.message-bubble .delete-btn {
-  opacity: 0;
-  transition: opacity 0.15s;
-  background: transparent;
-  border: none;
-  color: var(--accent);
-  cursor: pointer;
-  padding: 0;
-  margin-left: 4px;
-}
-
-.message-bubble:hover .delete-btn {
-  opacity: 1;
-}
-
-/* Regenerate button hover rules */
 .msg-action-btn {
   opacity: 0;
   transition: opacity 0.15s;
@@ -197,7 +173,7 @@ button {
   padding: 0;
 }
 
-.message-bubble:hover .msg-action-btn,
+.message-bubble:hover .message-actions .msg-action-btn,
 .step-item:hover .msg-action-btn {
   opacity: 1;
 }
@@ -216,6 +192,11 @@ button {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.scene-page--fixed-frame {
+  block-size: 100dvh;
+  max-block-size: 100dvh;
 }
 
 .scene-page__messages {
@@ -247,11 +228,6 @@ button {
   box-sizing: border-box;
 }
 
-.scene-page__actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .scene-page__error {
   text-align: left;
   color: var(--error);
@@ -263,6 +239,12 @@ button {
   gap: var(--space-sm);
 }
 
+.message-composer__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
 .message-composer__textarea {
   width: 100%;
   min-height: calc(var(--space-xl) * 3 + var(--space-sm));
@@ -271,7 +253,7 @@ button {
 }
 
 .message-composer__send {
-  align-self: flex-end;
+  margin-left: auto;
 }
 
 .story-list {
@@ -358,6 +340,6 @@ button {
   }
 
   .message-composer__send {
-    align-self: stretch;
+    margin-left: auto;
   }
 }

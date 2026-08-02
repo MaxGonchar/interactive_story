@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, act, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import MessageItem from './MessageItem'
@@ -108,5 +108,38 @@ describe('MessageItem', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     await act(async () => { resolveSave() })
+  })
+
+  it('renders assistant actions inside one shared action container', () => {
+    const msg = makeMessage({ role: 'assistant' })
+    render(
+      <MessageItem
+        message={msg}
+        onRegenerate={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+
+    const actions = screen.getByRole('group', { name: 'Message actions' })
+    expect(within(actions).getByLabelText('Regenerate message')).toBeInTheDocument()
+    expect(within(actions).getByLabelText('Edit message')).toBeInTheDocument()
+    expect(within(actions).getByLabelText('Delete message')).toBeInTheDocument()
+  })
+
+  it('renders user actions inside one shared action container', () => {
+    const msg = makeMessage({ role: 'user' })
+    render(
+      <MessageItem
+        message={msg}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+
+    const actions = screen.getByRole('group', { name: 'Message actions' })
+    expect(within(actions).getByLabelText('Edit message')).toBeInTheDocument()
+    expect(within(actions).getByLabelText('Delete message')).toBeInTheDocument()
+    expect(within(actions).queryByLabelText('Regenerate message')).not.toBeInTheDocument()
   })
 })
