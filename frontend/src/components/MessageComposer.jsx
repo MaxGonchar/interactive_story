@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { inputBase } from '../styles'
 
-function MessageComposer({ onSend, disabled = false }) {
+function MessageComposer({ onSend, disabled = false, leadingAction = null }) {
   const [text, setText] = useState('')
 
   async function handleSend() {
@@ -25,13 +25,16 @@ function MessageComposer({ onSend, disabled = false }) {
         placeholder={disabled ? 'Scene is finished' : 'Your message…'}
         style={inputBase}
       />
-      <button
-        className="message-composer__send"
-        onClick={handleSend}
-        disabled={disabled || text.trim() === ''}
-      >
-        Send
-      </button>
+      <div className="message-composer__actions" role="group" aria-label="Message composer actions">
+        {leadingAction}
+        <button
+          className="message-composer__send"
+          onClick={handleSend}
+          disabled={disabled || text.trim() === ''}
+        >
+          Send
+        </button>
+      </div>
     </div>
   )
 }

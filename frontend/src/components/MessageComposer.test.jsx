@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import MessageComposer from './MessageComposer'
@@ -18,6 +18,26 @@ describe('MessageComposer', () => {
   it('renders an accessible composer group for footer integration', () => {
     render(<MessageComposer onSend={vi.fn()} />)
     expect(screen.getByRole('group', { name: 'Message composer' })).toBeInTheDocument()
+  })
+
+  it('renders a shared composer action row that includes Send', () => {
+    render(<MessageComposer onSend={vi.fn()} />)
+
+    const actions = screen.getByRole('group', { name: 'Message composer actions' })
+    expect(within(actions).getByRole('button', { name: 'Send' })).toBeInTheDocument()
+  })
+
+  it('renders leading action in the same shared action row as Send', () => {
+    render(
+      <MessageComposer
+        onSend={vi.fn()}
+        leadingAction={<button type="button">Finish</button>}
+      />
+    )
+
+    const actions = screen.getByRole('group', { name: 'Message composer actions' })
+    expect(within(actions).getByRole('button', { name: 'Finish' })).toBeInTheDocument()
+    expect(within(actions).getByRole('button', { name: 'Send' })).toBeInTheDocument()
   })
 
   it('Send button is disabled when textarea is empty', () => {
