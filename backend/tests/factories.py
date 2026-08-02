@@ -210,6 +210,7 @@ _CD_META = ChoiceDrivenStoryMeta(
     title="The Black Harbor",
     writing_style="dark, suspenseful",
     plot_directions=["Romance", "Betrayal"],
+    user_character_id="hero",
     character_ids=["c1"],
 )
 _CD_MISSING_ID = "00000000-0000-0000-0000-000000000000"

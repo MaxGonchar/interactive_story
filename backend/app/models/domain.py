@@ -88,4 +88,5 @@ class ChoiceDrivenStoryMeta(BaseModel):
     title: str
     writing_style: str
     plot_directions: list[str]
+    user_character_id: str
     character_ids: list[str]

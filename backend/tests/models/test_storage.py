@@ -205,6 +205,7 @@ def test_choice_driven_story_yaml_fields():
         title="Fog City",
         type="choice_driven",
         created_at="2024-06-01T12:00:00Z",
+        user_character_id="john",
         character_ids=["john"],
         writing_style="Dark and suspenseful",
         plot_directions=["Romance", "Betrayal"],
@@ -220,8 +221,21 @@ def test_choice_driven_story_yaml_missing_writing_style_raises():
             title="Fog City",
             type="choice_driven",
             created_at="2024-06-01T12:00:00Z",
+            user_character_id="john",
             character_ids=[],
             plot_directions=[],
+        )
+
+
+def test_choice_driven_story_yaml_missing_user_character_id_raises():
+    with pytest.raises(ValidationError):
+        ChoiceDrivenStoryYaml(
+            title="Fog City",
+            type="choice_driven",
+            created_at="2024-06-01T12:00:00Z",
+            character_ids=["john"],
+            writing_style="Dark and suspenseful",
+            plot_directions=["Romance"],
         )
 
 
