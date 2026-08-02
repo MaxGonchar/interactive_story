@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { inlineEditTextarea } from '../styles'
+import { DeleteIcon, EditIcon, RefreshIcon } from './icons'
 
 function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false }) {
   const isUser = message.role === 'user'
@@ -67,7 +68,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
                 aria-label="Regenerate message"
                 type="button"
               >
-                ↺
+                <RefreshIcon style={{ width: '1rem', height: '1rem' }} />
               </button>
             )}
             {/* Existing edit/delete buttons */}
@@ -77,7 +78,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
                 onClick={() => setEditing(true)}
                 aria-label="Edit message"
               >
-                ✏️
+                <EditIcon style={{ width: '1rem', height: '1rem' }} />
               </button>
             )}
             {onDelete && (
@@ -86,7 +87,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
                 onClick={() => onDelete(message.id)}
                 aria-label="Delete message"
               >
-                ✕
+                <DeleteIcon style={{ width: '1rem', height: '1rem' }} />
               </button>
             )}
           </>

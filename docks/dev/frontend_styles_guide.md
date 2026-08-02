@@ -70,9 +70,25 @@ Use this table to decide where to put every style you write:
 
 ---
 
-## 3. Component Anatomy Examples
+## 3. Icons
 
-### 3a. Card component — `StepItem`
+Use a single shared source of truth for SVG icons in [frontend/src/components/icons.jsx](frontend/src/components/icons.jsx).
+
+- Icons should be implemented as React components, not inline SVG markup inside components.
+- Prefer icons from Heroicons: https://heroicons.com/
+- Use the same stroke color and sizing pattern across the app: `stroke="currentColor"`, `width/height` controlled by the component or a shared class.
+- Keep icon usage semantic: buttons should expose an accessible label via `aria-label` or `title` even when the icon is visual-only.
+
+### Icon conventions
+
+- Edit actions: use the edit icon component.
+- Regenerate / refresh actions: use the refresh icon component.
+- Delete actions: use the delete icon component.
+- Step-back / previous-step actions: use the step-back icon component.
+
+## 4. Component Anatomy Examples
+
+### 4a. Card component — `StepItem`
 
 `StepItem` renders a history step as a neutral card with an inline-edit mode.
 
@@ -138,7 +154,7 @@ export const inlineEditTextarea = {
 
 ---
 
-### 3b. Form input — `FinishModal` / `BulletTextarea`
+### 4b. Form input — `FinishModal` / `BulletTextarea`
 
 `inputBase` in `styles.js` defines the visual appearance of every textarea or text input in the app. Import and spread it; add only the one-off overrides inline.
 
@@ -171,7 +187,7 @@ export const inputBase = {
 
 ---
 
-### 3c. Modal — `FinishModal`
+### 4c. Modal — `FinishModal`
 
 The overlay and panel structure are CSS classes. Only values that are dynamic (none in this case) would be inline.
 

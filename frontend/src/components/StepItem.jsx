@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { inlineEditTextarea } from '../styles'
+import { EditIcon, StepBackIcon } from './icons'
 
 function StepItem({ step, onEdit, onReturn, disabled = false }) {
   const [editing, setEditing] = useState(false)
@@ -57,13 +58,13 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
                 onClick={() => { setDraft(step.text); setEditing(true) }}
                 aria-label="Edit step"
                 title="Edit"
-              >✏</button>
+              ><EditIcon style={{ width: '1rem', height: '1rem' }} /></button>
               <button
                 className="msg-action-btn"
                 onClick={() => onReturn(step.id)}
                 aria-label="Return to this step"
                 title="Return to this step"
-              >↩</button>
+              ><StepBackIcon style={{ width: '1rem', height: '1rem' }} /></button>
             </div>
           )}
         </div>
