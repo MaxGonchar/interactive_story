@@ -1,8 +1,13 @@
 import MessageItem from './MessageItem'
 
-function MessageList({ messages = [], onEdit, onDelete, onRegenerate, disabled }) {
+function MessageList({ messages = [], onEdit, onDelete, onRegenerate, disabled, className, endSlot = null }) {
   if (messages.length === 0) {
-    return <p>No messages yet.</p>
+    return (
+      <div className={className}>
+        <p>No messages yet.</p>
+        {endSlot}
+      </div>
+    )
   }
 
   const lastUserIdx = messages.map((m) => m.role).lastIndexOf('user')
@@ -15,7 +20,7 @@ function MessageList({ messages = [], onEdit, onDelete, onRegenerate, disabled }
     lastAssistantIdx > 0
 
   return (
-    <div>
+    <div className={className}>
       {messages.map((message, index) => (
         <MessageItem
           key={message.id}
@@ -26,6 +31,7 @@ function MessageList({ messages = [], onEdit, onDelete, onRegenerate, disabled }
           onRegenerate={shouldShowRegenerate && index === lastAssistantIdx ? onRegenerate : undefined}
         />
       ))}
+      {endSlot}
     </div>
   )
 }

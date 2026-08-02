@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { inputBase } from '../styles'
 
 function MessageComposer({ onSend, disabled = false }) {
   const [text, setText] = useState('')
@@ -15,15 +16,17 @@ function MessageComposer({ onSend, disabled = false }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="message-composer" role="group" aria-label="Message composer">
       <textarea
+        className="message-composer__textarea"
         value={text}
         onChange={(e) => setText(e.target.value)}
         disabled={disabled}
         placeholder={disabled ? 'Scene is finished' : 'Your message…'}
-        style={{ resize: 'vertical', minHeight: '80px', padding: '8px' }}
+        style={inputBase}
       />
       <button
+        className="message-composer__send"
         onClick={handleSend}
         disabled={disabled || text.trim() === ''}
       >
