@@ -72,6 +72,7 @@ class ChoiceDrivenStoryYaml(BaseModel):
     title: str
     type: Literal["choice_driven"]
     created_at: str
+    user_character_id: str
     character_ids: list[str]
     writing_style: str
     plot_directions: list[str]

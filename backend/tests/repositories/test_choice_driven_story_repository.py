@@ -28,6 +28,7 @@ def story_root(monkeypatch, tmp_path):
         "title": "Fog City",
         "type": "choice_driven",
         "created_at": "2024-06-01T12:00:00Z",
+        "user_character_id": "john",
         "character_ids": ["john"],
         "writing_style": "Dark and suspenseful",
         "plot_directions": ["Romance", "Betrayal"],
@@ -53,6 +54,7 @@ async def test_get_story_meta_returns_correct_data(story_root):
     assert meta.title == "Fog City"
     assert meta.writing_style == "Dark and suspenseful"
     assert meta.plot_directions == ["Romance", "Betrayal"]
+    assert meta.user_character_id == "john"
     assert meta.character_ids == ["john"]
 
 

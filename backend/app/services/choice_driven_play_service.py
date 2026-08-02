@@ -33,13 +33,21 @@ class ChoiceDrivenPlayService:
         if not steps:
             raise NoStepsError()
 
-        characters = await self._character_repo.get_characters(story_id, meta.character_ids)
+        user_character, supporting_characters = await self._load_character_context(
+            story_id,
+            meta.user_character_id,
+            meta.character_ids,
+        )
         story_text = "\n\n".join(s.text for s in steps)
 
         results: list[list[Choice]] = list(
             await asyncio.gather(
                 *[
-                    ChoiceEngineClient(direction, characters).invoke(story_text)
+                    ChoiceEngineClient(
+                        plot_direction=direction,
+                        user_character=user_character,
+                        supporting_characters=supporting_characters,
+                    ).invoke(story_text)
                     for direction in meta.plot_directions
                 ]
             )
@@ -64,11 +72,19 @@ class ChoiceDrivenPlayService:
             self._repo.get_history(story_id),
         )
 
-        characters = await self._character_repo.get_characters(story_id, meta.character_ids)
+        user_character, supporting_characters = await self._load_character_context(
+            story_id,
+            meta.user_character_id,
+            meta.character_ids,
+        )
         window = steps[-_PARAGRAPH_WINDOW:]
         story_text = "\n\n".join(s.text for s in window)
 
-        reply = await StoryEngineClient(characters, meta.writing_style).invoke(
+        reply = await StoryEngineClient(
+            user_character=user_character,
+            supporting_characters=supporting_characters,
+            writing_style=meta.writing_style,
+        ).invoke(
             story_text, choice.action, choice.consequence
         )
 
@@ -93,3 +109,18 @@ class ChoiceDrivenPlayService:
     async def return_to_step(self, story_id: str, step_id: int) -> int:
         await self._repo.truncate_from(story_id, step_id)
         return step_id
+
+    async def _load_character_context(
+        self,
+        story_id: str,
+        user_character_id: str,
+        supporting_character_ids: list[str],
+    ):
+        user_character, supporting_characters = await asyncio.gather(
+            self._character_repo.get_character(story_id, user_character_id),
+            self._character_repo.get_characters(
+                story_id,
+                [cid for cid in supporting_character_ids if cid != user_character_id],
+            ),
+        )
+        return user_character, supporting_characters

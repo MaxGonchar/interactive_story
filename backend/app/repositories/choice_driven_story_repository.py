@@ -20,6 +20,7 @@ class ChoiceDrivenStoryRepository:
             title=raw.title,
             writing_style=raw.writing_style,
             plot_directions=raw.plot_directions,
+            user_character_id=raw.user_character_id,
             character_ids=raw.character_ids,
         )
 

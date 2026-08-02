@@ -10,13 +10,15 @@ from langchain_core.exceptions import OutputParserException
 from app.llm.choice_engine_client import ChoiceEngineClient, _DEFAULT_MODEL
 from app.models.domain import CharacterCard, Choice
 
-DEFAULT_CHARACTER = CharacterCard(id="c-1", name="Aria")
+DEFAULT_USER_CHARACTER = CharacterCard(id="c-1", name="Aria")
+DEFAULT_SUPPORTING_CHARACTER = CharacterCard(id="c-2", name="Bram")
 
 
 def _make_client() -> ChoiceEngineClient:
     return ChoiceEngineClient(
         plot_direction="Head toward the ancient ruins.",
-        characters=[DEFAULT_CHARACTER],
+        user_character=DEFAULT_USER_CHARACTER,
+        supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
     )
 
 
@@ -67,6 +69,33 @@ async def test_invoke_raises_on_malformed_response():
     )
     with pytest.raises(OutputParserException):
         await client.invoke("You stand before the ruins.")
+
+
+@pytest.mark.asyncio
+async def test_invoke_prompt_contains_main_and_supporting_sections_without_leakage():
+    client = _make_client()
+    captured: list[list] = []
+
+    async def _mock_ainvoke(messages):
+        captured.append(messages)
+        return _ai_response(_well_formed_json())
+
+    client._model = types.SimpleNamespace(ainvoke=_mock_ainvoke)
+    await client.invoke("You stand before the ruins.")
+
+    system_prompt = captured[0][0].content
+    assert "### Main Character Profile" in system_prompt
+    assert "### Supporting Characters" in system_prompt
+
+    main_section = system_prompt.split("### Main Character Profile", 1)[1].split(
+        "### Supporting Characters", 1
+    )[0]
+    supporting_section = system_prompt.split("### Supporting Characters", 1)[1].split(
+        "### Plot Development Direction", 1
+    )[0]
+    assert "Aria" in main_section
+    assert "Aria" not in supporting_section
+    assert "Bram" in supporting_section
 
 
 def test_default_model_used_when_env_absent():

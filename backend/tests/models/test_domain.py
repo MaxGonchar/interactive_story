@@ -290,10 +290,12 @@ def test_choice_driven_story_meta():
         title="Test Story",
         writing_style="Dark and suspenseful",
         plot_directions=["Romance", "Betrayal"],
+        user_character_id="john",
         character_ids=["john"],
     )
     assert meta.writing_style == "Dark and suspenseful"
     assert meta.plot_directions == ["Romance", "Betrayal"]
+    assert meta.user_character_id == "john"
     assert meta.character_ids == ["john"]
 
 
@@ -303,6 +305,7 @@ def test_choice_driven_story_meta_empty_plot_directions():
         title="Test",
         writing_style="Lyrical",
         plot_directions=[],
+        user_character_id="john",
         character_ids=[],
     )
     assert meta.plot_directions == []

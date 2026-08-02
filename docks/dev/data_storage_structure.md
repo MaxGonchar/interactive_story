@@ -77,6 +77,11 @@ created_at: "2024-06-01T12:00:00Z"
 Constraints:
 - `type` is required; valid values: `"scene"` | `"choice_driven"`
 - `created_at` is required; ISO 8601 string
+- when `type` is `"choice_driven"`, `story.yaml` additionally requires:
+  - `user_character_id`: protagonist character id
+  - `character_ids`: supporting character ids used for prompt context
+  - `writing_style`: style instructions for story engine
+  - `plot_directions`: list of plot goals for parallel choice engines
 - stories are discovered by scanning `data/stories/` for subdirectories; IDs are derived from folder names
 - stories are sorted by `created_at` desc when returned from list
 - scene IDs are discovered by listing `scenes/<scene_id>/` subfolder names (integer, sorted ascending)

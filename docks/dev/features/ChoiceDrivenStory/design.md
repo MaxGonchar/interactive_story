@@ -143,8 +143,10 @@ Response 200: { "data": { "step_id": 2 } }
 title: "..."
 type: "choice_driven"
 created_at: "2024-06-01T12:00:00Z"
+user_character_id: "john"
 character_ids:
   - "john"
+  - "sarah"
 writing_style: "dark, suspenseful, first-person"
 plot_directions:
   - "Romance with Sarah"
@@ -153,6 +155,7 @@ plot_directions:
 ```
 No `scenes` list. `writing_style` and `plot_directions` are new fields specific to this type.
 The story ID is derived from the enclosing folder name, not stored in the file.
+`user_character_id` is required and identifies the main character profile passed separately from supporting characters.
 
 ### `data/stories/<story_id>/history.yaml` — new file
 ```yaml
@@ -212,13 +215,14 @@ Constraints:
 
 ### New `app/llm/choice_engine_client.py`
 - `ChoiceEngineClient(plot_direction: str)`
-- System prompt: character descriptions + plot direction
+- System prompt: Jinja template (`choice_engine_system.j2`) with separate sections for main character and supporting characters + plot direction
 - `async invoke(story_text: str) -> list[Choice]`
 - Parses the Markdown `### Option 1 / ### Option 2` output into `Choice` objects
 
 ### New `app/llm/story_engine_client.py`
 - `StoryEngineClient`
-- System prompt: character descriptions + writing style
+- System prompt: Jinja template (`story_engine_system.j2`) with separate main/supporting character sections + writing style
+- User prompt: Jinja template (`story_engine_user.j2`) for story/action/consequence payload
 - `async invoke(story_text: str, action: str, consequence: str) -> str`
 
 ### New `app/services/choice_driven_play_service.py`
