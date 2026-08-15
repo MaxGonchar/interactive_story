@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -36,6 +36,8 @@ def make_steps(n: int = 3) -> list[Step]:
 def make_service(
     meta: ChoiceDrivenStoryMeta = _META,
     steps: list[Step] | None = None,
+    choice_engine_client: MagicMock | None = None,
+    story_engine_client: MagicMock | None = None,
 ) -> tuple[ChoiceDrivenPlayService, MagicMock, MagicMock]:
     if steps is None:
         steps = make_steps()
@@ -52,7 +54,19 @@ def make_service(
     character_repo.get_character = AsyncMock(return_value=_USER_CHARACTER)
     character_repo.get_characters = AsyncMock(return_value=_SUPPORTING_CHARACTERS)
 
-    service = ChoiceDrivenPlayService(repo=repo, character_repo=character_repo)
+    if choice_engine_client is None:
+        choice_engine_client = MagicMock()
+        choice_engine_client.invoke = AsyncMock(return_value=[])
+    if story_engine_client is None:
+        story_engine_client = MagicMock()
+        story_engine_client.invoke = AsyncMock(return_value="")
+
+    service = ChoiceDrivenPlayService(
+        repo=repo,
+        character_repo=character_repo,
+        choice_engine_client=choice_engine_client,
+        story_engine_client=story_engine_client,
+    )
     return service, repo, character_repo
 
 
@@ -95,22 +109,15 @@ async def test_get_story_state_returns_meta_and_history():
 
 
 @pytest.mark.asyncio
-async def test_generate_choices_creates_one_client_per_direction():
+async def test_generate_choices_invokes_client_once_per_direction():
     steps = make_steps(3)
-    service, repo, _ = make_service(steps=steps)
-
     mock_client = MagicMock()
     mock_client.invoke = AsyncMock(return_value=[_CHOICE_A, _CHOICE_B])
+    service, repo, _ = make_service(steps=steps, choice_engine_client=mock_client)
 
-    with patch(
-        "app.services.choice_driven_play_service.ChoiceEngineClient",
-        return_value=mock_client,
-    ) as MockClass:
-        result = await service.generate_choices(_STORY_ID)
+    result = await service.generate_choices(_STORY_ID)
 
-    # One instantiation per plot direction
-    assert MockClass.call_count == len(_META.plot_directions)
-    # invoke called on each instance
+    # invoke called once per plot direction, on the same injected client
     assert mock_client.invoke.await_count == len(_META.plot_directions)
     # results are flattened: 2 directions × 2 choices = 4
     assert len(result) == 4
@@ -119,18 +126,13 @@ async def test_generate_choices_creates_one_client_per_direction():
 @pytest.mark.asyncio
 async def test_generate_choices_passes_separated_character_context_to_client():
     steps = make_steps(2)
-    service, _, _ = make_service(steps=steps)
-
     mock_client = MagicMock()
     mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
+    service, _, _ = make_service(steps=steps, choice_engine_client=mock_client)
 
-    with patch(
-        "app.services.choice_driven_play_service.ChoiceEngineClient",
-        return_value=mock_client,
-    ) as MockClass:
-        await service.generate_choices(_STORY_ID)
+    await service.generate_choices(_STORY_ID)
 
-    for call in MockClass.call_args_list:
+    for call in mock_client.invoke.call_args_list:
         assert call.kwargs["user_character"] == _USER_CHARACTER
         assert call.kwargs["supporting_characters"] == _SUPPORTING_CHARACTERS
 
@@ -138,16 +140,11 @@ async def test_generate_choices_passes_separated_character_context_to_client():
 @pytest.mark.asyncio
 async def test_generate_choices_persists_to_latest_step():
     steps = make_steps(3)
-    service, repo, _ = make_service(steps=steps)
-
     mock_client = MagicMock()
     mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
+    service, repo, _ = make_service(steps=steps, choice_engine_client=mock_client)
 
-    with patch(
-        "app.services.choice_driven_play_service.ChoiceEngineClient",
-        return_value=mock_client,
-    ):
-        choices = await service.generate_choices(_STORY_ID)
+    choices = await service.generate_choices(_STORY_ID)
 
     repo.update_step_choices.assert_awaited_once_with(_STORY_ID, steps[-1].id, choices)
 
@@ -155,22 +152,20 @@ async def test_generate_choices_persists_to_latest_step():
 @pytest.mark.asyncio
 async def test_generate_choices_passes_full_story_text():
     steps = make_steps(3)
-    service, repo, _ = make_service(steps=steps)
 
     captured_texts: list[str] = []
     mock_client = MagicMock()
 
-    async def capture_invoke(text: str) -> list[Choice]:
+    async def capture_invoke(
+        text: str, plot_direction: str, user_character, supporting_characters
+    ) -> list[Choice]:
         captured_texts.append(text)
         return [_CHOICE_A]
 
     mock_client.invoke = capture_invoke
+    service, repo, _ = make_service(steps=steps, choice_engine_client=mock_client)
 
-    with patch(
-        "app.services.choice_driven_play_service.ChoiceEngineClient",
-        return_value=mock_client,
-    ):
-        await service.generate_choices(_STORY_ID)
+    await service.generate_choices(_STORY_ID)
 
     expected = "\n\n".join(s.text for s in steps)
     assert all(t == expected for t in captured_texts)
@@ -178,16 +173,11 @@ async def test_generate_choices_passes_full_story_text():
 
 @pytest.mark.asyncio
 async def test_generate_choices_excludes_user_character_from_supporting_ids():
-    service, _, character_repo = make_service(steps=make_steps(2))
-
     mock_client = MagicMock()
     mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
+    service, _, character_repo = make_service(steps=make_steps(2), choice_engine_client=mock_client)
 
-    with patch(
-        "app.services.choice_driven_play_service.ChoiceEngineClient",
-        return_value=mock_client,
-    ):
-        await service.generate_choices(_STORY_ID)
+    await service.generate_choices(_STORY_ID)
 
     character_repo.get_character.assert_awaited_once_with(_STORY_ID, "c1")
     character_repo.get_characters.assert_awaited_once_with(_STORY_ID, ["c2"])
@@ -209,28 +199,23 @@ async def test_generate_choices_raises_when_no_steps():
 @pytest.mark.asyncio
 async def test_regenerate_choices_clears_then_generates():
     steps = make_steps(3)
-    service, repo, _ = make_service(steps=steps)
 
     mock_client = MagicMock()
-    mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
 
     call_order: list[str] = []
 
     async def track_clear(story_id: str, step_id: int, choices: list) -> None:
         call_order.append("clear")
 
-    async def track_generate(text: str) -> list[Choice]:
+    async def track_generate(text: str, plot_direction: str, user_character, supporting_characters) -> list[Choice]:
         call_order.append("generate")
         return [_CHOICE_A]
 
-    repo.update_step_choices.side_effect = track_clear
     mock_client.invoke = track_generate
+    service, repo, _ = make_service(steps=steps, choice_engine_client=mock_client)
+    repo.update_step_choices.side_effect = track_clear
 
-    with patch(
-        "app.services.choice_driven_play_service.ChoiceEngineClient",
-        return_value=mock_client,
-    ):
-        await service.regenerate_choices(_STORY_ID)
+    await service.regenerate_choices(_STORY_ID)
 
     # clear must happen before generate
     assert call_order[0] == "clear"
@@ -256,16 +241,11 @@ async def test_regenerate_choices_raises_when_no_steps():
 @pytest.mark.asyncio
 async def test_select_choice_appends_new_step():
     steps = make_steps(3)
-    service, repo, _ = make_service(steps=steps)
-
     mock_engine = MagicMock()
     mock_engine.invoke = AsyncMock(return_value="New paragraph text.")
+    service, repo, _ = make_service(steps=steps, story_engine_client=mock_engine)
 
-    with patch(
-        "app.services.choice_driven_play_service.StoryEngineClient",
-        return_value=mock_engine,
-    ):
-        result = await service.select_choice(_STORY_ID, _CHOICE_A)
+    result = await service.select_choice(_STORY_ID, _CHOICE_A)
 
     repo.append_step.assert_awaited_once()
     appended: Step = repo.append_step.call_args.args[1]
@@ -279,16 +259,11 @@ async def test_select_choice_appends_new_step():
 @pytest.mark.asyncio
 async def test_select_choice_passes_action_and_consequence():
     steps = make_steps(3)
-    service, repo, _ = make_service(steps=steps)
-
     mock_engine = MagicMock()
     mock_engine.invoke = AsyncMock(return_value="reply")
+    service, repo, _ = make_service(steps=steps, story_engine_client=mock_engine)
 
-    with patch(
-        "app.services.choice_driven_play_service.StoryEngineClient",
-        return_value=mock_engine,
-    ):
-        await service.select_choice(_STORY_ID, _CHOICE_A)
+    await service.select_choice(_STORY_ID, _CHOICE_A)
 
     mock_engine.invoke.assert_awaited_once()
     _, action_arg, consequence_arg = mock_engine.invoke.call_args.args
@@ -298,44 +273,38 @@ async def test_select_choice_passes_action_and_consequence():
 
 @pytest.mark.asyncio
 async def test_select_choice_passes_separated_character_context_to_story_engine():
-    service, _, _ = make_service(steps=make_steps(3))
-
     mock_engine = MagicMock()
     mock_engine.invoke = AsyncMock(return_value="reply")
+    service, _, _ = make_service(steps=make_steps(3), story_engine_client=mock_engine)
 
-    with patch(
-        "app.services.choice_driven_play_service.StoryEngineClient",
-        return_value=mock_engine,
-    ) as MockClass:
-        await service.select_choice(_STORY_ID, _CHOICE_A)
+    await service.select_choice(_STORY_ID, _CHOICE_A)
 
-    MockClass.assert_called_once_with(
-        user_character=_USER_CHARACTER,
-        supporting_characters=_SUPPORTING_CHARACTERS,
-        writing_style=_META.writing_style,
-    )
+    mock_engine.invoke.assert_awaited_once()
+    assert mock_engine.invoke.call_args.kwargs == {
+        "user_character": _USER_CHARACTER,
+        "supporting_characters": _SUPPORTING_CHARACTERS,
+        "writing_style": _META.writing_style,
+    }
 
 
 @pytest.mark.asyncio
 async def test_select_choice_uses_last_10_paragraphs():
     # 12 steps — only the last 10 should be passed to StoryEngineClient
     steps = make_steps(12)
-    service, repo, _ = make_service(steps=steps)
 
     captured_story_text: list[str] = []
     mock_engine = MagicMock()
 
-    async def capture(story_text: str, action: str, consequence: str) -> str:
+    async def capture(
+        story_text: str, action: str, consequence: str, user_character, supporting_characters, writing_style
+    ) -> str:
         captured_story_text.append(story_text)
         return "reply"
 
     mock_engine.invoke = capture
+    service, repo, _ = make_service(steps=steps, story_engine_client=mock_engine)
 
-    with patch(
-        "app.services.choice_driven_play_service.StoryEngineClient",
-        return_value=mock_engine,
-    ):
-        await service.select_choice(_STORY_ID, _CHOICE_A)
+    await service.select_choice(_STORY_ID, _CHOICE_A)
 
     expected = "\n\n".join(s.text for s in steps[-10:])
     assert captured_story_text[0] == expected
@@ -344,22 +313,20 @@ async def test_select_choice_uses_last_10_paragraphs():
 @pytest.mark.asyncio
 async def test_select_choice_window_not_exceeded_when_fewer_than_10_steps():
     steps = make_steps(3)
-    service, repo, _ = make_service(steps=steps)
 
     captured_story_text: list[str] = []
     mock_engine = MagicMock()
 
-    async def capture(story_text: str, action: str, consequence: str) -> str:
+    async def capture(
+        story_text: str, action: str, consequence: str, user_character, supporting_characters, writing_style
+    ) -> str:
         captured_story_text.append(story_text)
         return "reply"
 
     mock_engine.invoke = capture
+    service, repo, _ = make_service(steps=steps, story_engine_client=mock_engine)
 
-    with patch(
-        "app.services.choice_driven_play_service.StoryEngineClient",
-        return_value=mock_engine,
-    ):
-        await service.select_choice(_STORY_ID, _CHOICE_A)
+    await service.select_choice(_STORY_ID, _CHOICE_A)
 
     expected = "\n\n".join(s.text for s in steps)
     assert captured_story_text[0] == expected
