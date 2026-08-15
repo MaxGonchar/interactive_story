@@ -56,8 +56,7 @@ class ScenePlayService:
         user_msg = Message(id=user_id, role="user", content=user_content)
         assistant_msg = Message(id=assistant_id, role="assistant", content=reply)
 
-        await self._scene_repo.add_message(story_id, scene_id, user_msg)
-        await self._scene_repo.add_message(story_id, scene_id, assistant_msg)
+        await self._scene_repo.add_messages(story_id, scene_id, [user_msg, assistant_msg])
 
         return user_msg, assistant_msg
 

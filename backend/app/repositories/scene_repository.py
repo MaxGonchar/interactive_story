@@ -54,11 +54,11 @@ class SceneRepository:
             key=lambda m: m.id,
         )
 
-    async def add_message(
-        self, story_id: str, scene_id: int, message: Message
+    async def add_messages(
+        self, story_id: str, scene_id: int, new_messages: list[Message]
     ) -> None:
         messages = await self.get_messages(story_id, scene_id)
-        messages.append(message)
+        messages.extend(new_messages)
         await self._save_messages(story_id, scene_id, messages)
 
     async def update_message(

@@ -85,21 +85,25 @@ async def test_get_messages_returns_empty_list_when_file_missing(data_root):
 
 
 # ---------------------------------------------------------------------------
-# add_message
+# add_messages
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_add_message_appends_to_existing(writable_data_root):
+async def test_add_messages_appends_to_existing(writable_data_root):
     repo = SceneRepository()
     original = await repo.get_messages(FIXTURE_STORY_ID, FIXTURE_SCENE_ID)
-    new_msg = Message(id=len(original) + 1, role="user", content="A new message.")
+    new_msgs = [
+        Message(id=len(original) + 1, role="user", content="A new message."),
+        Message(id=len(original) + 2, role="assistant", content="A reply."),
+    ]
 
-    await repo.add_message(FIXTURE_STORY_ID, FIXTURE_SCENE_ID, new_msg)
+    await repo.add_messages(FIXTURE_STORY_ID, FIXTURE_SCENE_ID, new_msgs)
     result = await repo.get_messages(FIXTURE_STORY_ID, FIXTURE_SCENE_ID)
 
-    assert len(result) == len(original) + 1
-    assert result[-1].content == "A new message."
+    assert len(result) == len(original) + 2
+    assert result[-2].content == "A new message."
+    assert result[-1].content == "A reply."
 
 
 # ---------------------------------------------------------------------------

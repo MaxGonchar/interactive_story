@@ -113,8 +113,7 @@ async def test_play_returns_both_messages():
     assert user_msg.content == "Hello"
     assert assistant_msg.role == "assistant"
     assert assistant_msg.content == "Hello back!"
-    scene_repo.add_message.assert_awaited()
-    assert scene_repo.add_message.await_count == 2
+    scene_repo.add_messages.assert_awaited_once_with(STORY_ID, SCENE_ID, [user_msg, assistant_msg])
 
 
 @pytest.mark.asyncio
@@ -124,7 +123,7 @@ async def test_play_raises_when_scene_finished():
     with pytest.raises(SceneFinishedError):
         await service.play(STORY_ID, SCENE_ID, "Hello")
 
-    scene_repo.add_message.assert_not_awaited()
+    scene_repo.add_messages.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -134,7 +133,7 @@ async def test_play_does_not_persist_on_llm_failure():
     with pytest.raises(RuntimeError, match="LLM down"):
         await service.play(STORY_ID, SCENE_ID, "Hello")
 
-    scene_repo.add_message.assert_not_awaited()
+    scene_repo.add_messages.assert_not_awaited()
 
 
 @pytest.mark.asyncio
