@@ -15,11 +15,7 @@ DEFAULT_SUPPORTING_CHARACTER = CharacterCard(id="c-2", name="Bram")
 
 
 def _make_client() -> ChoiceEngineClient:
-    return ChoiceEngineClient(
-        plot_direction="Head toward the ancient ruins.",
-        user_character=DEFAULT_USER_CHARACTER,
-        supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
-    )
+    return ChoiceEngineClient()
 
 
 def _ai_response(content: str):
@@ -53,7 +49,12 @@ async def test_invoke_returns_two_choices():
     client._model = types.SimpleNamespace(
         ainvoke=AsyncMock(return_value=_ai_response(_well_formed_json()))
     )
-    result = await client.invoke("You stand before the ruins.")
+    result = await client.invoke(
+        "You stand before the ruins.",
+        plot_direction="Head toward the ancient ruins.",
+        user_character=DEFAULT_USER_CHARACTER,
+        supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
+    )
     assert len(result) == 2
     assert all(isinstance(c, Choice) for c in result)
     assert result[0].action == "Sneak past the guards"
@@ -68,7 +69,12 @@ async def test_invoke_raises_on_malformed_response():
         ainvoke=AsyncMock(return_value=_ai_response("not valid json at all"))
     )
     with pytest.raises(OutputParserException):
-        await client.invoke("You stand before the ruins.")
+        await client.invoke(
+            "You stand before the ruins.",
+            plot_direction="Head toward the ancient ruins.",
+            user_character=DEFAULT_USER_CHARACTER,
+            supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
+        )
 
 
 @pytest.mark.asyncio
@@ -81,7 +87,12 @@ async def test_invoke_prompt_contains_main_and_supporting_sections_without_leaka
         return _ai_response(_well_formed_json())
 
     client._model = types.SimpleNamespace(ainvoke=_mock_ainvoke)
-    await client.invoke("You stand before the ruins.")
+    await client.invoke(
+        "You stand before the ruins.",
+        plot_direction="Head toward the ancient ruins.",
+        user_character=DEFAULT_USER_CHARACTER,
+        supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
+    )
 
     system_prompt = captured[0][0].content
     assert "### Main Character Profile" in system_prompt

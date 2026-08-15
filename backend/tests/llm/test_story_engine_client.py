@@ -13,11 +13,7 @@ DEFAULT_SUPPORTING_CHARACTER = CharacterCard(id="c-2", name="Bram")
 
 
 def _make_client() -> StoryEngineClient:
-    return StoryEngineClient(
-        user_character=DEFAULT_USER_CHARACTER,
-        supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
-        writing_style="Dark and atmospheric.",
-    )
+    return StoryEngineClient()
 
 
 def _ai_response(content: str):
@@ -44,6 +40,9 @@ async def test_invoke_returns_llm_content():
         story_text="You approach the ruins.",
         action="Step inside",
         consequence="The darkness swallows you.",
+        user_character=DEFAULT_USER_CHARACTER,
+        supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
+        writing_style="Dark and atmospheric.",
     )
     assert result == expected
     mock_ainvoke.assert_called_once()
@@ -63,6 +62,9 @@ async def test_invoke_builds_expected_system_and_user_message_shape():
         story_text="You approach the ruins.",
         action="Step inside",
         consequence="The darkness swallows you.",
+        user_character=DEFAULT_USER_CHARACTER,
+        supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
+        writing_style="Dark and atmospheric.",
     )
 
     system_prompt = captured[0][0].content

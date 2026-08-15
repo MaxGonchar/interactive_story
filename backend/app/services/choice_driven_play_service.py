@@ -17,9 +17,13 @@ class ChoiceDrivenPlayService:
         self,
         repo: ChoiceDrivenStoryRepository,
         character_repo: CharacterRepository,
+        choice_engine_client: ChoiceEngineClient,
+        story_engine_client: StoryEngineClient,
     ) -> None:
         self._repo = repo
         self._character_repo = character_repo
+        self._choice_engine_client = choice_engine_client
+        self._story_engine_client = story_engine_client
 
     async def get_play_state(self, story_id: str) -> list[Step]:
         return await self._repo.get_history(story_id)
@@ -50,11 +54,12 @@ class ChoiceDrivenPlayService:
         results: list[list[Choice]] = list(
             await asyncio.gather(
                 *[
-                    ChoiceEngineClient(
+                    self._choice_engine_client.invoke(
+                        story_text,
                         plot_direction=direction,
                         user_character=user_character,
                         supporting_characters=supporting_characters,
-                    ).invoke(story_text)
+                    )
                     for direction in meta.plot_directions
                 ]
             )
@@ -87,12 +92,13 @@ class ChoiceDrivenPlayService:
         window = steps[-_PARAGRAPH_WINDOW:]
         story_text = "\n\n".join(s.text for s in window)
 
-        reply = await StoryEngineClient(
+        reply = await self._story_engine_client.invoke(
+            story_text,
+            choice.action,
+            choice.consequence,
             user_character=user_character,
             supporting_characters=supporting_characters,
             writing_style=meta.writing_style,
-        ).invoke(
-            story_text, choice.action, choice.consequence
         )
 
         last_id = steps[-1].id if steps else 0

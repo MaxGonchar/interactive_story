@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from fastapi import Depends
 
+from app.llm.choice_engine_client import ChoiceEngineClient
 from app.llm.scene_llm_client import SceneLLMClient
+from app.llm.story_engine_client import StoryEngineClient
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
 from app.repositories.scene_repository import SceneRepository
@@ -89,8 +91,23 @@ def get_choice_driven_story_repository() -> ChoiceDrivenStoryRepository:
     return ChoiceDrivenStoryRepository()
 
 
+def get_choice_engine_client() -> ChoiceEngineClient:
+    return ChoiceEngineClient()
+
+
+def get_story_engine_client() -> StoryEngineClient:
+    return StoryEngineClient()
+
+
 def get_choice_driven_play_service(
     repo: ChoiceDrivenStoryRepository = Depends(get_choice_driven_story_repository),
     character_repo: CharacterRepository = Depends(get_character_repository),
+    choice_engine_client: ChoiceEngineClient = Depends(get_choice_engine_client),
+    story_engine_client: StoryEngineClient = Depends(get_story_engine_client),
 ) -> ChoiceDrivenPlayService:
-    return ChoiceDrivenPlayService(repo=repo, character_repo=character_repo)
+    return ChoiceDrivenPlayService(
+        repo=repo,
+        character_repo=character_repo,
+        choice_engine_client=choice_engine_client,
+        story_engine_client=story_engine_client,
+    )
