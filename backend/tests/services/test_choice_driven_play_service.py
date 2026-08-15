@@ -73,6 +73,23 @@ async def test_get_play_state_returns_history():
 
 
 # ---------------------------------------------------------------------------
+# get_story_state
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_get_story_state_returns_meta_and_history():
+    steps = make_steps(3)
+    service, repo, _ = make_service(steps=steps)
+
+    result = await service.get_story_state(_STORY_ID)
+
+    repo.get_story_meta.assert_awaited_once_with(_STORY_ID)
+    repo.get_history.assert_awaited_once_with(_STORY_ID)
+    assert result == (_META, steps)
+
+
+# ---------------------------------------------------------------------------
 # generate_choices
 # ---------------------------------------------------------------------------
 
