@@ -39,8 +39,7 @@ async def get_choice_play(
     story_id: str,
     svc: ChoiceDrivenPlayService = Depends(get_choice_driven_play_service),
 ):
-    meta = await svc._repo.get_story_meta(story_id)
-    steps = await svc.get_play_state(story_id)
+    meta, steps = await svc.get_story_state(story_id)
     return {
         "data": {
             "id": meta.id,

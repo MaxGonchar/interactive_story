@@ -5,7 +5,7 @@ import asyncio
 from app.exceptions import NoStepsError
 from app.llm.choice_engine_client import ChoiceEngineClient
 from app.llm.story_engine_client import StoryEngineClient
-from app.models.domain import Choice, Step
+from app.models.domain import Choice, ChoiceDrivenStoryMeta, Step
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
 
@@ -23,6 +23,13 @@ class ChoiceDrivenPlayService:
 
     async def get_play_state(self, story_id: str) -> list[Step]:
         return await self._repo.get_history(story_id)
+
+    async def get_story_state(self, story_id: str) -> tuple[ChoiceDrivenStoryMeta, list[Step]]:
+        meta, steps = await asyncio.gather(
+            self._repo.get_story_meta(story_id),
+            self.get_play_state(story_id),
+        )
+        return meta, steps
 
     async def generate_choices(self, story_id: str) -> list[Choice]:
         meta, steps = await asyncio.gather(

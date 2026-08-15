@@ -227,19 +227,18 @@ def make_choice_driven_service(
     regenerate_choices_side_effect: Exception | None = None,
 ) -> MagicMock:
     svc = MagicMock()
-    svc._repo = MagicMock()
     if story_not_found:
         err = NotFoundError(_CD_MISSING_ID)
-        svc._repo.get_story_meta = AsyncMock(side_effect=err)
         svc.get_play_state = AsyncMock(side_effect=err)
+        svc.get_story_state = AsyncMock(side_effect=err)
         svc.generate_choices = AsyncMock(side_effect=err)
         svc.regenerate_choices = AsyncMock(side_effect=err)
         svc.select_choice = AsyncMock(side_effect=err)
         svc.edit_step_text = AsyncMock(side_effect=err)
         svc.return_to_step = AsyncMock(side_effect=err)
     else:
-        svc._repo.get_story_meta = AsyncMock(return_value=_CD_META)
         svc.get_play_state = AsyncMock(return_value=steps or [_CD_STEP_1, _CD_STEP_2])
+        svc.get_story_state = AsyncMock(return_value=(_CD_META, steps or [_CD_STEP_1, _CD_STEP_2]))
         svc.generate_choices = (
             AsyncMock(side_effect=generate_choices_side_effect)
             if generate_choices_side_effect is not None
