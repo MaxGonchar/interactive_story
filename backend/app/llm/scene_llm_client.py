@@ -1,5 +1,5 @@
 
-import os
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
 from app.llm.logging_config import (
@@ -9,16 +9,11 @@ from app.llm.logging_config import (
 )
 from app.llm.models import SceneContext
 from app.llm.prompt_builder import PromptBuilder
-from app.llm.venice_ai import VeniceAIChatModel
-
-_DEFAULT_MODEL = "llama-3.3-70b"
 
 
 class SceneLLMClient:
-    def __init__(self) -> None:
-        api_key = os.environ["VENICE_API_KEY"]
-        model = os.environ.get("VENICE_MODEL", _DEFAULT_MODEL)
-        self._model = VeniceAIChatModel(model=model, api_key=api_key)
+    def __init__(self, model: BaseChatModel) -> None:
+        self._model = model
         self._prompt_builder = PromptBuilder()
         self._logger = configure_llm_logger("app.llm.scene")
 

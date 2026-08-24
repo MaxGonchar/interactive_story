@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import logging
 import types
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from app.llm.models import SceneContext
-from app.llm.scene_llm_client import SceneLLMClient, _DEFAULT_MODEL
+from app.llm.scene_llm_client import SceneLLMClient
 from app.models.domain import CharacterCard, SceneDescription, Message
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
@@ -26,41 +26,17 @@ def _make_context() -> SceneContext:
     )
 
 
-@pytest.fixture(autouse=True)
-def set_api_key(monkeypatch):
-    monkeypatch.setenv("VENICE_API_KEY", "test-key")
-
-
-@pytest.fixture(autouse=True)
-def clear_model_env(monkeypatch):
-    monkeypatch.delenv("VENICE_MODEL", raising=False)
+def _make_client() -> SceneLLMClient:
+    return SceneLLMClient(model=types.SimpleNamespace(ainvoke=AsyncMock()))
 
 
 @pytest.mark.asyncio
 async def test_invoke_returns_model_content():
-    client = SceneLLMClient()
-    with patch.object(client._model._client, "chat_complete", new_callable=AsyncMock) as mock_cc:
-        mock_cc.return_value = "hi"
-        result = await client.invoke(_make_context(), "Hello")
+    client = _make_client()
+    client._model.ainvoke.return_value = types.SimpleNamespace(content="hi")
+    result = await client.invoke(_make_context(), "Hello")
     assert result == "hi"
-    mock_cc.assert_called_once()
-
-
-def test_default_model_name_used_when_env_absent():
-    client = SceneLLMClient()
-    assert client._model.model == _DEFAULT_MODEL
-
-
-def test_custom_model_name_from_env(monkeypatch):
-    monkeypatch.setenv("VENICE_MODEL", "my-custom-model")
-    client = SceneLLMClient()
-    assert client._model.model == "my-custom-model"
-
-
-def test_raises_when_api_key_missing(monkeypatch):
-    monkeypatch.delenv("VENICE_API_KEY", raising=False)
-    with pytest.raises(KeyError):
-        SceneLLMClient()
+    client._model.ainvoke.assert_called_once()
 
 
 def _make_context_with_messages(messages):
@@ -89,7 +65,7 @@ async def test_invoke_forwards_all_message_history(monkeypatch):
     context = _make_context_with_messages(messages)
     client = SceneLLMClient.__new__(SceneLLMClient)
     client._model = mock_model
-    client._prompt_builder = SceneLLMClient()._prompt_builder
+    client._prompt_builder = _make_client()._prompt_builder
     client._logger = logging.getLogger("test.scene_llm_client")
     await client.invoke(context, "Second user turn")
     call_args = mock_model.ainvoke.call_args[0][0]
@@ -112,7 +88,7 @@ async def test_invoke_empty_history_sends_two_messages(monkeypatch):
     context = _make_context_with_messages([])
     client = SceneLLMClient.__new__(SceneLLMClient)
     client._model = mock_model
-    client._prompt_builder = SceneLLMClient()._prompt_builder
+    client._prompt_builder = _make_client()._prompt_builder
     client._logger = logging.getLogger("test.scene_llm_client")
     await client.invoke(context, "Hello")
     call_args = mock_model.ainvoke.call_args[0][0]
