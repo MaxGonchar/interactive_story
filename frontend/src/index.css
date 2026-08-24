@@ -192,6 +192,35 @@ button {
   margin-top: var(--space-sm);
 }
 
+.choices-grid-wrapper {
+  margin-top: var(--space-lg);
+}
+
+.choices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.choice-button {
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.choice-button:disabled {
+  cursor: not-allowed;
+}
+
+.choices-grid__regenerate {
+  margin-top: var(--space-md);
+}
+
 .scene-header {
   display: flex;
   align-items: center;
