@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFinishedError
 from app.llm.models import SceneContext
 from app.llm.scene_llm_client import SceneLLMClient
@@ -27,11 +29,9 @@ class ScenePlayService:
         if metadata.finished:
             raise SceneFinishedError()
 
-        characters, messages = (
-            await self._character_repo.get_characters(
-                story_id, metadata.character_ids
-            ),
-            await self._scene_repo.get_messages(story_id, scene_id),
+        characters, messages = await asyncio.gather(
+            self._character_repo.get_characters(story_id, metadata.character_ids),
+            self._scene_repo.get_messages(story_id, scene_id),
         )
 
         user_id = max((m.id for m in messages), default=0) + 1
