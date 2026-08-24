@@ -43,4 +43,21 @@ describe('ChoicesGrid', () => {
     expect(screen.getByText('Turn back')).toBeDisabled()
     expect(screen.getByText('Regenerate')).toBeDisabled()
   })
+
+  it('renders both buttons and calls onSelect independently when choices have duplicate action and consequence', async () => {
+    const user = userEvent.setup()
+    const onSelect = vi.fn()
+    const duplicateChoices = [
+      { action: 'Wait', consequence: 'Nothing happens' },
+      { action: 'Wait', consequence: 'Nothing happens' },
+    ]
+    render(<ChoicesGrid choices={duplicateChoices} onSelect={onSelect} onRegenerate={vi.fn()} />)
+
+    const buttons = screen.getAllByText('Wait')
+    expect(buttons).toHaveLength(2)
+
+    await user.click(buttons[1])
+
+    expect(onSelect).toHaveBeenCalledWith('Wait', 'Nothing happens')
+  })
 })
