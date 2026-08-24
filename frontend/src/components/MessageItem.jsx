@@ -73,7 +73,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
                     aria-label="Regenerate message"
                     type="button"
                   >
-                    <RefreshIcon style={{ width: '1rem', height: '1rem' }} />
+                       <RefreshIcon className="msg-action-icon" />
                   </button>
                 )}
                 {showEdit && (
@@ -82,7 +82,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
                     onClick={() => setEditing(true)}
                     aria-label="Edit message"
                   >
-                    <EditIcon style={{ width: '1rem', height: '1rem' }} />
+                       <EditIcon className="msg-action-icon" />
                   </button>
                 )}
                 {showDelete && (
@@ -91,7 +91,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
                     onClick={() => onDelete(message.id)}
                     aria-label="Delete message"
                   >
-                    <DeleteIcon style={{ width: '1rem', height: '1rem' }} />
+                       <DeleteIcon className="msg-action-icon" />
                   </button>
                 )}
               </div>
