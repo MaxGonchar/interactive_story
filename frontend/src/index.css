@@ -202,6 +202,11 @@ button {
   padding: 0;
 }
 
+.msg-action-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
 .message-bubble:hover .message-actions .msg-action-btn,
 .step-item:hover .msg-action-btn {
   opacity: 1;
