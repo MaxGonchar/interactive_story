@@ -178,6 +178,20 @@ button {
   opacity: 1;
 }
 
+.step-item {
+  margin: var(--space-md) 0;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+}
+
+.step-item__edit-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
 .scene-header {
   display: flex;
   align-items: center;

@@ -34,7 +34,7 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
   const saveDisabled = saving || draft.trim() === '' || draft === step.text
 
   return (
-    <div className="step-item" style={{ margin: '12px 0', padding: '12px', borderRadius: '8px', background: 'var(--code-bg)', border: '1px solid var(--border)' }}>
+    <div className="step-item">
       {editing ? (
         <>
           <textarea
@@ -43,7 +43,7 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
             onChange={(e) => setDraft(e.target.value)}
             style={inlineEditTextarea}
           />
-          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+          <div className="step-item__edit-actions">
             <button onClick={handleSave} disabled={saveDisabled}>Save</button>
             <button onClick={handleCancel}>Cancel</button>
           </div>
