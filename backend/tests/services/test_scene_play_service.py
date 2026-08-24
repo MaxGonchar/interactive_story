@@ -104,6 +104,33 @@ async def test_regenerate_includes_user_character_in_context():
 
 
 @pytest.mark.asyncio
+async def test_regenerate_context_data_uses_metadata_context():
+    user_msg = Message(id=1, role="user", content="Hi")
+    assistant_msg = Message(id=2, role="assistant", content="Old reply")
+    metadata = make_scene_metadata(
+        story_id=STORY_ID,
+        scene_id=SCENE_ID,
+        context=["Context line one.", "Context line two."],
+    )
+    service, scene_repo, _, llm_client = make_service(
+        metadata=metadata,
+        messages=[user_msg, assistant_msg],
+    )
+    scene_repo.update_message.return_value = Message(id=2, role="assistant", content="New reply")
+    captured_context = {}
+
+    async def fake_invoke(context, *_):
+        captured_context["context_data"] = context.context_data
+        return "New reply"
+
+    llm_client.invoke.side_effect = fake_invoke
+
+    await service.regenerate(STORY_ID, SCENE_ID)
+
+    assert captured_context["context_data"] == ["Context line one.", "Context line two."]
+
+
+@pytest.mark.asyncio
 async def test_play_returns_both_messages():
     service, scene_repo, _, _ = make_service(llm_reply="Hello back!")
 

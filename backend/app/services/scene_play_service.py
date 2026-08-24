@@ -78,6 +78,8 @@ class ScenePlayService:
         else:
             raise NoUserMessageError()
 
+        context_data = metadata.context or []
+
         characters = await self._character_repo.get_characters(story_id, metadata.character_ids)
         user_character = await self._character_repo.get_character(
             story_id, metadata.user_character_id
@@ -87,6 +89,7 @@ class ScenePlayService:
             characters=characters,
             user_character=user_character,
             messages=context_messages,
+            context_data=context_data,
         )
 
         reply = await self._llm_client.invoke(context, user_content)
