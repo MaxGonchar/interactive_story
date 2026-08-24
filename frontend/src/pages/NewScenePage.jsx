@@ -6,26 +6,6 @@ import { getCharacters } from '../api/characters'
 import BulletTextarea from '../components/BulletTextarea'
 import { inputBase } from '../styles'
 
-const fieldStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px',
-}
-
-const labelStyle = {
-  color: 'var(--text-h)',
-  fontFamily: 'var(--sans)',
-  fontWeight: 600,
-  alignSelf: 'flex-start',
-}
-
-const errorStyle = {
-  margin: 0,
-  color: 'var(--error)',
-  fontSize: '14px',
-  alignSelf: 'flex-start',
-}
-
 function NewScenePage() {
   const { storyId } = useParams()
   const navigate = useNavigate()
@@ -160,24 +140,16 @@ function NewScenePage() {
 
   return (
     <>
-      <h1 style={{ color: 'var(--text-h)' }}>New Scene</h1>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '24px',
-          paddingBottom: '40px',
-        }}
-      >
-        <div style={fieldStyle}>
-          <label htmlFor="userCharacter" style={labelStyle}>User character</label>
+      <h1 className="new-scene-page__heading">New Scene</h1>
+      <form onSubmit={handleSubmit} className="new-scene-page__form">
+        <div className="new-scene-page__field">
+          <label htmlFor="userCharacter" className="new-scene-page__label">User character</label>
           <select
             id="userCharacter"
             value={userCharacterId}
             onChange={(e) => handleUserCharacterChange(e.target.value)}
-            style={{ ...inputBase, width: '300px' }}
+            style={inputBase}
+            className="new-scene-page__select"
           >
             <option value="">— select —</option>
             {characters.map((c) => (
@@ -187,24 +159,16 @@ function NewScenePage() {
             ))}
           </select>
           {validationErrors.userCharacterId && (
-            <p style={errorStyle}>{validationErrors.userCharacterId}</p>
+            <p className="new-scene-page__error">{validationErrors.userCharacterId}</p>
           )}
         </div>
 
-        <div style={fieldStyle}>
-          <fieldset
-            style={{
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              padding: '12px 16px',
-              fontFamily: 'var(--sans)',
-              color: 'var(--text)',
-            }}
-          >
-            <legend style={{ color: 'var(--text-h)', fontWeight: 600 }}>Scene characters</legend>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div className="new-scene-page__field">
+          <fieldset className="new-scene-page__fieldset">
+            <legend className="new-scene-page__legend">Scene characters</legend>
+            <div className="new-scene-page__checkbox-list">
               {characters.map((c) => (
-                <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <label key={c.id} className="new-scene-page__checkbox-row">
                   <input
                     type="checkbox"
                     checked={sceneCharacterIds.includes(c.id)}
@@ -218,63 +182,67 @@ function NewScenePage() {
           </fieldset>
         </div>
 
-        <div style={fieldStyle}>
-          <label htmlFor="context" style={labelStyle}>Context</label>
+        <div className="new-scene-page__field">
+          <label htmlFor="context" className="new-scene-page__label">Context</label>
           <BulletTextarea
             id="context"
             value={context}
             onChange={setContext}
             rows={20}
-            style={{ ...inputBase, resize: 'vertical', width: '800px' }}
+            style={inputBase}
+            className="new-scene-page__context-textarea"
           />
           {validationErrors.context && (
-            <p style={errorStyle}>{validationErrors.context}</p>
+            <p className="new-scene-page__error">{validationErrors.context}</p>
           )}
         </div>
 
-        <div style={fieldStyle}>
-          <label htmlFor="generalSceneGuide" style={labelStyle}>General scene guide</label>
+        <div className="new-scene-page__field">
+          <label htmlFor="generalSceneGuide" className="new-scene-page__label">General scene guide</label>
           <textarea
             id="generalSceneGuide"
             value={generalSceneGuide}
             onChange={(e) => setGeneralSceneGuide(e.target.value)}
             rows={6}
-            style={{ ...inputBase, resize: 'vertical', width: '600px' }}
+            style={inputBase}
+            className="new-scene-page__textarea"
           />
           {validationErrors.generalSceneGuide && (
-            <p style={errorStyle}>{validationErrors.generalSceneGuide}</p>
+            <p className="new-scene-page__error">{validationErrors.generalSceneGuide}</p>
           )}
         </div>
 
-        <div style={fieldStyle}>
-          <label htmlFor="writingStyle" style={labelStyle}>Writing style</label>
+        <div className="new-scene-page__field">
+          <label htmlFor="writingStyle" className="new-scene-page__label">Writing style</label>
           <textarea
             id="writingStyle"
             value={writingStyle}
             onChange={(e) => setWritingStyle(e.target.value)}
             rows={6}
-            style={{ ...inputBase, resize: 'vertical', width: '600px' }}
+            style={inputBase}
+            className="new-scene-page__textarea"
           />
           {validationErrors.writingStyle && (
-            <p style={errorStyle}>{validationErrors.writingStyle}</p>
+            <p className="new-scene-page__error">{validationErrors.writingStyle}</p>
           )}
         </div>
 
-        <div style={fieldStyle}>
-          <label htmlFor="firstMessage" style={labelStyle}>First message</label>
+        <div className="new-scene-page__field">
+          <label htmlFor="firstMessage" className="new-scene-page__label">First message</label>
           <textarea
             id="firstMessage"
             value={firstMessage}
             onChange={(e) => setFirstMessage(e.target.value)}
             rows={8}
-            style={{ ...inputBase, resize: 'vertical', width: '600px' }}
+            style={inputBase}
+            className="new-scene-page__textarea"
           />
           {validationErrors.firstMessage && (
-            <p style={errorStyle}>{validationErrors.firstMessage}</p>
+            <p className="new-scene-page__error">{validationErrors.firstMessage}</p>
           )}
         </div>
 
-        {submitError && <p style={{ margin: 0, color: 'var(--error)', fontSize: '14px' }}>{submitError}</p>}
+        {submitError && <p className="new-scene-page__error">{submitError}</p>}
 
         <button type="submit" disabled={busy}>
           {busy ? 'Creating…' : 'Create scene'}

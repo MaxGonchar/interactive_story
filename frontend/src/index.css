@@ -22,6 +22,10 @@
   --radius-sm: 4px;
   --radius-md: 8px;
 
+  --input-width-sm: 300px;
+  --input-width-md: 600px;
+  --input-width-lg: 800px;
+
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
@@ -385,4 +389,76 @@ button {
   .message-composer__send {
     margin-left: auto;
   }
+}
+
+.new-scene-page__heading {
+  color: var(--text-h);
+}
+
+.new-scene-page__form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xl);
+  padding-bottom: calc(var(--space-xl) + var(--space-lg));
+}
+
+.new-scene-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.new-scene-page__label {
+  color: var(--text-h);
+  font-family: var(--sans);
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.new-scene-page__error {
+  margin: 0;
+  color: var(--error);
+  font-size: 14px;
+  align-self: flex-start;
+}
+
+.new-scene-page__fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md) var(--space-lg);
+  font-family: var(--sans);
+  color: var(--text);
+}
+
+.new-scene-page__legend {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.new-scene-page__checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.new-scene-page__checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.new-scene-page__select {
+  width: var(--input-width-sm);
+}
+
+.new-scene-page__context-textarea {
+  width: var(--input-width-lg);
+  resize: vertical;
+}
+
+.new-scene-page__textarea {
+  width: var(--input-width-md);
+  resize: vertical;
 }
