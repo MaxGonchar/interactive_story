@@ -1,7 +1,7 @@
-import os
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
@@ -11,9 +11,7 @@ from app.llm.logging_config import (
     log_prompt_messages,
     log_response_content,
 )
-from app.llm.venice_ai import VeniceAIChatModel
 
-_DEFAULT_MODEL = "llama-3.3-70b"
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
@@ -22,10 +20,8 @@ class _Summary(BaseModel):
 
 
 class SummarizeLLMClient:
-    def __init__(self) -> None:
-        api_key = os.environ["VENICE_API_KEY"]
-        model = os.environ.get("SUMMARY_MODEL", _DEFAULT_MODEL)
-        self._model = VeniceAIChatModel(model=model, api_key=api_key)
+    def __init__(self, model: BaseChatModel) -> None:
+        self._model = model
         self._parser = PydanticOutputParser(pydantic_object=_Summary)
         env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), keep_trailing_newline=True)
         self._system_template = env.get_template("summary_system.j2")

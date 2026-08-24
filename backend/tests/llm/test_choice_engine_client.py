@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from langchain_core.exceptions import OutputParserException
 
-from app.llm.choice_engine_client import ChoiceEngineClient, _DEFAULT_MODEL
+from app.llm.choice_engine_client import ChoiceEngineClient
 from app.models.domain import CharacterCard, Choice
 
 DEFAULT_USER_CHARACTER = CharacterCard(id="c-1", name="Aria")
@@ -15,7 +15,7 @@ DEFAULT_SUPPORTING_CHARACTER = CharacterCard(id="c-2", name="Bram")
 
 
 def _make_client() -> ChoiceEngineClient:
-    return ChoiceEngineClient()
+    return ChoiceEngineClient(model=types.SimpleNamespace())
 
 
 def _ai_response(content: str):
@@ -31,16 +31,6 @@ def _well_formed_json() -> str:
             ]
         }
     )
-
-
-@pytest.fixture(autouse=True)
-def set_api_key(monkeypatch):
-    monkeypatch.setenv("VENICE_API_KEY", "test-key")
-
-
-@pytest.fixture(autouse=True)
-def clear_model_env(monkeypatch):
-    monkeypatch.delenv("VENICE_MODEL", raising=False)
 
 
 @pytest.mark.asyncio
@@ -107,20 +97,3 @@ async def test_invoke_prompt_contains_main_and_supporting_sections_without_leaka
     assert "Aria" in main_section
     assert "Aria" not in supporting_section
     assert "Bram" in supporting_section
-
-
-def test_default_model_used_when_env_absent():
-    client = _make_client()
-    assert client._model.model == _DEFAULT_MODEL
-
-
-def test_custom_model_from_env(monkeypatch):
-    monkeypatch.setenv("VENICE_MODEL", "my-custom-model")
-    client = _make_client()
-    assert client._model.model == "my-custom-model"
-
-
-def test_raises_when_api_key_missing(monkeypatch):
-    monkeypatch.delenv("VENICE_API_KEY", raising=False)
-    with pytest.raises(KeyError):
-        _make_client()

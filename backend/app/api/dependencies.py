@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import Depends
 
 from app.llm.choice_engine_client import ChoiceEngineClient
 from app.llm.scene_llm_client import SceneLLMClient
 from app.llm.story_engine_client import StoryEngineClient
+from app.llm.venice_ai import VeniceAIChatModel
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
 from app.repositories.scene_repository import SceneRepository
@@ -19,6 +22,20 @@ from app.services.scene_query_service import SceneQueryService
 from app.services.scene_summarize_service import SceneSummarizeService
 from app.services.story_query_service import StoryQueryService
 
+_DEFAULT_MODEL = "llama-3.3-70b"
+
+
+def get_venice_model() -> VeniceAIChatModel:
+    api_key = os.environ["VENICE_API_KEY"]
+    model = os.environ.get("VENICE_MODEL", _DEFAULT_MODEL)
+    return VeniceAIChatModel(model=model, api_key=api_key)
+
+
+def get_summary_model() -> VeniceAIChatModel:
+    api_key = os.environ["VENICE_API_KEY"]
+    model = os.environ.get("SUMMARY_MODEL", _DEFAULT_MODEL)
+    return VeniceAIChatModel(model=model, api_key=api_key)
+
 
 def get_story_repository() -> StoryRepository:
     return StoryRepository()
@@ -32,8 +49,10 @@ def get_character_repository() -> CharacterRepository:
     return CharacterRepository()
 
 
-def get_scene_llm_client() -> SceneLLMClient:
-    return SceneLLMClient()
+def get_scene_llm_client(
+    model: VeniceAIChatModel = Depends(get_venice_model),
+) -> SceneLLMClient:
+    return SceneLLMClient(model)
 
 
 def get_story_query_service(
@@ -76,8 +95,10 @@ def get_scene_creation_service(
     return SceneCreationService(story_repo, scene_repo)
 
 
-def get_summarize_llm_client() -> SummarizeLLMClient:
-    return SummarizeLLMClient()
+def get_summarize_llm_client(
+    model: VeniceAIChatModel = Depends(get_summary_model),
+) -> SummarizeLLMClient:
+    return SummarizeLLMClient(model)
 
 
 def get_scene_summarize_service(
@@ -91,12 +112,16 @@ def get_choice_driven_story_repository() -> ChoiceDrivenStoryRepository:
     return ChoiceDrivenStoryRepository()
 
 
-def get_choice_engine_client() -> ChoiceEngineClient:
-    return ChoiceEngineClient()
+def get_choice_engine_client(
+    model: VeniceAIChatModel = Depends(get_venice_model),
+) -> ChoiceEngineClient:
+    return ChoiceEngineClient(model)
 
 
-def get_story_engine_client() -> StoryEngineClient:
-    return StoryEngineClient()
+def get_story_engine_client(
+    model: VeniceAIChatModel = Depends(get_venice_model),
+) -> StoryEngineClient:
+    return StoryEngineClient(model)
 
 
 def get_choice_driven_play_service(
