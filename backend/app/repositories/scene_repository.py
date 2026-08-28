@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from app.exceptions import NotFoundError
+from app.exceptions import NarratorModeNotSupportedError, NotFoundError
 from app.models.domain import Message, SceneDescription, SceneMetadata
-from app.models.storage import MessagesYaml, SceneMetadataYaml
+from app.models.storage import MessagesYaml, SceneMetadataYaml, StoryYaml
 from app.utils import file_paths, yaml_storage
 from app.utils.atomic_write import atomic_write
 
@@ -88,8 +88,33 @@ class SceneRepository:
     async def create_scene(
         self, story_id: str, scene_id: int, metadata: SceneMetadata, first_message: Message
     ) -> None:
+        await self._validate_scene_references(story_id, metadata)
         await self.save_metadata(story_id, scene_id, metadata)
         await self._save_messages(story_id, scene_id, [first_message])
+
+    async def _validate_scene_references(
+        self, story_id: str, metadata: SceneMetadata
+    ) -> None:
+        try:
+            story_data = await yaml_storage.read_yaml(file_paths.story_file(story_id))
+        except FileNotFoundError:
+            raise NotFoundError(f"Story '{story_id}' not found")
+
+        story = StoryYaml(**story_data)
+        if story.type != "scene" and metadata.user_character_id is None:
+            raise NarratorModeNotSupportedError()
+
+        character_ids = list(metadata.character_ids)
+        if metadata.user_character_id is not None:
+            character_ids.append(metadata.user_character_id)
+
+        for character_id in character_ids:
+            try:
+                await yaml_storage.read_yaml(
+                    file_paths.character_file(story_id, character_id)
+                )
+            except FileNotFoundError:
+                raise NotFoundError(f"Character '{character_id}' not found")
 
     async def _save_messages(
         self, story_id: str, scene_id: int, messages: list[Message]

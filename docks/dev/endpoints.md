@@ -180,6 +180,12 @@ Both messages are returned so the client can append them to the chat in the corr
 **Response 409** – scene is already finished (`scene_finished` error code)
 **Response 502** – LLM call failed (`llm_error` error code); scene unchanged
 
+### POST /api/stories/{story_id}/scenes
+
+Create the next scene for a story when no active scene exists.
+
+For a story with `type: "scene"`, `user_character_id` may be `null` to create a narrator scene. For `type: "choice_driven"`, a valid non-null user character is required. A non-null user character must not appear in `character_ids`, and every supplied character ID must exist in the story.
+
 ---
 
 ### PUT /api/stories/{story_id}/scenes/{scene_id}/messages/{message_id}

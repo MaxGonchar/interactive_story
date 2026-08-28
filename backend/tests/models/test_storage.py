@@ -68,6 +68,20 @@ def test_scene_metadata_scene_summary_is_optional_none():
     assert meta.scene_summary is None
 
 
+def test_scene_metadata_yaml_accepts_null_user_character_id():
+    meta = SceneMetadataYaml(
+        finished=False,
+        character_ids=["mila"],
+        user_character_id=None,
+        scene_description=SceneDescriptionYaml(
+            general_scene_guide="Guide.",
+            writing_style="Style.",
+        ),
+    )
+
+    assert meta.user_character_id is None
+
+
 def test_scene_metadata_yaml_context_defaults_none():
     meta = SceneMetadataYaml(
         finished=False,

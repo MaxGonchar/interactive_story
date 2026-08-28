@@ -301,6 +301,20 @@ def test_create_scene_success():
     assert resp.json() == {"data": {"id": 3, "finished": False}}
 
 
+def test_create_scene_accepts_null_user_character_id():
+    svc = make_creation_service()
+    app.dependency_overrides[get_scene_creation_service] = lambda: svc
+
+    resp = TestClient(app).post(
+        f"/api/stories/{_STORY_ID}/scenes",
+        json={**_VALID_CREATE_PAYLOAD, "user_character_id": None},
+    )
+
+    assert resp.status_code == 201
+    assert resp.json() == {"data": {"id": 3, "finished": False}}
+    assert svc.create.await_args.kwargs["user_character_id"] is None
+
+
 @pytest.mark.parametrize("exc,status,code", [
     (NotFoundError("Story not found"), 404, "not_found"),
     (ActiveSceneExistsError(), 409, "active_scene_exists"),

@@ -85,6 +85,26 @@ async def test_play_includes_user_character_in_context():
 
 
 @pytest.mark.asyncio
+async def test_play_uses_narrator_context_without_user_character_lookup():
+    metadata = make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID).model_copy(
+        update={"user_character_id": None}
+    )
+    service, _, character_repo, llm_client = make_service(metadata=metadata)
+    captured = {}
+
+    async def fake_invoke(context, *_):
+        captured["user_character"] = context.user_character
+        return "reply"
+
+    llm_client.invoke.side_effect = fake_invoke
+
+    await service.play(STORY_ID, SCENE_ID, "Advance the scene.")
+
+    assert captured["user_character"] is None
+    character_repo.get_character.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_regenerate_includes_user_character_in_context():
     user_msg = Message(id=1, role="user", content="Hi")
     assistant_msg = Message(id=2, role="assistant", content="Old reply")
@@ -101,6 +121,32 @@ async def test_regenerate_includes_user_character_in_context():
 
     assert captured["user_character"].id == "user-char"
     character_repo.get_character.assert_awaited_once_with(STORY_ID, "max")
+
+
+@pytest.mark.asyncio
+async def test_regenerate_uses_narrator_context_without_user_character_lookup():
+    user_msg = Message(id=1, role="user", content="Advance the scene.")
+    assistant_msg = Message(id=2, role="assistant", content="Old reply")
+    metadata = make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID).model_copy(
+        update={"user_character_id": None}
+    )
+    service, scene_repo, character_repo, llm_client = make_service(
+        metadata=metadata,
+        messages=[user_msg, assistant_msg],
+    )
+    scene_repo.update_message.return_value = Message(id=2, role="assistant", content="New reply")
+    captured = {}
+
+    async def fake_invoke(context, *_):
+        captured["user_character"] = context.user_character
+        return "New reply"
+
+    llm_client.invoke.side_effect = fake_invoke
+
+    await service.regenerate(STORY_ID, SCENE_ID)
+
+    assert captured["user_character"] is None
+    character_repo.get_character.assert_not_awaited()
 
 
 @pytest.mark.asyncio

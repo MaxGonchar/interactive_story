@@ -13,6 +13,7 @@ class PromptBuilder:
     def __init__(self) -> None:
         env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), keep_trailing_newline=True)
         self._system_template = env.get_template("scene_system.j2")
+        self._narrator_system_template = env.get_template("scene_system_narrator.j2")
         self._config_template = env.get_template("scene_config.j2")
 
     def build_system_prompt(self, context: SceneContext) -> str:
@@ -22,12 +23,18 @@ class PromptBuilder:
             general_scene_guide=context.scene_description.general_scene_guide,
             writing_style=context.scene_description.writing_style,
         )
-        user_character_profile = context.user_character.to_prompt_text()
-        return self._system_template.render(
-            context_data=context_data,
-            character_profiles=character_profiles,
-            scene_configuration=scene_configuration,
-            user_character_profile=user_character_profile,
+        template = self._system_template
+        template_context = {
+            "context_data": context_data,
+            "character_profiles": character_profiles,
+            "scene_configuration": scene_configuration,
+        }
+        if context.user_character is not None:
+            template_context["user_character_profile"] = context.user_character.to_prompt_text()
+        else:
+            template = self._narrator_system_template
+        return template.render(
+            **template_context,
         )
 
     def _build_context_data(self, context: SceneContext) -> str:

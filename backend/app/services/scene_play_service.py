@@ -39,9 +39,11 @@ class ScenePlayService:
 
         context_data = metadata.context or []
 
-        user_character = await self._character_repo.get_character(
-            story_id, metadata.user_character_id
-        )
+        user_character = None
+        if metadata.user_character_id is not None:
+            user_character = await self._character_repo.get_character(
+                story_id, metadata.user_character_id
+            )
 
         context = SceneContext(
             scene_description=metadata.scene_description,
@@ -81,9 +83,11 @@ class ScenePlayService:
         context_data = metadata.context or []
 
         characters = await self._character_repo.get_characters(story_id, metadata.character_ids)
-        user_character = await self._character_repo.get_character(
-            story_id, metadata.user_character_id
-        )
+        user_character = None
+        if metadata.user_character_id is not None:
+            user_character = await self._character_repo.get_character(
+                story_id, metadata.user_character_id
+            )
         context = SceneContext(
             scene_description=metadata.scene_description,
             characters=characters,

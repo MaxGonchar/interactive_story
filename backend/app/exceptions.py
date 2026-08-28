@@ -41,6 +41,13 @@ class ActiveSceneExistsError(DomainError):
     message = "Story already has an active scene"
 
 
+class NarratorModeNotSupportedError(DomainError):
+    """Narrator mode is unavailable for this story type."""
+
+    error_code = "narrator_mode_not_supported"
+    message = "Narrator mode is only supported for scene stories"
+
+
 class NotFoundError(DomainError):
     """Raised by repositories when a requested record does not exist."""
 
