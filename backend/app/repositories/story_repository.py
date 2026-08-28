@@ -69,4 +69,5 @@ class StoryRepository:
             title=story.title,
             scenes=list(scene_refs),
             active_scene_id=active_scene_id,
+            type=story.type,
         )

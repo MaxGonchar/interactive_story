@@ -111,6 +111,12 @@ def test_create_scene_request_valid():
     assert req.context == ["It was a dark night."]
 
 
+def test_create_scene_request_accepts_null_user_character_id():
+    req = CreateSceneRequest(**{**VALID_CREATE_SCENE, "user_character_id": None})
+
+    assert req.user_character_id is None
+
+
 def test_create_scene_request_character_ids_defaults_to_empty():
     req = CreateSceneRequest(
         user_character_id="char-1",
@@ -132,6 +138,19 @@ def test_create_scene_request_user_character_id_in_character_ids_rejected():
             writing_style="style",
             first_message="Hello",
         )
+
+
+def test_create_scene_request_null_user_character_id_skips_membership_validation():
+    req = CreateSceneRequest(
+        user_character_id=None,
+        character_ids=["char-1", "char-2"],
+        context=["Context."],
+        general_scene_guide="Guide",
+        writing_style="style",
+        first_message="Hello",
+    )
+
+    assert req.character_ids == ["char-1", "char-2"]
 
 
 def test_create_scene_request_missing_user_character_id_rejected():

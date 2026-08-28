@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.exceptions import ActiveSceneExistsError, NotFoundError
+from app.exceptions import ActiveSceneExistsError, NarratorModeNotSupportedError, NotFoundError
 from app.models.domain import SceneDescription, SceneMetadata, SceneRef, StoryMeta
 from app.services.scene_creation_service import SceneCreationService
 
@@ -23,8 +23,14 @@ _BASE_KWARGS = dict(
 )
 
 
-def make_story_meta(scenes: list[SceneRef]) -> StoryMeta:
-    return StoryMeta(id=STORY_ID, title="Test Story", scenes=scenes, active_scene_id=None)
+def make_story_meta(scenes: list[SceneRef], type: str = "scene") -> StoryMeta:
+    return StoryMeta(
+        id=STORY_ID,
+        title="Test Story",
+        scenes=scenes,
+        active_scene_id=None,
+        type=type,
+    )
 
 
 def make_service(
@@ -91,6 +97,16 @@ async def test_create_calls_scene_repo_create_scene():
     assert first_msg.content == FIRST_MESSAGE
 
 
+@pytest.mark.asyncio
+async def test_create_allows_narrator_for_scene_story():
+    service, _, scene_repo = make_service(story_meta=make_story_meta([]))
+
+    await service.create(**{**_BASE_KWARGS, "user_character_id": None})
+
+    metadata = scene_repo.create_scene.call_args.args[2]
+    assert metadata.user_character_id is None
+
+
 # ---------------------------------------------------------------------------
 # Error cases
 # ---------------------------------------------------------------------------
@@ -111,5 +127,17 @@ async def test_create_raises_active_scene_exists_when_unfinished_scene_present()
 
     with pytest.raises(ActiveSceneExistsError):
         await service.create(**_BASE_KWARGS)
+
+    scene_repo.create_scene.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_rejects_narrator_for_choice_driven_story():
+    service, _, scene_repo = make_service(
+        story_meta=make_story_meta([], type="choice_driven")
+    )
+
+    with pytest.raises(NarratorModeNotSupportedError):
+        await service.create(**{**_BASE_KWARGS, "user_character_id": None})
 
     scene_repo.create_scene.assert_not_awaited()

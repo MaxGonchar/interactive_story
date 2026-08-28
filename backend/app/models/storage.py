@@ -31,7 +31,7 @@ class SceneDescriptionYaml(BaseModel):
 class SceneMetadataYaml(BaseModel):
     finished: bool = False
     character_ids: list[str]
-    user_character_id: str
+    user_character_id: str | None
     scene_description: SceneDescriptionYaml
     scene_summary: list[str] | None = None
     context: list[str] | None = None

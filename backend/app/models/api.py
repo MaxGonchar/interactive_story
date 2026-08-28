@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Annotated
 
 from pydantic import BaseModel, Field, model_validator
@@ -155,7 +157,7 @@ class RegenerateResponse(BaseModel):
 
 
 class CreateSceneRequest(BaseModel):
-    user_character_id: str
+    user_character_id: str | None
     character_ids: list[str] = []
     context: list[str] = Field(min_length=1)
     general_scene_guide: str
@@ -164,7 +166,10 @@ class CreateSceneRequest(BaseModel):
 
     @model_validator(mode="after")
     def user_character_not_in_character_ids(self) -> "CreateSceneRequest":
-        if self.user_character_id in self.character_ids:
+        if (
+            self.user_character_id is not None
+            and self.user_character_id in self.character_ids
+        ):
             raise ValueError(
                 "user_character_id must not appear in character_ids"
             )

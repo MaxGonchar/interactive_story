@@ -121,6 +121,22 @@ def test_user_character_profile_in_prompt():
     assert "Mila" in result
 
 
+def test_narrator_prompt_omits_user_character_profile_and_uses_narrator_direction():
+    ctx = SceneContext(
+        scene_description=_make_scene_description(),
+        characters=[_make_character(id="npc-1", name="Sarah")],
+        user_character=None,
+        messages=[],
+    )
+
+    result = _build(ctx)
+
+    assert "User's Character Profile" not in result
+    assert "The user directs the scene" in result
+    assert "Sarah" in result
+    assert "controlling the environment and all characters" in result
+
+
 def test_hardcoded_protagonist_absent():
     ctx = SceneContext(
         scene_description=_make_scene_description(),

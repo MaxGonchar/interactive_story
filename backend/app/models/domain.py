@@ -24,6 +24,7 @@ class StoryMeta(BaseModel):
     title: str
     scenes: list[SceneRef]
     active_scene_id: int | None
+    type: StoryType = "scene"
 
 
 class CharacterCard(BaseModel):
@@ -58,7 +59,7 @@ class SceneMetadata(BaseModel):
     id: int
     story_id: str
     character_ids: list[str]
-    user_character_id: str
+    user_character_id: str | None
     finished: bool
     scene_description: SceneDescription
     scene_summary: list[str] | None = None

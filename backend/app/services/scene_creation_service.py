@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.exceptions import ActiveSceneExistsError
+from app.exceptions import ActiveSceneExistsError, NarratorModeNotSupportedError
 from app.models.domain import Message, SceneDescription, SceneMetadata, SceneRef
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
@@ -14,7 +14,7 @@ class SceneCreationService:
     async def create(
         self,
         story_id: str,
-        user_character_id: str,
+        user_character_id: str | None,
         character_ids: list[str],
         context: list[str],
         general_scene_guide: str,
@@ -25,6 +25,9 @@ class SceneCreationService:
 
         if any(not s.finished for s in story.scenes):
             raise ActiveSceneExistsError()
+
+        if story.type != "scene" and user_character_id is None:
+            raise NarratorModeNotSupportedError()
 
         next_id = max((s.id for s in story.scenes), default=0) + 1
 

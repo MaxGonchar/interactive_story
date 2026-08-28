@@ -136,7 +136,8 @@ context:
 Constraints:
 - finished is boolean
 - each character_id must have a matching character file in characters/<character_id>.yaml
-- user_character_id must have a matching character file in characters/<user_character_id>.yaml
+- user_character_id is a character id or null; null is allowed only for scenes in a "scene" story
+- when user_character_id is non-null, it must have a matching character file in characters/<user_character_id>.yaml
 - scene_description must include: general_scene_guide, writing_style
   
 ### 5) Scene Messages

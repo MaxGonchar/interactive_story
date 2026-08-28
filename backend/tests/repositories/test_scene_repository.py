@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.exceptions import NotFoundError
+from app.exceptions import NarratorModeNotSupportedError, NotFoundError
 from app.models.domain import Message, SceneDescription, SceneMetadata
 from app.repositories.scene_repository import SceneRepository
 
@@ -220,7 +220,7 @@ async def test_create_scene_writes_metadata(writable_data_root):
     metadata = SceneMetadata(
         id=new_scene_id,
         story_id=FIXTURE_STORY_ID,
-        character_ids=["c1"],
+        character_ids=["mila"],
         user_character_id="max",
         finished=False,
         scene_description=SceneDescription(
@@ -236,7 +236,7 @@ async def test_create_scene_writes_metadata(writable_data_root):
     result = await repo.get_metadata(FIXTURE_STORY_ID, new_scene_id)
     assert result.id == new_scene_id
     assert result.finished is False
-    assert result.character_ids == ["c1"]
+    assert result.character_ids == ["mila"]
     assert result.user_character_id == "max"
     assert result.scene_description.general_scene_guide == "A new guide."
     assert result.context == ["Context line one."]
@@ -295,3 +295,72 @@ async def test_create_scene_creates_directory(writable_data_root):
     assert scene_dir.exists()
     assert (scene_dir / "meta.yaml").exists()
     assert (scene_dir / "messages.yaml").exists()
+
+
+@pytest.mark.asyncio
+async def test_create_scene_persists_null_user_character_for_scene_story(writable_data_root):
+    repo = SceneRepository()
+    metadata = SceneMetadata(
+        id=96,
+        story_id=FIXTURE_STORY_ID,
+        character_ids=["mila"],
+        user_character_id=None,
+        finished=False,
+        scene_description=SceneDescription(general_scene_guide="Guide.", writing_style="Style."),
+    )
+
+    await repo.create_scene(
+        FIXTURE_STORY_ID,
+        96,
+        metadata,
+        Message(id=1, role="assistant", content="Hello."),
+    )
+
+    result = await repo.get_metadata(FIXTURE_STORY_ID, 96)
+    assert result.user_character_id is None
+
+
+@pytest.mark.asyncio
+async def test_create_scene_rejects_missing_character_reference(writable_data_root):
+    repo = SceneRepository()
+    metadata = SceneMetadata(
+        id=95,
+        story_id=FIXTURE_STORY_ID,
+        character_ids=["missing"],
+        user_character_id="max",
+        finished=False,
+        scene_description=SceneDescription(general_scene_guide="Guide.", writing_style="Style."),
+    )
+
+    with pytest.raises(NotFoundError, match="Character 'missing' not found"):
+        await repo.create_scene(
+            FIXTURE_STORY_ID,
+            95,
+            metadata,
+            Message(id=1, role="assistant", content="Hello."),
+        )
+
+
+@pytest.mark.asyncio
+async def test_create_scene_rejects_narrator_for_choice_driven_story(writable_data_root):
+    story_path = writable_data_root / "stories" / FIXTURE_STORY_ID / "story.yaml"
+    story_data = yaml.safe_load(story_path.read_text())
+    story_data["type"] = "choice_driven"
+    story_path.write_text(yaml.safe_dump(story_data))
+    repo = SceneRepository()
+    metadata = SceneMetadata(
+        id=94,
+        story_id=FIXTURE_STORY_ID,
+        character_ids=["mila"],
+        user_character_id=None,
+        finished=False,
+        scene_description=SceneDescription(general_scene_guide="Guide.", writing_style="Style."),
+    )
+
+    with pytest.raises(NarratorModeNotSupportedError):
+        await repo.create_scene(
+            FIXTURE_STORY_ID,
+            94,
+            metadata,
+            Message(id=1, role="assistant", content="Hello."),
+        )
