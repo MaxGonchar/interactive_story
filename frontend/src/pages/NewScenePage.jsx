@@ -6,6 +6,8 @@ import { getCharacters } from '../api/characters'
 import BulletTextarea from '../components/BulletTextarea'
 import { inputBase } from '../styles'
 
+const NARRATOR_CHARACTER_ID = '__narrator__'
+
 function NewScenePage() {
   const { storyId } = useParams()
   const navigate = useNavigate()
@@ -66,7 +68,9 @@ function NewScenePage() {
 
   function handleUserCharacterChange(characterId) {
     setUserCharacterId(characterId)
-    setSceneCharacterIds((prev) => prev.filter((id) => id !== characterId))
+    if (characterId !== NARRATOR_CHARACTER_ID) {
+      setSceneCharacterIds((prev) => prev.filter((id) => id !== characterId))
+    }
   }
 
   function handleSceneCharacterToggle(characterId) {
@@ -115,7 +119,8 @@ function NewScenePage() {
     setBusy(true)
     try {
       const response = await createScene(storyId, {
-        user_character_id: userCharacterId,
+        user_character_id:
+          userCharacterId === NARRATOR_CHARACTER_ID ? null : userCharacterId,
         character_ids: sceneCharacterIds,
         context,
         general_scene_guide: generalSceneGuide,
@@ -152,6 +157,7 @@ function NewScenePage() {
             className="new-scene-page__select"
           >
             <option value="">— select —</option>
+            <option value={NARRATOR_CHARACTER_ID}>Narrator</option>
             {characters.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}

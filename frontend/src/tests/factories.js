@@ -32,3 +32,11 @@ export function makeStory(overrides = {}) {
     ...overrides,
   }
 }
+
+export function makeCharacter(overrides = {}) {
+  return {
+    id: uid(),
+    name: 'Test Character',
+    ...overrides,
+  }
+}
