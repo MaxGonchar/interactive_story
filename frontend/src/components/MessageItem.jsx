@@ -21,6 +21,12 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
     }
   }, [editing, draft])
 
+  // Regeneration reuses the same message id, so sync draft/edit state to new content.
+  useEffect(() => {
+    setDraft(message.content)
+    setEditing(false)
+  }, [message.id, message.content])
+
   const handleSave = async () => {
     if (!onEdit) return
     setSaving(true)
