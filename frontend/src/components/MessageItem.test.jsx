@@ -142,4 +142,26 @@ describe('MessageItem', () => {
     expect(within(actions).getByLabelText('Delete message')).toBeInTheDocument()
     expect(within(actions).queryByLabelText('Regenerate message')).not.toBeInTheDocument()
   })
+
+  it('opens edit mode with regenerated content when rerendered with same id and new content', async () => {
+    const msg = makeMessage({ id: 'm1', content: 'Original content' })
+    const { rerender } = render(<MessageItem message={msg} onEdit={vi.fn()} />)
+
+    rerender(<MessageItem message={{ ...msg, content: 'Regenerated content' }} onEdit={vi.fn()} />)
+    await userEvent.click(screen.getByLabelText('Edit message'))
+
+    expect(screen.getByRole('textbox')).toHaveValue('Regenerated content')
+  })
+
+  it('closes edit mode when content changes while editing', async () => {
+    const msg = makeMessage({ id: 'm1', content: 'Original content' })
+    const { rerender } = render(<MessageItem message={msg} onEdit={vi.fn()} />)
+
+    await userEvent.click(screen.getByLabelText('Edit message'))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+
+    rerender(<MessageItem message={{ ...msg, content: 'Regenerated content' }} onEdit={vi.fn()} />)
+
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
 })
