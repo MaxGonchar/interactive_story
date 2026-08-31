@@ -60,4 +60,76 @@ describe('ChoicesGrid', () => {
 
     expect(onSelect).toHaveBeenCalledWith('Wait', 'Nothing happens')
   })
+
+  it('shows ProcessingLabel for the clicked choice when pendingAction matches choice key', () => {
+    const onSelect = vi.fn()
+    const pendingActionKey = 'Open the door::A gust of wind blows in'
+    render(
+      <ChoicesGrid
+        choices={choices}
+        onSelect={onSelect}
+        onRegenerate={vi.fn()}
+        pendingAction={pendingActionKey}
+      />
+    )
+
+    expect(screen.getByText(/Continuing/)).toBeInTheDocument()
+    expect(screen.queryByText('Open the door')).not.toBeInTheDocument()
+  })
+
+  it('disables all choice buttons when pendingAction is set', () => {
+    const pendingActionKey = 'Open the door::A gust of wind blows in'
+    render(
+      <ChoicesGrid
+        choices={choices}
+        onSelect={vi.fn()}
+        onRegenerate={vi.fn()}
+        pendingAction={pendingActionKey}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: /Continuing/ })).toBeDisabled()
+    expect(screen.getByText('Turn back')).toBeDisabled()
+  })
+
+  it('shows ProcessingLabel for regenerate button when pendingAction is "regenerate"', () => {
+    render(
+      <ChoicesGrid
+        choices={choices}
+        onSelect={vi.fn()}
+        onRegenerate={vi.fn()}
+        pendingAction="regenerate"
+      />
+    )
+
+    expect(screen.getByRole('button', { name: /Regenerating/ })).toBeInTheDocument()
+  })
+
+  it('disables regenerate button and choice buttons when pendingAction is "regenerate"', () => {
+    render(
+      <ChoicesGrid
+        choices={choices}
+        onSelect={vi.fn()}
+        onRegenerate={vi.fn()}
+        pendingAction="regenerate"
+      />
+    )
+
+    expect(screen.getByRole('button', { name: /Regenerating/ })).toBeDisabled()
+    expect(screen.getByText('Open the door')).toBeDisabled()
+  })
+
+  it('shows normal choice text when pendingAction is null', () => {
+    render(
+      <ChoicesGrid
+        choices={choices}
+        onSelect={vi.fn()}
+        onRegenerate={vi.fn()}
+        pendingAction={null}
+      />
+    )
+
+    expect(screen.getByText('Open the door')).toBeInTheDocument()
+    expect(screen.getByText('Turn back')).toBeInTheDocument()
+  })
 })

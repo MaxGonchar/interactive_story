@@ -10,6 +10,7 @@ import {
 } from '../api/choice_driven'
 import StepItem from '../components/StepItem'
 import ChoicesGrid from '../components/ChoicesGrid'
+import ProcessingLabel from '../components/ProcessingLabel'
 
 function ChoiceDrivenStoryPage() {
   const { storyId } = useParams()
@@ -19,6 +20,7 @@ function ChoiceDrivenStoryPage() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [opError, setOpError] = useState(null)
+  const [pendingAction, setPendingAction] = useState(null)
 
   useEffect(() => {
     getChoiceDrivenPlay(storyId)
@@ -33,6 +35,7 @@ function ChoiceDrivenStoryPage() {
   async function handleGenerateChoices() {
     setOpError(null)
     setBusy(true)
+    setPendingAction('generate')
     try {
       const response = await generateChoices(storyId)
       const choices = response.data.choices
@@ -43,12 +46,14 @@ function ChoiceDrivenStoryPage() {
       setOpError(err.message ?? 'Failed to generate choices')
     } finally {
       setBusy(false)
+      setPendingAction(null)
     }
   }
 
   async function handleRegenerateChoices() {
     setOpError(null)
     setBusy(true)
+    setPendingAction('regenerate')
     try {
       const response = await regenerateChoices(storyId)
       const choices = response.data.choices
@@ -59,12 +64,15 @@ function ChoiceDrivenStoryPage() {
       setOpError(err.message ?? 'Failed to regenerate choices')
     } finally {
       setBusy(false)
+      setPendingAction(null)
     }
   }
 
   async function handleSelectChoice(action, consequence) {
     setOpError(null)
+    const choiceKey = `${action}::${consequence}`
     setBusy(true)
+    setPendingAction(choiceKey)
     try {
       const response = await selectChoice(storyId, action, consequence)
       setSteps((prev) => [...prev, response.data])
@@ -72,6 +80,7 @@ function ChoiceDrivenStoryPage() {
       setOpError(err.message ?? 'Failed to select choice')
     } finally {
       setBusy(false)
+      setPendingAction(null)
     }
   }
 
@@ -129,14 +138,15 @@ function ChoiceDrivenStoryPage() {
             onSelect={handleSelectChoice}
             onRegenerate={handleRegenerateChoices}
             disabled={busy}
+            pendingAction={pendingAction}
           />
         ) : (
           <button
             onClick={handleGenerateChoices}
             disabled={busy}
-            style={{ marginTop: '16px' }}
+            style={{ marginTop: '16px', minWidth: '150px' }}
           >
-            Generate choices
+            {pendingAction === 'generate' ? <ProcessingLabel verb="Generating" /> : 'Generate choices'}
           </button>
         )
       )}

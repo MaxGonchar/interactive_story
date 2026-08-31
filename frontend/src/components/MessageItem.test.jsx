@@ -164,4 +164,37 @@ describe('MessageItem', () => {
 
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
+
+  it('shows ProcessingLabel when regeneratingMessageId matches message id', () => {
+    const msg = makeMessage({ id: 'm1', role: 'assistant', content: 'Original content' })
+    render(<MessageItem message={msg} regeneratingMessageId="m1" />)
+    expect(screen.getByText(/Regenerating/)).toBeInTheDocument()
+    expect(screen.queryByText('Original content')).not.toBeInTheDocument()
+  })
+
+  it('does not show ProcessingLabel when regeneratingMessageId does not match message id', () => {
+    const msg = makeMessage({ id: 'm1', role: 'assistant', content: 'Original content' })
+    render(<MessageItem message={msg} regeneratingMessageId="m2" />)
+    expect(screen.queryByText(/Regenerating/)).not.toBeInTheDocument()
+    expect(screen.getByText('Original content', { exact: false })).toBeInTheDocument()
+  })
+
+  it('does not show ProcessingLabel when regeneratingMessageId is null', () => {
+    const msg = makeMessage({ id: 'm1', role: 'assistant', content: 'Original content' })
+    render(<MessageItem message={msg} regeneratingMessageId={null} />)
+    expect(screen.queryByText(/Regenerating/)).not.toBeInTheDocument()
+    expect(screen.getByText('Original content', { exact: false })).toBeInTheDocument()
+  })
+
+  it('hides message actions while regenerating', () => {
+    const msg = makeMessage({ id: 'm1', role: 'assistant', content: 'Original content' })
+    render(
+      <MessageItem
+        message={msg}
+        onRegenerate={vi.fn()}
+        regeneratingMessageId="m1"
+      />
+    )
+    expect(screen.queryByLabelText('Regenerate message')).not.toBeInTheDocument()
+  })
 })

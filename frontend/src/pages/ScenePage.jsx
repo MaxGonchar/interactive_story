@@ -9,25 +9,6 @@ import FinishModal from '../components/FinishModal'
 function ScenePage() {
   const navigate = useNavigate()
   const messageEndRef = useRef(null)
-
-    async function handleRegenerate() {
-      setOpError(null)
-      setBusy(true)
-      try {
-        const response = await regenerateLastAssistantMessage(storyId, sceneId)
-        const { assistant_message } = response.data
-        setScene((prev) => ({
-          ...prev,
-          messages: prev.messages.map((m) =>
-            m.id === assistant_message.id ? assistant_message : m
-          ),
-        }))
-      } catch (err) {
-        setOpError(err.message ?? 'Failed to regenerate message')
-      } finally {
-        setBusy(false)
-      }
-    }
   const { storyId, sceneId } = useParams()
   const [scene, setScene] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -35,6 +16,8 @@ function ScenePage() {
   const [busy, setBusy] = useState(false)
   const [opError, setOpError] = useState(null)
   const [showFinishModal, setShowFinishModal] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [regeneratingMessageId, setRegeneratingMessageId] = useState(null)
 
   useEffect(() => {
     getScene(storyId, sceneId)
@@ -50,6 +33,7 @@ function ScenePage() {
   async function handleSend(content) {
     setOpError(null)
     setBusy(true)
+    setSending(true)
     try {
       const response = await playScene(storyId, sceneId, content)
       const { user_message, assistant_message } = response.data
@@ -62,6 +46,30 @@ function ScenePage() {
       throw err
     } finally {
       setBusy(false)
+      setSending(false)
+    }
+  }
+
+  async function handleRegenerate() {
+    setOpError(null)
+    const lastAssistantMessage = scene.messages.filter((m) => m.role === 'assistant').pop()
+    if (!lastAssistantMessage) return
+    setRegeneratingMessageId(lastAssistantMessage.id)
+    setBusy(true)
+    try {
+      const response = await regenerateLastAssistantMessage(storyId, sceneId)
+      const { assistant_message } = response.data
+      setScene((prev) => ({
+        ...prev,
+        messages: prev.messages.map((m) =>
+          m.id === assistant_message.id ? assistant_message : m
+        ),
+      }))
+    } catch (err) {
+      setOpError(err.message ?? 'Failed to regenerate message')
+    } finally {
+      setBusy(false)
+      setRegeneratingMessageId(null)
     }
   }
 
@@ -147,6 +155,7 @@ function ScenePage() {
           onDelete={handleDeleteLastExchange}
           onRegenerate={handleRegenerate}
           disabled={scene.finished || busy}
+          regeneratingMessageId={regeneratingMessageId}
           endSlot={<div ref={messageEndRef} aria-hidden="true" className="scene-message-list__end-anchor" />}
         />
       </div>
@@ -155,6 +164,7 @@ function ScenePage() {
         <MessageComposer
           onSend={handleSend}
           disabled={scene.finished || busy}
+          sending={sending}
           leadingAction={!scene.finished ? (
             <button
               onClick={() => setShowFinishModal(true)}
