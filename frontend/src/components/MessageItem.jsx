@@ -3,8 +3,9 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { inlineEditTextarea } from '../styles'
 import { DeleteIcon, EditIcon, RefreshIcon } from './icons'
+import ProcessingLabel from './ProcessingLabel'
 
-function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false }) {
+function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false, regeneratingMessageId = null }) {
   const isUser = message.role === 'user'
   const label = isUser ? 'You' : 'Narrator'
 
@@ -48,6 +49,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
   const showEdit = !disabled && Boolean(onEdit)
   const showDelete = Boolean(onDelete)
   const hasActions = showRegenerate || showEdit || showDelete
+  const isRegenerating = regeneratingMessageId === message.id
 
   return (
     <div className="message-wrapper" style={{ alignItems: isUser ? 'flex-end' : 'flex-start' }}>
@@ -67,6 +69,8 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
               <button onClick={handleCancel}>Cancel</button>
             </div>
           </>
+        ) : isRegenerating ? (
+          <ProcessingLabel verb="Regenerating" />
         ) : (
           <>
             <div className="message-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown></div>

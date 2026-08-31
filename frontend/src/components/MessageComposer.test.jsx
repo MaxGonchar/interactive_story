@@ -88,4 +88,21 @@ describe('MessageComposer', () => {
     rerender(<MessageComposer onSend={vi.fn()} disabled={true} />)
     expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', 'Scene is finished')
   })
+
+  it('Send button shows ProcessingLabel when sending is true', () => {
+    render(<MessageComposer onSend={vi.fn()} sending={true} />)
+    expect(screen.getByText(/Sending/)).toBeInTheDocument()
+    expect(screen.queryByText('Send')).not.toBeInTheDocument()
+  })
+
+  it('Send button is disabled when sending is true', () => {
+    render(<MessageComposer onSend={vi.fn()} sending={true} />)
+    const button = screen.getByRole('button', { name: /Sending/ })
+    expect(button).toBeDisabled()
+  })
+
+  it('Send button shows normal text when sending is false', () => {
+    render(<MessageComposer onSend={vi.fn()} sending={false} />)
+    expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument()
+  })
 })

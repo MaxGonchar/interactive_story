@@ -72,7 +72,8 @@ describe('FinishModal', () => {
     )
     render(<FinishModal {...defaultProps} />)
     await userEvent.click(screen.getByRole('button', { name: 'Generate Summary' }))
-    expect(screen.getByRole('button', { name: 'Generating…' })).toBeDisabled()
+    expect(screen.getByText(/Generating/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Generating/ })).toBeDisabled()
     await act(async () => { resolveGenerate({ data: { summary: [] } }) })
   })
 

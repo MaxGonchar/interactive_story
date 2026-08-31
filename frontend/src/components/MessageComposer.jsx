@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { inputBase } from '../styles'
+import ProcessingLabel from './ProcessingLabel'
 
-function MessageComposer({ onSend, disabled = false, leadingAction = null }) {
+function MessageComposer({ onSend, disabled = false, leadingAction = null, sending = false }) {
   const [text, setText] = useState('')
 
   async function handleSend() {
@@ -30,9 +31,10 @@ function MessageComposer({ onSend, disabled = false, leadingAction = null }) {
         <button
           className="message-composer__send"
           onClick={handleSend}
-          disabled={disabled || text.trim() === ''}
+          disabled={disabled || text.trim() === '' || sending}
+          style={{ minWidth: '80px' }}
         >
-          Send
+          {sending ? <ProcessingLabel verb="Sending" /> : 'Send'}
         </button>
       </div>
     </div>
