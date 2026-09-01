@@ -27,4 +27,18 @@ describe('StepItem', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
   })
+
+  it('scrolls the textarea into view when entering edit mode', async () => {
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    const user = userEvent.setup()
+    const message = makeMessage({ content: 'Editable step' })
+    const step = { id: message.id, text: message.content }
+
+    render(<StepItem step={step} onEdit={vi.fn()} onReturn={vi.fn()} />)
+
+    await user.click(screen.getByLabelText('Edit step'))
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' })
+  })
 })

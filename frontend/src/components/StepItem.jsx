@@ -13,6 +13,7 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
       const el = textareaRef.current
       el.style.height = 'auto'
       el.style.height = `${el.scrollHeight}px`
+      el.scrollIntoView?.({ block: 'nearest' })
     }
   }, [editing, draft])
 
