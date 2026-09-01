@@ -24,6 +24,15 @@ function toText(value) {
   return value.length > 0 ? value.map((item) => BULLET + item).join('\n') : BULLET
 }
 
+// Mirrors parseItems' per-line trim so an echoed `value` can be compared against
+// the raw DOM text without treating in-progress edge whitespace as an external change.
+function canonicalizeLines(text) {
+  return text
+    .split('\n')
+    .map((line) => line.trim())
+    .join('\n')
+}
+
 function BulletTextarea({ value, onChange, ...rest }) {
   const [text, setText] = useState(() => toText(value))
   const prevValueRef = useRef(value)
@@ -31,9 +40,13 @@ function BulletTextarea({ value, onChange, ...rest }) {
   useEffect(() => {
     if (JSON.stringify(value) !== JSON.stringify(prevValueRef.current)) {
       prevValueRef.current = value
-      setText(toText(value))
+      // Skip resync when `value` is just the parent echoing our own edit back,
+      // otherwise the DOM value reset snaps the caret to the end.
+      if (canonicalizeLines(text) !== toText(value)) {
+        setText(toText(value))
+      }
     }
-  }, [value])
+  }, [value, text])
 
   function handleChange(e) {
     const newText = e.target.value
