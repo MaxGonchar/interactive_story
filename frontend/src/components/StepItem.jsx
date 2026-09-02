@@ -7,13 +7,15 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
   const [draft, setDraft] = useState(step.text)
   const [saving, setSaving] = useState(false)
   const textareaRef = useRef(null)
+  const editBlockRef = useRef(null)
 
   useEffect(() => {
     if (editing && textareaRef.current) {
       const el = textareaRef.current
       el.style.height = 'auto'
       el.style.height = `${el.scrollHeight}px`
-      el.scrollIntoView?.({ block: 'nearest' })
+      // Scroll the whole edit block (textarea + Save/Cancel) into view, not just the textarea.
+      editBlockRef.current?.scrollIntoView?.({ block: 'nearest' })
     }
   }, [editing, draft])
 
@@ -37,7 +39,7 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
   return (
     <div className="step-item">
       {editing ? (
-        <>
+        <div ref={editBlockRef}>
           <textarea
             ref={textareaRef}
             value={draft}
@@ -48,7 +50,7 @@ function StepItem({ step, onEdit, onReturn, disabled = false }) {
             <button onClick={handleSave} disabled={saveDisabled}>Save</button>
             <button onClick={handleCancel}>Cancel</button>
           </div>
-        </>
+        </div>
       ) : (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
           <p style={{ margin: 0, flex: 1 }}>{step.text}</p>

@@ -13,13 +13,15 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
   const [draft, setDraft] = useState(message.content)
   const [saving, setSaving] = useState(false)
   const textareaRef = useRef(null)
+  const editBlockRef = useRef(null)
 
   useEffect(() => {
     if (editing && textareaRef.current) {
       const el = textareaRef.current
       el.style.height = 'auto'
       el.style.height = `${el.scrollHeight}px`
-      el.scrollIntoView?.({ block: 'nearest' })
+      // Scroll the whole edit block (textarea + Save/Cancel) into view, not just the textarea.
+      editBlockRef.current?.scrollIntoView?.({ block: 'nearest' })
     }
   }, [editing, draft])
 
@@ -57,7 +59,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
       <span className="message-label">{label}</span>
       <div className={`message-bubble ${isUser ? 'message-bubble--user' : 'message-bubble--narrator'}`} style={{ width: editing ? '70%' : undefined }}>
         {editing ? (
-          <>
+          <div ref={editBlockRef}>
             <textarea
               ref={textareaRef}
               value={draft}
@@ -69,7 +71,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
               <button onClick={handleSave} disabled={saveDisabled}>Save</button>
               <button onClick={handleCancel}>Cancel</button>
             </div>
-          </>
+          </div>
         ) : isRegenerating ? (
           <ProcessingLabel verb="Regenerating" />
         ) : (

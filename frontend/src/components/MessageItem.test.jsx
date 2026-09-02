@@ -41,13 +41,16 @@ describe('MessageItem', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
-  it('scrolls the textarea into view when entering edit mode', async () => {
+  it('scrolls the whole edit block (including Save button) into view when entering edit mode', async () => {
     const scrollIntoView = vi.fn()
     Element.prototype.scrollIntoView = scrollIntoView
     const msg = makeMessage({ content: 'Hello world' })
     render(<MessageItem message={msg} onEdit={vi.fn()} />)
     await userEvent.click(screen.getByLabelText('Edit message'))
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' })
+    const scrolledElement = scrollIntoView.mock.instances[0]
+    expect(within(scrolledElement).getByRole('textbox')).toBeInTheDocument()
+    expect(within(scrolledElement).getByRole('button', { name: 'Save' })).toBeInTheDocument()
   })
 
   it('Save button is disabled when draft equals original content', async () => {
