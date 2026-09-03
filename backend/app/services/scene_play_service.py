@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFinishedError
 from app.llm.models import SceneContext
@@ -8,6 +9,8 @@ from app.llm.scene_llm_client import SceneLLMClient
 from app.models.domain import Message
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.scene_repository import SceneRepository
+
+logger = logging.getLogger(__name__)
 
 
 class ScenePlayService:
@@ -24,6 +27,7 @@ class ScenePlayService:
     async def play(
         self, story_id: str, scene_id: int, user_content: str
     ) -> tuple[Message, Message]:
+        logger.info(f"Playing scene story_id={story_id} scene_id={scene_id}")
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
 
         if metadata.finished:
@@ -63,6 +67,7 @@ class ScenePlayService:
         return user_msg, assistant_msg
 
     async def regenerate(self, story_id: str, scene_id: int) -> Message:
+        logger.info(f"Regenerating last assistant message story_id={story_id} scene_id={scene_id}")
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
         if metadata.finished:
             raise SceneFinishedError()

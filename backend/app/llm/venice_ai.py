@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Any, Optional
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -7,6 +8,8 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from pydantic import PrivateAttr
 
 from app.llm.venice_client import VeniceClient
+
+logger = logging.getLogger(__name__)
 
 _MESSAGE_ROLE_MAP = {
     SystemMessage: "system",
@@ -49,6 +52,11 @@ class VeniceAIChatModel(BaseChatModel):
         }
         if self.max_tokens is not None:
             payload["max_tokens"] = self.max_tokens
+
+        logger.debug(
+            f"LLM request model={self.model} temperature={self.temperature} "
+            f"max_tokens={self.max_tokens} message_count={len(formatted)}"
+        )
 
         return payload
 

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import logging
+
 from app.exceptions import ActiveSceneExistsError, NarratorModeNotSupportedError
 from app.models.domain import Message, SceneDescription, SceneMetadata, SceneRef
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
+
+logger = logging.getLogger(__name__)
 
 
 class SceneCreationService:
@@ -30,6 +34,7 @@ class SceneCreationService:
             raise NarratorModeNotSupportedError()
 
         next_id = max((s.id for s in story.scenes), default=0) + 1
+        logger.info(f"Creating scene story_id={story_id} scene_id={next_id}")
 
         metadata = SceneMetadata(
             id=next_id,

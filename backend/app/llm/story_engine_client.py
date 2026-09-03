@@ -4,6 +4,11 @@ from jinja2 import Environment, FileSystemLoader
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from app.llm.logging_config import (
+    configure_llm_logger,
+    log_prompt_messages,
+    log_response_content,
+)
 from app.models.domain import CharacterCard
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -15,6 +20,7 @@ class StoryEngineClient:
         env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), keep_trailing_newline=True)
         self._system_template = env.get_template("story_engine_system.j2")
         self._user_template = env.get_template("story_engine_user.j2")
+        self._logger = configure_llm_logger("app.llm.story_engine")
 
     def _build_system_prompt(
         self,
@@ -47,5 +53,8 @@ class StoryEngineClient:
             consequence=consequence,
         )
         messages = [SystemMessage(system_prompt), HumanMessage(user_message)]
+        log_prompt_messages(self._logger, messages)
+
         response = await self._model.ainvoke(messages)
+        log_response_content(self._logger, response.content)
         return response.content

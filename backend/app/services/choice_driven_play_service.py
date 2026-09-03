@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from app.exceptions import NoStepsError
 from app.llm.choice_engine_client import ChoiceEngineClient
@@ -10,6 +11,8 @@ from app.repositories.character_repository import CharacterRepository
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
 
 _PARAGRAPH_WINDOW = 10
+
+logger = logging.getLogger(__name__)
 
 
 class ChoiceDrivenPlayService:
@@ -36,6 +39,7 @@ class ChoiceDrivenPlayService:
         return meta, steps
 
     async def generate_choices(self, story_id: str) -> list[Choice]:
+        logger.info(f"Generating choices story_id={story_id}")
         meta, steps = await asyncio.gather(
             self._repo.get_story_meta(story_id),
             self._repo.get_history(story_id),
@@ -70,6 +74,7 @@ class ChoiceDrivenPlayService:
         return choices
 
     async def regenerate_choices(self, story_id: str) -> list[Choice]:
+        logger.info(f"Regenerating choices story_id={story_id}")
         steps = await self._repo.get_history(story_id)
 
         if not steps:
@@ -79,6 +84,7 @@ class ChoiceDrivenPlayService:
         return await self.generate_choices(story_id)
 
     async def select_choice(self, story_id: str, choice: Choice) -> Step:
+        logger.info(f"Selecting choice story_id={story_id}")
         meta, steps = await asyncio.gather(
             self._repo.get_story_meta(story_id),
             self._repo.get_history(story_id),
@@ -112,6 +118,7 @@ class ChoiceDrivenPlayService:
         return new_step
 
     async def edit_step_text(self, story_id: str, step_id: int, text: str) -> Step:
+        logger.info(f"Editing step text story_id={story_id} step_id={step_id}")
         await self._repo.update_step_text(story_id, step_id, text)
         steps = await self._repo.get_history(story_id)
         target = next((s for s in steps if s.id == step_id), None)
@@ -120,6 +127,7 @@ class ChoiceDrivenPlayService:
         return target
 
     async def return_to_step(self, story_id: str, step_id: int) -> int:
+        logger.info(f"Returning to step story_id={story_id} step_id={step_id}")
         await self._repo.truncate_from(story_id, step_id)
         return step_id
 

@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 from app.exceptions import SceneFinishedError
 from app.llm.summarize_llm_client import SummarizeLLMClient
 from app.repositories.scene_repository import SceneRepository
 
 _MAX_CONTEXT_ITEMS = 50
+
+logger = logging.getLogger(__name__)
 
 
 class SceneSummarizeService:
@@ -17,6 +21,7 @@ class SceneSummarizeService:
         self._llm_client = llm_client
 
     async def summarize(self, story_id: str, scene_id: int) -> list[str]:
+        logger.info(f"Summarizing scene story_id={story_id} scene_id={scene_id}")
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
 
         if metadata.finished:
