@@ -26,6 +26,10 @@ def get_llm_log_level() -> int:
     return _parse_log_level("LLM_LOG_LEVEL")
 
 
+def get_app_log_level() -> int:
+    return _parse_log_level("LOG_LEVEL")
+
+
 def should_log_llm_prompts() -> bool:
     return _parse_bool_env("LLM_LOG_PROMPT", default=False)
 
