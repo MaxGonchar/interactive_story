@@ -9,13 +9,14 @@ from starlette.responses import JSONResponse
 
 from app.api.routers import scenes, stories, choice_driven, characters
 from app.exceptions import DomainError, LLMError
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
-)
+from app.llm.logging_config import get_app_log_level
 
 load_dotenv()
+
+logging.basicConfig(
+    level=get_app_log_level(),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 
 _testing_enabled = os.getenv("TESTING", "").strip().lower() in {"1", "true", "yes", "on"}
 
