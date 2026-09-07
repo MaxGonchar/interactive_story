@@ -1,0 +1,9 @@
+models:
+  gpt-4o-mini:
+    name: "GPT-4o-mini"
+    providerModelID: "gpt-4o-mini"
+    default: true
+  llama-3.3-70b:
+    name: "Llama 3.3 70B"
+    providerModelID: "llama-3.3-70b"
+    default: false

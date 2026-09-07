@@ -72,6 +72,17 @@ class Message(BaseModel):
     content: str
 
 
+class ModelMetadata(BaseModel):
+    id: str
+    name: str
+    provider_model_id: str
+
+
+class ModelRegistry(BaseModel):
+    models: dict[str, ModelMetadata]
+    default_model_id: str
+
+
 class Choice(BaseModel):
     action: str
     consequence: str

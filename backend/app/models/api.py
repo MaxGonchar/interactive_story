@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.domain import StoryType
 
@@ -48,6 +48,27 @@ class CharacterListItem(BaseModel):
 
 class CharacterListResponse(BaseModel):
     data: list[CharacterListItem]
+
+
+# ---------------------------------------------------------------------------
+# Model registry — GET /api/models
+# ---------------------------------------------------------------------------
+
+
+class ModelResponse(BaseModel):
+    name: str
+    provider_model_id: str = Field(alias="providerModelID")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class ModelRegistryData(BaseModel):
+    models: dict[str, ModelResponse]
+    default_model_id: str
+
+
+class ModelRegistryResponse(BaseModel):
+    data: ModelRegistryData
 
 
 # ---------------------------------------------------------------------------
