@@ -6,6 +6,7 @@ from pathlib import Path
 # parents: [0]=utils  [1]=app  [2]=backend  [3]=repo_root
 _BACKEND_DIR = Path(__file__).resolve().parents[2]
 _DEFAULT_DATA_ROOT = Path(__file__).resolve().parents[3] / "data-test"
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 _STORIES_DIR = "stories"
 _CHARACTERS_DIR = "characters"
@@ -16,6 +17,7 @@ _STORY_FILE = "story.yaml"
 _METADATA_FILE = "meta.yaml"
 _MESSAGES_FILE = "messages.yaml"
 _HISTORY_FILE = "history.yaml"
+_MODEL_REGISTRY_FILE = "models.yaml"
 
 
 def _data_root() -> Path:
@@ -59,3 +61,11 @@ def scene_messages_file(story_id: str, scene_id: int) -> Path:
 
 def history_file(story_id: str) -> Path:
     return _data_root() / _STORIES_DIR / story_id / _HISTORY_FILE
+
+
+def model_registry_file() -> Path:
+    raw = os.environ.get("MODEL_REGISTRY_PATH")
+    if raw is None:
+        return _REPO_ROOT / "data" / _MODEL_REGISTRY_FILE
+    path = Path(raw)
+    return path if path.is_absolute() else (_REPO_ROOT / path).resolve()

@@ -7,7 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
-from app.api.routers import scenes, stories, choice_driven, characters
+from app.api.routers import scenes, stories, choice_driven, characters, models
 from app.exceptions import DomainError, LLMError
 from app.llm.logging_config import get_app_log_level
 
@@ -47,6 +47,7 @@ app.include_router(stories.router, prefix="/api")
 app.include_router(scenes.router, prefix="/api")
 app.include_router(choice_driven.router, prefix="/api")
 app.include_router(characters.router, prefix="/api")
+app.include_router(models.router, prefix="/api")
 
 
 @app.exception_handler(DomainError)

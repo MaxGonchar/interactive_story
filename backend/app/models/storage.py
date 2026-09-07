@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.domain import StoryType
 
@@ -61,6 +61,23 @@ class MessageYaml(BaseModel):
 
 class MessagesYaml(BaseModel):
     messages: list[MessageYaml]
+
+
+# ---------------------------------------------------------------------------
+# Model registry — data/models.yaml
+# ---------------------------------------------------------------------------
+
+
+class ModelYaml(BaseModel):
+    name: str = Field(min_length=1)
+    provider_model_id: str = Field(alias="providerModelID", min_length=1)
+    default: bool = False
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class ModelRegistryYaml(BaseModel):
+    models: dict[str, ModelYaml]
 
 
 # ---------------------------------------------------------------------------

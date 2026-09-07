@@ -60,5 +60,13 @@ class NotFoundError(DomainError):
         super().__init__(message)
 
 
+class ModelRegistryError(DomainError):
+    """Raised when the backend model registry is missing or invalid."""
+
+    http_status = 500
+    error_code = "internal_error"
+    message = "Model registry configuration is invalid"
+
+
 class LLMError(Exception):
     """Raised when an LLM/upstream API call fails."""

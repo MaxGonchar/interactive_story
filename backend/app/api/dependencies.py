@@ -12,6 +12,7 @@ from app.repositories.character_repository import CharacterRepository
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
+from app.repositories.model_registry_repository import ModelRegistryRepository
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 from app.llm.summarize_llm_client import SummarizeLLMClient
 from app.services.scene_creation_service import SceneCreationService
@@ -21,6 +22,7 @@ from app.services.scene_play_service import ScenePlayService
 from app.services.scene_query_service import SceneQueryService
 from app.services.scene_summarize_service import SceneSummarizeService
 from app.services.story_query_service import StoryQueryService
+from app.services.model_registry_service import ModelRegistryService
 
 _DEFAULT_MODEL = "llama-3.3-70b"
 
@@ -39,6 +41,16 @@ def get_summary_model() -> VeniceAIChatModel:
 
 def get_story_repository() -> StoryRepository:
     return StoryRepository()
+
+
+def get_model_registry_repository() -> ModelRegistryRepository:
+    return ModelRegistryRepository()
+
+
+def get_model_registry_service(
+    repo: ModelRegistryRepository = Depends(get_model_registry_repository),
+) -> ModelRegistryService:
+    return ModelRegistryService(repo)
 
 
 def get_scene_repository() -> SceneRepository:
