@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFinishedError
-from app.models.domain import CharacterCard, Message
+from app.models.domain import CharacterCard, LLMData, Message, ModelMetadata, ModelRegistry
 from app.services.scene_play_service import ScenePlayService
 from tests.factories import make_scene_metadata
 
@@ -33,7 +33,25 @@ def make_service(
     else:
         llm_client.invoke.return_value = llm_reply
 
-    service = ScenePlayService(scene_repo, character_repo, llm_client)
+    llm_client_factory = MagicMock(return_value=llm_client)
+    registry_service = MagicMock()
+    registry_service.get_registry = AsyncMock(
+        return_value=ModelRegistry(
+            models={
+                "default-model": ModelMetadata(
+                    id="default-model", name="Default", provider_model_id="provider-default"
+                ),
+                "alternate-model": ModelMetadata(
+                    id="alternate-model", name="Alternate", provider_model_id="provider-alternate"
+                ),
+            },
+            default_model_id="default-model",
+        )
+    )
+
+    service = ScenePlayService(
+        scene_repo, character_repo, llm_client_factory, registry_service
+    )
     return service, scene_repo, character_repo, llm_client
 
 
@@ -186,6 +204,7 @@ async def test_play_returns_both_messages():
     assert user_msg.content == "Hello"
     assert assistant_msg.role == "assistant"
     assert assistant_msg.content == "Hello back!"
+    assert assistant_msg.llm_data == LLMData(model_id="default-model")
     scene_repo.add_messages.assert_awaited_once_with(STORY_ID, SCENE_ID, [user_msg, assistant_msg])
 
 
@@ -224,6 +243,46 @@ async def test_play_assigns_correct_message_ids():
 
 
 @pytest.mark.asyncio
+async def test_play_uses_requested_model_and_provider_model():
+    service, _, _, llm_client = make_service()
+
+    _, assistant_msg = await service.play(
+        STORY_ID, SCENE_ID, "New input", model_id="alternate-model"
+    )
+
+    assert assistant_msg.llm_data == LLMData(model_id="alternate-model")
+    llm_client_factory = service._llm_client_factory
+    llm_client_factory.assert_called_once_with("provider-alternate")
+
+
+@pytest.mark.asyncio
+async def test_play_falls_back_to_latest_assistant_model():
+    existing = [
+        Message(id=1, role="assistant", content="Welcome", llm_data=LLMData(model_id="alternate-model")),
+    ]
+    service, _, _, _ = make_service(messages=existing)
+
+    _, assistant_msg = await service.play(STORY_ID, SCENE_ID, "Continue")
+
+    assert assistant_msg.llm_data == LLMData(model_id="alternate-model")
+    service._llm_client_factory.assert_called_once_with("provider-alternate")
+
+
+@pytest.mark.asyncio
+async def test_play_rejects_unknown_model_before_llm_invocation():
+    service, scene_repo, _, llm_client = make_service()
+
+    from app.exceptions import InvalidModelError
+
+    with pytest.raises(InvalidModelError):
+        await service.play(STORY_ID, SCENE_ID, "Hello", model_id="missing-model")
+
+    service._llm_client_factory.assert_not_called()
+    llm_client.invoke.assert_not_awaited()
+    scene_repo.add_messages.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_regenerate_replaces_last_assistant_message():
     user_msg = Message(id=1, role="user", content="Hi")
     assistant_msg = Message(id=2, role="assistant", content="Old reply")
@@ -232,7 +291,13 @@ async def test_regenerate_replaces_last_assistant_message():
 
     result = await service.regenerate(STORY_ID, SCENE_ID)
 
-    scene_repo.update_message.assert_awaited_once_with(STORY_ID, SCENE_ID, 2, "New reply")
+    scene_repo.update_message.assert_awaited_once_with(
+        STORY_ID,
+        SCENE_ID,
+        2,
+        "New reply",
+        llm_data=LLMData(model_id="default-model"),
+    )
     assert result.id == 2
     assert result.role == "assistant"
     assert result.content == "New reply"

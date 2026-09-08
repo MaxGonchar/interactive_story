@@ -28,6 +28,10 @@ class SceneDescriptionYaml(BaseModel):
     writing_style: str
 
 
+class LLMDataYaml(BaseModel):
+    model_id: str
+
+
 class SceneMetadataYaml(BaseModel):
     finished: bool = False
     character_ids: list[str]
@@ -57,6 +61,7 @@ class MessageYaml(BaseModel):
     id: int
     role: Literal["user", "assistant"]
     content: str
+    llm_data: LLMDataYaml | None = None
 
 
 class MessagesYaml(BaseModel):

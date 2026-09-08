@@ -1,4 +1,6 @@
 
+from collections.abc import Callable
+
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
@@ -9,6 +11,9 @@ from app.llm.logging_config import (
 )
 from app.llm.models import SceneContext
 from app.llm.prompt_builder import PromptBuilder
+
+
+SceneLLMClientFactory = Callable[[str], "SceneLLMClient"]
 
 
 class SceneLLMClient:

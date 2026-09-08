@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.exceptions import NarratorModeNotSupportedError, NotFoundError
-from app.models.domain import Message, SceneDescription, SceneMetadata
+from app.models.domain import LLMData, Message, SceneDescription, SceneMetadata
 from app.models.storage import MessagesYaml, SceneMetadataYaml, StoryYaml
 from app.utils import file_paths, yaml_storage
 from app.utils.atomic_write import atomic_write
@@ -50,7 +50,17 @@ class SceneRepository:
 
         parsed = MessagesYaml(**data)
         return sorted(
-            [Message(id=m.id, role=m.role, content=m.content) for m in parsed.messages],
+            [
+                Message(
+                    id=m.id,
+                    role=m.role,
+                    content=m.content,
+                    llm_data=LLMData(model_id=m.llm_data.model_id)
+                    if m.llm_data is not None
+                    else None,
+                )
+                for m in parsed.messages
+            ],
             key=lambda m: m.id,
         )
 
@@ -62,14 +72,21 @@ class SceneRepository:
         await self._save_messages(story_id, scene_id, messages)
 
     async def update_message(
-        self, story_id: str, scene_id: int, message_id: int, new_content: str
+        self,
+        story_id: str,
+        scene_id: int,
+        message_id: int,
+        new_content: str,
+        llm_data: LLMData | None = None,
     ) -> Message:
         messages = await self.get_messages(story_id, scene_id)
         index = next((i for i, m in enumerate(messages) if m.id == message_id), None)
         if index is None:
             raise NotFoundError(f"Message '{message_id}' not found")
 
-        updated = Message(id=messages[index].id, role=messages[index].role, content=new_content)
+        updated = messages[index].model_copy(update={"content": new_content})
+        if llm_data is not None:
+            updated = updated.model_copy(update={"llm_data": llm_data})
         messages[index] = updated
         await self._save_messages(story_id, scene_id, messages)
         return updated
@@ -119,7 +136,7 @@ class SceneRepository:
     async def _save_messages(
         self, story_id: str, scene_id: int, messages: list[Message]
     ) -> None:
-        data = {"messages": [m.model_dump() for m in messages]}
+        data = {"messages": [m.model_dump(exclude_none=True) for m in messages]}
         await atomic_write(
             file_paths.scene_messages_file(story_id, scene_id),
             yaml_storage.dump_yaml(data),

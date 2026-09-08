@@ -5,7 +5,7 @@ import os
 from fastapi import Depends
 
 from app.llm.choice_engine_client import ChoiceEngineClient
-from app.llm.scene_llm_client import SceneLLMClient
+from app.llm.scene_llm_client import SceneLLMClient, SceneLLMClientFactory
 from app.llm.story_engine_client import StoryEngineClient
 from app.llm.venice_ai import VeniceAIChatModel
 from app.repositories.character_repository import CharacterRepository
@@ -61,6 +61,17 @@ def get_character_repository() -> CharacterRepository:
     return CharacterRepository()
 
 
+def get_scene_llm_client_factory() -> SceneLLMClientFactory:
+    api_key = os.environ["VENICE_API_KEY"]
+
+    def create_client(provider_model_id: str) -> SceneLLMClient:
+        return SceneLLMClient(
+            VeniceAIChatModel(model=provider_model_id, api_key=api_key)
+        )
+
+    return create_client
+
+
 def get_scene_llm_client(
     model: VeniceAIChatModel = Depends(get_venice_model),
 ) -> SceneLLMClient:
@@ -83,9 +94,15 @@ def get_scene_query_service(
 def get_scene_play_service(
     scene_repo: SceneRepository = Depends(get_scene_repository),
     character_repo: CharacterRepository = Depends(get_character_repository),
-    llm_client: SceneLLMClient = Depends(get_scene_llm_client),
+    llm_client_factory: SceneLLMClientFactory = Depends(get_scene_llm_client_factory),
+    model_registry_service: ModelRegistryService = Depends(get_model_registry_service),
 ) -> ScenePlayService:
-    return ScenePlayService(scene_repo, character_repo, llm_client)
+    return ScenePlayService(
+        scene_repo,
+        character_repo,
+        llm_client_factory,
+        model_registry_service,
+    )
 
 
 def get_scene_message_service(

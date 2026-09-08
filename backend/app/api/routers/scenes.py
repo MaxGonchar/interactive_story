@@ -32,6 +32,13 @@ from app.services.scene_summarize_service import SceneSummarizeService
 router = APIRouter(prefix="/stories", tags=["scenes"])
 
 
+def _message_data(message):
+    data = {"id": message.id, "role": message.role, "content": message.content}
+    if message.llm_data is not None:
+        data["llm_data"] = {"model_id": message.llm_data.model_id}
+    return data
+
+
 @router.post(
     "/{story_id}/scenes",
     response_model=CreateSceneResponse,
@@ -74,7 +81,7 @@ async def get_scene(
             },
             "scene_summary": metadata.scene_summary or None,
             "context": metadata.context,
-            "messages": [{"id": m.id, "role": m.role, "content": m.content} for m in messages],
+            "messages": [_message_data(m) for m in messages],
         }
     }
 
@@ -82,6 +89,7 @@ async def get_scene(
 @router.post(
     "/{story_id}/scenes/{scene_id}/play",
     response_model=PlayResponse,
+    response_model_exclude_none=True,
 )
 async def play(
     story_id: str,
@@ -89,11 +97,13 @@ async def play(
     request: PlayRequest,
     svc: ScenePlayService = Depends(get_scene_play_service),
 ):
-    user_msg, assistant_msg = await svc.play(story_id, scene_id, request.content)
+    user_msg, assistant_msg = await svc.play(
+        story_id, scene_id, request.content, request.model_id
+    )
     return {
         "data": {
-            "user_message": {"id": user_msg.id, "role": user_msg.role, "content": user_msg.content},
-            "assistant_message": {"id": assistant_msg.id, "role": assistant_msg.role, "content": assistant_msg.content},
+            "user_message": _message_data(user_msg),
+            "assistant_message": _message_data(assistant_msg),
         }
     }
 
@@ -101,6 +111,7 @@ async def play(
 @router.put(
     "/{story_id}/scenes/{scene_id}/messages/{message_id}",
     response_model=UpdateMessageResponse,
+    response_model_exclude_none=True,
 )
 async def edit_message(
     story_id: str,
@@ -163,6 +174,7 @@ async def finish_scene(
 @router.post(
     "/{story_id}/scenes/{scene_id}/regenerate",
     response_model=RegenerateResponse,
+    response_model_exclude_none=True,
 )
 async def regenerate_assistant_message(
     story_id: str,
@@ -170,4 +182,4 @@ async def regenerate_assistant_message(
     svc: ScenePlayService = Depends(get_scene_play_service),
 ):
     assistant_msg = await svc.regenerate(story_id, scene_id)
-    return {"data": {"assistant_message": {"id": assistant_msg.id, "role": assistant_msg.role, "content": assistant_msg.content}}}
+    return {"data": {"assistant_message": _message_data(assistant_msg)}}

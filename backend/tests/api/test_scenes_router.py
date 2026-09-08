@@ -367,7 +367,7 @@ def test_get_scene_success():
             },
             "scene_summary": None,
             "context": ["Previously...", "And then..."],
-            "messages": [{"id": 2, "role": "assistant", "content": "Hi there!"}],
+            "messages": [{"id": 2, "role": "assistant", "content": "Hi there!", "llm_data": None}],
         }
     }
 
