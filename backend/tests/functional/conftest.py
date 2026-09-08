@@ -6,8 +6,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.dependencies import get_scene_llm_client
+from app.api.dependencies import (
+  get_model_registry_service,
+  get_scene_llm_client_factory,
+)
 from app.main import app
+from app.models.domain import ModelMetadata, ModelRegistry
 
 _STORY_ID = "test-story-1"
 _SCENE_ID = 1
@@ -65,6 +69,18 @@ def client(tmp_path, monkeypatch):
 
     mock_llm = MagicMock()
     mock_llm.invoke = AsyncMock(return_value="Assistant reply")
-    app.dependency_overrides[get_scene_llm_client] = lambda: mock_llm
+    registry_service = MagicMock()
+    registry_service.get_registry = AsyncMock(
+      return_value=ModelRegistry(
+        models={
+          "test-model": ModelMetadata(
+            id="test-model", name="Test", provider_model_id="provider-test"
+          )
+        },
+        default_model_id="test-model",
+      )
+    )
+    app.dependency_overrides[get_scene_llm_client_factory] = lambda: lambda _: mock_llm
+    app.dependency_overrides[get_model_registry_service] = lambda: registry_service
 
     return TestClient(app)

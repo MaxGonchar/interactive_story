@@ -3,12 +3,18 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFinishedError
+from app.exceptions import (
+    InvalidModelError,
+    NoAssistantMessageError,
+    NoUserMessageError,
+    SceneFinishedError,
+)
 from app.llm.models import SceneContext
-from app.llm.scene_llm_client import SceneLLMClient
-from app.models.domain import Message
+from app.llm.scene_llm_client import SceneLLMClientFactory
+from app.models.domain import LLMData, Message, ModelMetadata, ModelRegistry
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.scene_repository import SceneRepository
+from app.services.model_registry_service import ModelRegistryService
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +24,20 @@ class ScenePlayService:
         self,
         scene_repo: SceneRepository,
         character_repo: CharacterRepository,
-        llm_client: SceneLLMClient,
+        llm_client_factory: SceneLLMClientFactory,
+        model_registry_service: ModelRegistryService,
     ) -> None:
         self._scene_repo = scene_repo
         self._character_repo = character_repo
-        self._llm_client = llm_client
+        self._llm_client_factory = llm_client_factory
+        self._model_registry_service = model_registry_service
 
     async def play(
-        self, story_id: str, scene_id: int, user_content: str
+        self,
+        story_id: str,
+        scene_id: int,
+        user_content: str,
+        model_id: str | None = None,
     ) -> tuple[Message, Message]:
         logger.info(f"Playing scene story_id={story_id} scene_id={scene_id}")
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
@@ -37,6 +49,8 @@ class ScenePlayService:
             self._character_repo.get_characters(story_id, metadata.character_ids),
             self._scene_repo.get_messages(story_id, scene_id),
         )
+        registry = await self._model_registry_service.get_registry()
+        selected_model = self._resolve_model(registry, messages, model_id)
 
         user_id = max((m.id for m in messages), default=0) + 1
         assistant_id = user_id + 1
@@ -57,10 +71,16 @@ class ScenePlayService:
             context_data=context_data,
         )
 
-        reply = await self._llm_client.invoke(context, user_content)
+        llm_client = self._llm_client_factory(selected_model.provider_model_id)
+        reply = await llm_client.invoke(context, user_content)
 
         user_msg = Message(id=user_id, role="user", content=user_content)
-        assistant_msg = Message(id=assistant_id, role="assistant", content=reply)
+        assistant_msg = Message(
+            id=assistant_id,
+            role="assistant",
+            content=reply,
+            llm_data=LLMData(model_id=selected_model.id),
+        )
 
         await self._scene_repo.add_messages(story_id, scene_id, [user_msg, assistant_msg])
 
@@ -85,6 +105,9 @@ class ScenePlayService:
         else:
             raise NoUserMessageError()
 
+        registry = await self._model_registry_service.get_registry()
+        selected_model = self._resolve_model(registry, messages)
+
         context_data = metadata.context or []
 
         characters = await self._character_repo.get_characters(story_id, metadata.character_ids)
@@ -101,10 +124,34 @@ class ScenePlayService:
             context_data=context_data,
         )
 
-        reply = await self._llm_client.invoke(context, user_content)
+        llm_client = self._llm_client_factory(selected_model.provider_model_id)
+        reply = await llm_client.invoke(context, user_content)
 
         last_assistant_msg = messages[-1]
         updated_msg = await self._scene_repo.update_message(
-            story_id, scene_id, last_assistant_msg.id, reply
+            story_id,
+            scene_id,
+            last_assistant_msg.id,
+            reply,
+            llm_data=LLMData(model_id=selected_model.id),
         )
         return updated_msg
+
+    @staticmethod
+    def _resolve_model(
+        registry: ModelRegistry,
+        messages: list[Message],
+        requested_model_id: str | None = None,
+    ) -> ModelMetadata:
+        if requested_model_id is not None:
+            try:
+                return registry.models[requested_model_id]
+            except KeyError as exc:
+                raise InvalidModelError() from exc
+
+        default_model = registry.models[registry.default_model_id]
+        for message in reversed(messages):
+            if message.role == "assistant" and message.llm_data is not None:
+                return registry.models.get(message.llm_data.model_id, default_model)
+
+        return default_model

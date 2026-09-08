@@ -55,6 +55,10 @@ class SceneDescription(BaseModel):
     writing_style: str
 
 
+class LLMData(BaseModel):
+    model_id: str
+
+
 class SceneMetadata(BaseModel):
     id: int
     story_id: str
@@ -70,6 +74,7 @@ class Message(BaseModel):
     id: int
     role: Literal["user", "assistant"]
     content: str
+    llm_data: LLMData | None = None
 
 
 class ModelMetadata(BaseModel):

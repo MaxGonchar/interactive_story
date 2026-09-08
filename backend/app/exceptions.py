@@ -68,5 +68,13 @@ class ModelRegistryError(DomainError):
     message = "Model registry configuration is invalid"
 
 
+class InvalidModelError(DomainError):
+    """Raised when a requested model is not in the backend registry."""
+
+    http_status = 422
+    error_code = "validation_error"
+    message = "Requested model is not available"
+
+
 class LLMError(Exception):
     """Raised when an LLM/upstream API call fails."""

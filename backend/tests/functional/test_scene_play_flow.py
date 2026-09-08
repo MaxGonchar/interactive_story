@@ -19,7 +19,12 @@ def test_play_returns_user_and_assistant_messages(client):
     assert response.status_code == 200
     data = response.json()["data"]
     assert data["user_message"] == {"id": 1, "role": "user", "content": "Hello"}
-    assert data["assistant_message"] == {"id": 2, "role": "assistant", "content": "Assistant reply"}
+    assert data["assistant_message"] == {
+        "id": 2,
+        "role": "assistant",
+        "content": "Assistant reply",
+        "llm_data": {"model_id": "test-model"},
+    }
 
 
 # --- GET /scenes/{scene_id} ---
@@ -32,8 +37,13 @@ def test_play_messages_persisted_in_scene(client):
 
     assert response.status_code == 200
     messages = response.json()["data"]["messages"]
-    assert {"id": 1, "role": "user", "content": "Hello"} in messages
-    assert {"id": 2, "role": "assistant", "content": "Assistant reply"} in messages
+    assert {"id": 1, "role": "user", "content": "Hello", "llm_data": None} in messages
+    assert {
+        "id": 2,
+        "role": "assistant",
+        "content": "Assistant reply",
+        "llm_data": {"model_id": "test-model"},
+    } in messages
 
 
 def test_narrator_scene_play_persists_messages(client):
@@ -56,12 +66,23 @@ def test_narrator_scene_play_persists_messages(client):
                 "id": 2,
                 "role": "assistant",
                 "content": "Assistant reply",
+                "llm_data": {"model_id": "test-model"},
             },
         }
     }
 
     scene_response = client.get(_SCENE_URL)
     assert scene_response.json()["data"]["messages"] == [
-        {"id": 1, "role": "user", "content": "Have the villain reveal the map."},
-        {"id": 2, "role": "assistant", "content": "Assistant reply"},
+        {
+            "id": 1,
+            "role": "user",
+            "content": "Have the villain reveal the map.",
+            "llm_data": None,
+        },
+        {
+            "id": 2,
+            "role": "assistant",
+            "content": "Assistant reply",
+            "llm_data": {"model_id": "test-model"},
+        },
     ]

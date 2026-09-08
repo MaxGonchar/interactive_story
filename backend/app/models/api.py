@@ -102,10 +102,15 @@ class SceneDescriptionModel(BaseModel):
     writing_style: str
 
 
+class LLMDataModel(BaseModel):
+    model_id: str
+
+
 class MessageModel(BaseModel):
     id: int
     role: str
     content: str
+    llm_data: LLMDataModel | None = None
 
 
 class SceneDetail(BaseModel):
@@ -128,6 +133,7 @@ class SceneDetailResponse(BaseModel):
 
 class PlayRequest(BaseModel):
     content: str = Field(min_length=1, max_length=4000)
+    model_id: str | None = None
 
 
 class PlayData(BaseModel):
