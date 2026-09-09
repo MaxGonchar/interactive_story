@@ -13,11 +13,11 @@ export async function getScene(storyId, sceneId) {
   return apiFetch(`/api/stories/${storyId}/scenes/${sceneId}`);
 }
 
-export async function playScene(storyId, sceneId, content) {
+export async function playScene(storyId, sceneId, content, modelId) {
   return apiFetch(`/api/stories/${storyId}/scenes/${sceneId}/play`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, model_id: modelId }),
   });
 }
 
