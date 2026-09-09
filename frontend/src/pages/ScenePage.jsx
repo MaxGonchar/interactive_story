@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getScene, playScene, finishScene, editMessage, deleteMessage, regenerateLastAssistantMessage } from '../api/scenes'
+import { getModels } from '../api/models'
 import SceneHeader from '../components/SceneHeader'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
@@ -11,6 +12,8 @@ function ScenePage() {
   const messageEndRef = useRef(null)
   const { storyId, sceneId } = useParams()
   const [scene, setScene] = useState(null)
+  const [models, setModels] = useState([])
+  const [selectedModelId, setSelectedModelId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -20,8 +23,20 @@ function ScenePage() {
   const [regeneratingMessageId, setRegeneratingMessageId] = useState(null)
 
   useEffect(() => {
-    getScene(storyId, sceneId)
-      .then((response) => setScene(response.data))
+    Promise.all([getScene(storyId, sceneId), getModels()])
+      .then(([sceneResponse, modelsResponse]) => {
+        const loadedScene = sceneResponse.data
+        const registry = modelsResponse.data
+        const latestAssistantMessage = [...loadedScene.messages]
+          .reverse()
+          .find((message) => message.role === 'assistant' && message.llm_data?.model_id)
+
+        setScene(loadedScene)
+        setModels(
+          Object.entries(registry.models).map(([id, model]) => ({ id, ...model }))
+        )
+        setSelectedModelId(latestAssistantMessage?.llm_data.model_id ?? registry.default_model_id)
+      })
       .catch((err) => setError(err.message ?? 'Failed to load scene'))
       .finally(() => setLoading(false))
   }, [storyId, sceneId])
@@ -35,12 +50,13 @@ function ScenePage() {
     setBusy(true)
     setSending(true)
     try {
-      const response = await playScene(storyId, sceneId, content)
+      const response = await playScene(storyId, sceneId, content, selectedModelId)
       const { user_message, assistant_message } = response.data
       setScene((prev) => ({
         ...prev,
         messages: [...prev.messages, user_message, assistant_message],
       }))
+      setSelectedModelId(assistant_message.llm_data.model_id)
     } catch (err) {
       setOpError(err.message ?? 'Failed to send message')
       throw err
@@ -146,7 +162,13 @@ function ScenePage() {
 
   return (
     <div className="scene-page scene-page--fixed-frame">
-      <SceneHeader scene={scene} />
+      <SceneHeader
+        scene={scene}
+        models={models}
+        selectedModelId={selectedModelId}
+        onModelChange={setSelectedModelId}
+        disabled={scene.finished || busy}
+      />
       <div className="scene-page__messages" role="log" aria-label="Scene messages">
         <MessageList
           className="scene-message-list"

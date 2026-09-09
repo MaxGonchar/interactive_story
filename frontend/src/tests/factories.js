@@ -23,6 +23,24 @@ export function makeScene(overrides = {}) {
   }
 }
 
+export function makeModel(overrides = {}) {
+  return {
+    name: 'Test Model',
+    providerModelID: 'test-provider-model',
+    ...overrides,
+  }
+}
+
+export function makeModelRegistry(overrides = {}) {
+  const modelId = uid()
+  const model = makeModel()
+  return {
+    models: { [modelId]: model },
+    default_model_id: modelId,
+    ...overrides,
+  }
+}
+
 export function makeStory(overrides = {}) {
   return {
     id: uid(),

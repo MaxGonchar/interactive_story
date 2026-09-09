@@ -53,20 +53,20 @@ describe('api/scenes', () => {
   describe('playScene', () => {
     it('calls correct URL with POST and correct JSON body', async () => {
       vi.stubGlobal('fetch', mockFetchOk({}))
-      await playScene('story-1', 'scene-1', 'hello')
+      await playScene('story-1', 'scene-1', 'hello', 'model-1')
       expect(fetch).toHaveBeenCalledWith(
         `${BASE_URL}/api/stories/story-1/scenes/scene-1/play`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: 'hello' }),
+          body: JSON.stringify({ content: 'hello', model_id: 'model-1' }),
         }
       )
     })
 
     it('throws with API error message on non-ok response', async () => {
       vi.stubGlobal('fetch', mockFetchError('Bad request'))
-      await expect(playScene('story-1', 'scene-1', 'hello')).rejects.toThrow('Bad request')
+      await expect(playScene('story-1', 'scene-1', 'hello', 'model-1')).rejects.toThrow('Bad request')
     })
   })
 

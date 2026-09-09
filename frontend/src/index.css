@@ -264,6 +264,27 @@ button {
   border-bottom: var(--border-width) solid var(--border);
 }
 
+.scene-header__model-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+
+.scene-header__model-label {
+  color: var(--text);
+  font-size: var(--font-size-error);
+}
+
+.scene-header__model-select {
+  font: inherit;
+  color: var(--text-h);
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+}
+
 .scene-page {
   flex: 1;
   min-height: 0;
