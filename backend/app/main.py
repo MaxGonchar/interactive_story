@@ -52,8 +52,9 @@ app.include_router(models.router, prefix="/api")
 
 @app.exception_handler(DomainError)
 async def domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
-    logging.getLogger("app").warning(
-        "Domain error %s: %s %s", exc.error_code, request.method, request.url
+    logging.getLogger("app").error(
+        "Domain error %s: %s %s", exc.error_code, request.method, request.url,
+        exc_info=exc,
     )
     return JSONResponse(
         status_code=exc.http_status,
