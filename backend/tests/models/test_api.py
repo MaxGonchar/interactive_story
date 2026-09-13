@@ -101,6 +101,7 @@ VALID_CREATE_SCENE = dict(
     general_scene_guide="A tense encounter",
     writing_style="noir",
     first_message="Hello, stranger.",
+    model_id="model-a",
 )
 
 
@@ -124,6 +125,7 @@ def test_create_scene_request_character_ids_defaults_to_empty():
         general_scene_guide="Guide",
         writing_style="style",
         first_message="Hello",
+        model_id="model-a",
     )
     assert req.character_ids == []
 
@@ -137,6 +139,7 @@ def test_create_scene_request_user_character_id_in_character_ids_rejected():
             general_scene_guide="Guide",
             writing_style="style",
             first_message="Hello",
+            model_id="model-a",
         )
 
 
@@ -148,6 +151,7 @@ def test_create_scene_request_null_user_character_id_skips_membership_validation
         general_scene_guide="Guide",
         writing_style="style",
         first_message="Hello",
+        model_id="model-a",
     )
 
     assert req.character_ids == ["char-1", "char-2"]

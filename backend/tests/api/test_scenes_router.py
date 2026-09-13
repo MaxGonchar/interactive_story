@@ -11,7 +11,7 @@ from app.api.dependencies import (
     get_scene_query_service,
     get_scene_summarize_service,
 )
-from app.exceptions import ActiveSceneExistsError, LLMError, NoAssistantMessageError, NoUserMessageError, NotFoundError, SceneFinishedError
+from app.exceptions import ActiveSceneExistsError, InvalidModelError, LLMError, NoAssistantMessageError, NoUserMessageError, NotFoundError, SceneFinishedError
 from app.main import app
 from app.models.domain import SceneDescription, SceneMetadata
 from tests.factories import (
@@ -33,6 +33,7 @@ _VALID_CREATE_PAYLOAD = {
     "general_scene_guide": "Build tension.",
     "writing_style": "Cinematic.",
     "first_message": "You enter a dark corridor.",
+    "model_id": "model-a",
 }
 
 _SCENE_METADATA = SceneMetadata(
@@ -299,6 +300,7 @@ def test_create_scene_success():
 
     assert resp.status_code == 201
     assert resp.json() == {"data": {"id": 3, "finished": False}}
+    assert svc.create.await_args.kwargs["model_id"] == "model-a"
 
 
 def test_create_scene_accepts_null_user_character_id():
@@ -338,6 +340,34 @@ def test_create_scene_user_character_id_in_character_ids_returns_422():
     resp = client.post(
         f"/api/stories/{_STORY_ID}/scenes",
         json={**_VALID_CREATE_PAYLOAD, "character_ids": ["hero"]},
+    )
+
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+
+
+def test_create_scene_missing_model_id_returns_422():
+    svc = make_creation_service()
+    app.dependency_overrides[get_scene_creation_service] = lambda: svc
+
+    client = TestClient(app)
+    resp = client.post(
+        f"/api/stories/{_STORY_ID}/scenes",
+        json={key: value for key, value in _VALID_CREATE_PAYLOAD.items() if key != "model_id"},
+    )
+
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+
+
+def test_create_scene_unknown_model_returns_422():
+    svc = make_creation_service(side_effect=InvalidModelError())
+    app.dependency_overrides[get_scene_creation_service] = lambda: svc
+
+    client = TestClient(app)
+    resp = client.post(
+        f"/api/stories/{_STORY_ID}/scenes",
+        json={**_VALID_CREATE_PAYLOAD, "model_id": "unknown"},
     )
 
     assert resp.status_code == 422

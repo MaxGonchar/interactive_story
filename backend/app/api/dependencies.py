@@ -120,8 +120,9 @@ def get_scene_lifecycle_service(
 def get_scene_creation_service(
     story_repo: StoryRepository = Depends(get_story_repository),
     scene_repo: SceneRepository = Depends(get_scene_repository),
+    model_registry_service: ModelRegistryService = Depends(get_model_registry_service),
 ) -> SceneCreationService:
-    return SceneCreationService(story_repo, scene_repo)
+    return SceneCreationService(story_repo, scene_repo, model_registry_service)
 
 
 def get_summarize_llm_client(

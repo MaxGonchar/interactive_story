@@ -190,6 +190,7 @@ class CreateSceneRequest(BaseModel):
     general_scene_guide: str
     writing_style: str
     first_message: str
+    model_id: str
 
     @model_validator(mode="after")
     def user_character_not_in_character_ids(self) -> "CreateSceneRequest":
