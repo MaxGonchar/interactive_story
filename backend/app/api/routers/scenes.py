@@ -57,6 +57,7 @@ async def create_scene(
         general_scene_guide=request.general_scene_guide,
         writing_style=request.writing_style,
         first_message=request.first_message,
+        model_id=request.model_id,
     )
     return {"data": {"id": scene_ref.id, "finished": scene_ref.finished}}
 

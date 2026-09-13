@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.exceptions import ActiveSceneExistsError, NarratorModeNotSupportedError, NotFoundError
-from app.models.domain import SceneDescription, SceneMetadata, SceneRef, StoryMeta
+from app.exceptions import ActiveSceneExistsError, InvalidModelError, NarratorModeNotSupportedError, NotFoundError
+from app.models.domain import LLMData, ModelMetadata, ModelRegistry, SceneDescription, SceneMetadata, SceneRef, StoryMeta
 from app.services.scene_creation_service import SceneCreationService
 
 
@@ -20,6 +20,7 @@ _BASE_KWARGS = dict(
     general_scene_guide="Build tension.",
     writing_style="Cinematic.",
     first_message=FIRST_MESSAGE,
+    model_id="model-a",
 )
 
 
@@ -39,13 +40,22 @@ def make_service(
 ) -> tuple[SceneCreationService, AsyncMock, AsyncMock]:
     story_repo = AsyncMock()
     scene_repo = AsyncMock()
+    model_registry_service = AsyncMock()
+    model_registry_service.get_registry.return_value = ModelRegistry(
+        models={
+            "model-a": ModelMetadata(
+                id="model-a", name="Model A", provider_model_id="provider-a"
+            )
+        },
+        default_model_id="model-a",
+    )
 
     if story_side_effect is not None:
         story_repo.get_story = AsyncMock(side_effect=story_side_effect)
     else:
         story_repo.get_story = AsyncMock(return_value=story_meta or make_story_meta([]))
 
-    service = SceneCreationService(story_repo, scene_repo)
+    service = SceneCreationService(story_repo, scene_repo, model_registry_service)
     return service, story_repo, scene_repo
 
 
@@ -95,6 +105,7 @@ async def test_create_calls_scene_repo_create_scene():
     assert first_msg.id == 1
     assert first_msg.role == "assistant"
     assert first_msg.content == FIRST_MESSAGE
+    assert first_msg.llm_data == LLMData(model_id="model-a")
 
 
 @pytest.mark.asyncio
@@ -139,5 +150,15 @@ async def test_create_rejects_narrator_for_choice_driven_story():
 
     with pytest.raises(NarratorModeNotSupportedError):
         await service.create(**{**_BASE_KWARGS, "user_character_id": None})
+
+    scene_repo.create_scene.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_rejects_unknown_model():
+    service, _, scene_repo = make_service(story_meta=make_story_meta([]))
+
+    with pytest.raises(InvalidModelError):
+        await service.create(**{**_BASE_KWARGS, "model_id": "unknown"})
 
     scene_repo.create_scene.assert_not_awaited()

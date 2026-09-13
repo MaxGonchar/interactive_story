@@ -2,18 +2,25 @@ from __future__ import annotations
 
 import logging
 
-from app.exceptions import ActiveSceneExistsError, NarratorModeNotSupportedError
-from app.models.domain import Message, SceneDescription, SceneMetadata, SceneRef
+from app.exceptions import ActiveSceneExistsError, InvalidModelError, NarratorModeNotSupportedError
+from app.models.domain import LLMData, Message, SceneDescription, SceneMetadata, SceneRef
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
+from app.services.model_registry_service import ModelRegistryService
 
 logger = logging.getLogger(__name__)
 
 
 class SceneCreationService:
-    def __init__(self, story_repo: StoryRepository, scene_repo: SceneRepository) -> None:
+    def __init__(
+        self,
+        story_repo: StoryRepository,
+        scene_repo: SceneRepository,
+        model_registry_service: ModelRegistryService,
+    ) -> None:
         self._story_repo = story_repo
         self._scene_repo = scene_repo
+        self._model_registry_service = model_registry_service
 
     async def create(
         self,
@@ -24,8 +31,14 @@ class SceneCreationService:
         general_scene_guide: str,
         writing_style: str,
         first_message: str,
+        model_id: str,
     ) -> SceneRef:
         story = await self._story_repo.get_story(story_id)
+        # TODO: move model id validation to the model registry service (e.g., registry.validate_model_id(model_id))
+        # check for other places where we validate model ids
+        registry = await self._model_registry_service.get_registry()
+        if model_id not in registry.models:
+            raise InvalidModelError()
 
         if any(not s.finished for s in story.scenes):
             raise ActiveSceneExistsError()
@@ -48,7 +61,12 @@ class SceneCreationService:
             ),
             context=context,
         )
-        first_msg = Message(id=1, role="assistant", content=first_message)
+        first_msg = Message(
+            id=1,
+            role="assistant",
+            content=first_message,
+            llm_data=LLMData(model_id=model_id),
+        )
 
         await self._scene_repo.create_scene(story_id, next_id, metadata, first_msg)
 
