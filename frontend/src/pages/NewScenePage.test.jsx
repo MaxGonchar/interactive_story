@@ -6,13 +6,23 @@ import NewScenePage from './NewScenePage'
 import { getStory } from '../api/stories'
 import { getScene, createScene } from '../api/scenes'
 import { getCharacters } from '../api/characters'
-import { makeCharacter, makeScene, makeStory } from '../tests/factories'
+import { getModels } from '../api/models'
+import { makeCharacter, makeMessage, makeScene, makeStory } from '../tests/factories'
 
 vi.mock('../api/stories')
 vi.mock('../api/scenes')
 vi.mock('../api/characters')
+vi.mock('../api/models')
 
 const storyId = 'story-1'
+
+const modelRegistry = {
+  models: {
+    'model-a': { name: 'Model A' },
+    'model-b': { name: 'Model B' },
+  },
+  default_model_id: 'model-a',
+}
 
 function renderPage() {
   return render(
@@ -46,6 +56,7 @@ describe('NewScenePage', () => {
     const previousScene = makeScene({ id: 1, finished: true })
     getStory.mockResolvedValue({ data: makeStory({ scenes: [previousScene] }) })
     getCharacters.mockResolvedValue({ data: characters })
+    getModels.mockResolvedValue({ data: modelRegistry })
     getScene.mockResolvedValue({
       data: makeScene({
         context: ['The storm is building'],
@@ -118,6 +129,7 @@ describe('NewScenePage', () => {
       general_scene_guide: 'Reveal a clue.',
       writing_style: 'Atmospheric prose.',
       first_message: 'Rain lashes the windows.',
+      model_id: 'model-a',
     })
     expect(await screen.findByText('Created')).toBeInTheDocument()
   })
@@ -138,6 +150,68 @@ describe('NewScenePage', () => {
       general_scene_guide: 'Reveal a clue.',
       writing_style: 'Atmospheric prose.',
       first_message: 'Rain lashes the windows.',
+      model_id: 'model-a',
     })
+  })
+
+  // --- model selection ---
+
+  it('defaults the model to the registry default when there is no previous scene', async () => {
+    getStory.mockResolvedValue({ data: makeStory({ scenes: [] }) })
+    renderPage()
+
+    await screen.findByRole('option', { name: 'Narrator' })
+
+    expect(screen.getByLabelText('Model')).toHaveValue('model-a')
+  })
+
+  it('defaults the model to the last used model from the previous scene', async () => {
+    getScene.mockResolvedValue({
+      data: makeScene({
+        context: ['The storm is building'],
+        scene_summary: ['The party has arrived'],
+        scene_description: { writing_style: 'Atmospheric prose.' },
+        messages: [
+          makeMessage({ role: 'assistant', llm_data: { model_id: 'model-b' } }),
+        ],
+      }),
+    })
+    renderPage()
+
+    await screen.findByRole('option', { name: 'Narrator' })
+
+    expect(screen.getByLabelText('Model')).toHaveValue('model-b')
+  })
+
+  it('falls back to the registry default when the last message has no llm_data', async () => {
+    getScene.mockResolvedValue({
+      data: makeScene({
+        context: ['The storm is building'],
+        scene_summary: ['The party has arrived'],
+        scene_description: { writing_style: 'Atmospheric prose.' },
+        messages: [makeMessage({ role: 'user' })],
+      }),
+    })
+    renderPage()
+
+    await screen.findByRole('option', { name: 'Narrator' })
+
+    expect(screen.getByLabelText('Model')).toHaveValue('model-a')
+  })
+
+  it('lets the user override the preselected model before submitting', async () => {
+    createScene.mockResolvedValue({ data: { id: 2 } })
+    renderPage()
+
+    await screen.findByRole('option', { name: 'Narrator' })
+    await userEvent.selectOptions(screen.getByLabelText('User character'), 'Hero')
+    await userEvent.selectOptions(screen.getByLabelText('Model'), 'Model B')
+    await completeForm()
+    await userEvent.click(screen.getByRole('button', { name: 'Create scene' }))
+
+    expect(createScene).toHaveBeenCalledWith(
+      storyId,
+      expect.objectContaining({ model_id: 'model-b' })
+    )
   })
 })

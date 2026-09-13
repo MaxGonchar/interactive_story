@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getStory } from '../api/stories'
 import { getScene, createScene } from '../api/scenes'
 import { getCharacters } from '../api/characters'
+import { getModels } from '../api/models'
 import BulletTextarea from '../components/BulletTextarea'
 import { inputBase } from '../styles'
 
@@ -15,6 +16,7 @@ function NewScenePage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [characters, setCharacters] = useState([])
+  const [models, setModels] = useState([])
   const [submitError, setSubmitError] = useState(null)
   const [validationErrors, setValidationErrors] = useState({})
   const [busy, setBusy] = useState(false)
@@ -25,16 +27,24 @@ function NewScenePage() {
   const [generalSceneGuide, setGeneralSceneGuide] = useState('')
   const [writingStyle, setWritingStyle] = useState('')
   const [firstMessage, setFirstMessage] = useState('')
+  const [selectedModelId, setSelectedModelId] = useState('')
 
   useEffect(() => {
     async function load() {
       try {
-        const [storyResponse, charactersResponse] = await Promise.all([
+        const [storyResponse, charactersResponse, modelsResponse] = await Promise.all([
           getStory(storyId),
           getCharacters(storyId),
+          getModels(),
         ])
         const story = storyResponse.data
         setCharacters(charactersResponse.data)
+
+        const registry = modelsResponse.data
+        setModels(
+          Object.entries(registry.models).map(([id, model]) => ({ id, ...model }))
+        )
+        let modelId = registry.default_model_id
 
         const finishedScenes = story.scenes.filter((s) => s.finished)
         if (finishedScenes.length > 0) {
@@ -56,7 +66,12 @@ function NewScenePage() {
           if (assistantMessages.length > 0) {
             setFirstMessage(assistantMessages[assistantMessages.length - 1].content)
           }
+          const lastMessage = sceneData.messages[sceneData.messages.length - 1]
+          if (lastMessage?.llm_data?.model_id) {
+            modelId = lastMessage.llm_data.model_id
+          }
         }
+        setSelectedModelId(modelId)
       } catch (err) {
         setLoadError(err.message ?? 'Failed to load page data')
       } finally {
@@ -126,6 +141,7 @@ function NewScenePage() {
         general_scene_guide: generalSceneGuide,
         writing_style: writingStyle,
         first_message: firstMessage,
+        model_id: selectedModelId,
       })
       navigate(`/stories/${storyId}/scenes/${response.data.id}`)
     } catch (err) {
@@ -246,6 +262,21 @@ function NewScenePage() {
           {validationErrors.firstMessage && (
             <p className="new-scene-page__error">{validationErrors.firstMessage}</p>
           )}
+        </div>
+
+        <div className="new-scene-page__field">
+          <label htmlFor="model" className="new-scene-page__label">Model</label>
+          <select
+            id="model"
+            value={selectedModelId}
+            onChange={(e) => setSelectedModelId(e.target.value)}
+            style={inputBase}
+            className="new-scene-page__select"
+          >
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>{model.name}</option>
+            ))}
+          </select>
         </div>
 
         {submitError && <p className="new-scene-page__error">{submitError}</p>}
