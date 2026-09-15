@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
+from app.llm.models import VeniceCompletion, VeniceUsage
 from app.llm.venice_ai import VeniceAIChatModel
 
 
@@ -55,9 +56,31 @@ def test_prepare_payload_unknown_message_type_raises():
 async def test_agenerate_returns_chat_result():
     model = _make_model()
     with patch.object(model._client, "chat_complete", new_callable=AsyncMock) as mock_cc:
-        mock_cc.return_value = "hello"
+        mock_cc.return_value = VeniceCompletion(
+            content="hello",
+            provider_model_id="venice-1-provider",
+            created=1739928524,
+            usage=VeniceUsage(
+                prompt_tokens=12,
+                completion_tokens=8,
+                total_tokens=20,
+            ),
+            cost_usd=0.00042,
+            duration_ms=1243,
+        )
         result = await model._agenerate([HumanMessage(content="hi")])
 
     assert len(result.generations) == 1
     assert result.generations[0].message.content == "hello"
+    assert result.generations[0].message.usage_metadata == {
+        "input_tokens": 12,
+        "output_tokens": 8,
+        "total_tokens": 20,
+    }
+    assert result.generations[0].message.response_metadata == {
+        "cost_usd": 0.00042,
+        "provider_model_id": "venice-1-provider",
+        "provider_created": 1739928524,
+        "duration_ms": 1243,
+    }
     mock_cc.assert_called_once()

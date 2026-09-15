@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langchain_core.outputs import ChatGeneration, ChatResult
 from pydantic import PrivateAttr
 
+from app.llm.models import VeniceCompletion
 from app.llm.venice_client import VeniceClient
 
 logger = logging.getLogger(__name__)
@@ -68,8 +69,22 @@ class VeniceAIChatModel(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         payload = self._prepare_request_payload(messages)
-        content = await self._client.chat_complete(payload)
-        generation = ChatGeneration(message=AIMessage(content=content), text=content)
+        completion: VeniceCompletion = await self._client.chat_complete(payload)
+        message = AIMessage(
+            content=completion.content,
+            usage_metadata={
+                "input_tokens": completion.usage.prompt_tokens,
+                "output_tokens": completion.usage.completion_tokens,
+                "total_tokens": completion.usage.total_tokens,
+            },
+            response_metadata={
+                "cost_usd": completion.cost_usd,
+                "provider_model_id": completion.provider_model_id,
+                "provider_created": completion.created,
+                "duration_ms": completion.duration_ms,
+            },
+        )
+        generation = ChatGeneration(message=message, text=completion.content)
         return ChatResult(generations=[generation])
 
     def _generate(
