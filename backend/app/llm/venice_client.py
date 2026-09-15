@@ -1,8 +1,11 @@
 import os
+import time
 
 import httpx
+from pydantic import ValidationError
 
 from app.exceptions import LLMError
+from app.llm.models import VeniceCompletion, VeniceCompletionResponse
 
 _DEFAULT_TIMEOUT_SECONDS = 300.0
 
@@ -32,7 +35,8 @@ class VeniceClient:
             "Content-Type": "application/json",
         }
 
-    async def chat_complete(self, payload: dict) -> str:
+    async def chat_complete(self, payload: dict) -> VeniceCompletion:
+        started_at = time.perf_counter()
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -47,6 +51,7 @@ class VeniceClient:
         except httpx.RequestError as e:
             raise LLMError(f"LLM request failed: {e}") from e
 
+        duration_ms = int((time.perf_counter() - started_at) * 1000)
         data = response.json()
         choices = data.get("choices")
         if not choices:
@@ -54,4 +59,17 @@ class VeniceClient:
                 f"Unexpected response shape: 'choices' missing or empty. Got: {data}"
             )
 
-        return choices[0]["message"]["content"]
+        try:
+            parsed = VeniceCompletionResponse.model_validate(data)
+            content = parsed.choices[0].message.content
+        except (KeyError, TypeError, ValidationError) as e:
+            raise LLMError(f"Unexpected response shape: {data}") from e
+
+        return VeniceCompletion(
+            content=content,
+            provider_model_id=parsed.model,
+            created=parsed.created,
+            usage=parsed.usage,
+            cost_usd=parsed.cost.usd if parsed.cost is not None else None,
+            duration_ms=duration_ms,
+        )
