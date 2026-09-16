@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
+from uuid import UUID
 
 from app.models.domain import (
     CharacterCard,
     Choice,
     ChoiceDrivenStoryMeta,
+    LLMUsage,
     Message,
     SceneDescription,
     SceneMetadata,
@@ -14,6 +16,7 @@ from app.models.domain import (
     Step,
     StoryIndexItem,
     StoryMeta,
+    TokenUsage,
 )
 
 
@@ -225,6 +228,68 @@ def test_message_user_role():
 def test_message_invalid_role_raises():
     with pytest.raises(ValidationError):
         Message(id=3, role="narrator", content="Narration.")
+
+
+# ---------------------------------------------------------------------------
+# LLM usage
+# ---------------------------------------------------------------------------
+
+
+def test_llm_usage_contains_complete_scene_record():
+    usage = LLMUsage(
+        id=UUID("f58ec747-7004-4d2c-b749-67b8f0c2e845"),
+        operation="scene_reply",
+        model_id="default",
+        provider_model_id="provider-model",
+        provider_created=1739928524,
+        duration_ms=1243,
+        usage=TokenUsage(prompt_tokens=612, completion_tokens=146, total_tokens=758),
+        cost_usd=0.00042,
+        scene_id=2,
+        message_id=17,
+    )
+
+    assert usage.model_dump(mode="json") == {
+        "id": "f58ec747-7004-4d2c-b749-67b8f0c2e845",
+        "operation": "scene_reply",
+        "model_id": "default",
+        "provider_model_id": "provider-model",
+        "provider_created": 1739928524,
+        "duration_ms": 1243,
+        "usage": {"prompt_tokens": 612, "completion_tokens": 146, "total_tokens": 758},
+        "cost_usd": 0.00042,
+        "scene_id": 2,
+        "message_id": 17,
+        "step_id": None,
+    }
+
+
+def test_llm_usage_accepts_choice_reference_without_scene_reference():
+    usage = LLMUsage(
+        id=UUID("f58ec747-7004-4d2c-b749-67b8f0c2e846"),
+        operation="choice_generation",
+        model_id="default",
+        provider_model_id="provider-model",
+        provider_created=1739928524,
+        duration_ms=1243,
+        usage=TokenUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30),
+        step_id=3,
+    )
+
+    assert usage.step_id == 3
+
+
+def test_llm_usage_rejects_missing_choice_reference():
+    with pytest.raises(ValidationError):
+        LLMUsage(
+            id=UUID("f58ec747-7004-4d2c-b749-67b8f0c2e847"),
+            operation="choice_generation",
+            model_id="default",
+            provider_model_id="provider-model",
+            provider_created=1739928524,
+            duration_ms=1243,
+            usage=TokenUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30),
+        )
 
 
 # ---------------------------------------------------------------------------
