@@ -17,6 +17,7 @@ _STORY_FILE = "story.yaml"
 _METADATA_FILE = "meta.yaml"
 _MESSAGES_FILE = "messages.yaml"
 _HISTORY_FILE = "history.yaml"
+_LLM_USAGE_FILE = "llm_usage.yaml"
 _MODEL_REGISTRY_FILE = "models.yaml"
 
 
@@ -61,6 +62,10 @@ def scene_messages_file(story_id: str, scene_id: int) -> Path:
 
 def history_file(story_id: str) -> Path:
     return _data_root() / _STORIES_DIR / story_id / _HISTORY_FILE
+
+
+def llm_usage_file(story_id: str) -> Path:
+    return _data_root() / _STORIES_DIR / story_id / _LLM_USAGE_FILE
 
 
 def model_registry_file() -> Path:

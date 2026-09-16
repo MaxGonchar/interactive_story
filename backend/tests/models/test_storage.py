@@ -11,6 +11,8 @@ from app.models.storage import (
     ChoiceDrivenStoryYaml,
     ChoiceYaml,
     HistoryYaml,
+    LLMUsageDocumentYaml,
+    LLMUsageYaml,
     MessageYaml,
     MessagesYaml,
     SceneDescriptionYaml,
@@ -207,6 +209,53 @@ def test_message_yaml_invalid_role_raises():
 def test_messages_yaml_missing_messages_raises():
     with pytest.raises(ValidationError):
         MessagesYaml()
+
+
+# ---------------------------------------------------------------------------
+# LLM usage
+# ---------------------------------------------------------------------------
+
+
+def test_llm_usage_yaml_round_trips_nullable_cost():
+    usage = LLMUsageYaml(
+        id="f58ec747-7004-4d2c-b749-67b8f0c2e845",
+        operation="scene_reply",
+        model_id="default",
+        provider_model_id="provider-model",
+        provider_created=1739928524,
+        duration_ms=1243,
+        scene_id=2,
+        usage={"prompt_tokens": 612, "completion_tokens": 146, "total_tokens": 758},
+        cost_usd=None,
+    )
+    document = LLMUsageDocumentYaml(calls=[usage])
+
+    assert document.model_dump(mode="json") == {
+        "calls": [
+            {
+                "id": "f58ec747-7004-4d2c-b749-67b8f0c2e845",
+                "operation": "scene_reply",
+                "model_id": "default",
+                "provider_model_id": "provider-model",
+                "provider_created": 1739928524,
+                "duration_ms": 1243,
+                "usage": {
+                    "prompt_tokens": 612,
+                    "completion_tokens": 146,
+                    "total_tokens": 758,
+                },
+                "cost_usd": None,
+                "scene_id": 2,
+                "message_id": None,
+                "step_id": None,
+            }
+        ]
+    }
+
+
+def test_llm_usage_document_requires_calls():
+    with pytest.raises(ValidationError):
+        LLMUsageDocumentYaml()
 
 
 # ---------------------------------------------------------------------------
