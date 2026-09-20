@@ -538,6 +538,30 @@ button {
   gap: var(--space-xs);
 }
 
+.response-time-indicator {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.response-time-value {
+  display: inline-block;
+  min-width: 9ch;
+}
+
+.response-time-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .processing-dots::after {
   content: '';
   display: inline-block;
