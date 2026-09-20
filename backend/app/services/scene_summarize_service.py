@@ -4,7 +4,10 @@ import logging
 
 from app.exceptions import SceneFinishedError
 from app.llm.summarize_llm_client import SummarizeLLMClient
+from app.llm.models import LLMCompletion
+from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.repositories.scene_repository import SceneRepository
+from app.services.llm_usage_service import record_usage
 
 _MAX_CONTEXT_ITEMS = 50
 
@@ -16,9 +19,11 @@ class SceneSummarizeService:
         self,
         scene_repo: SceneRepository,
         llm_client: SummarizeLLMClient,
+        usage_repository: LLMUsageRepository,
     ) -> None:
         self._scene_repo = scene_repo
         self._llm_client = llm_client
+        self._usage_repository = usage_repository
 
     async def summarize(self, story_id: str, scene_id: int) -> list[str]:
         logger.info(f"Summarizing scene story_id={story_id} scene_id={scene_id}")
@@ -35,4 +40,12 @@ class SceneSummarizeService:
             f"{m.role}:\n{m.content}" for m in messages
         )
 
-        return await self._llm_client.invoke(previous_summary, scene_content)
+        completion = await self._llm_client.invoke(previous_summary, scene_content)
+        await record_usage(
+            self._usage_repository,
+            story_id,
+            "scene_summary",
+            completion,
+            scene_id=scene_id,
+        )
+        return completion.result

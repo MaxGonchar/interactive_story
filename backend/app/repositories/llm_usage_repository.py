@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from uuid import UUID
 
 from app.models.domain import LLMUsage, TokenUsage
@@ -9,6 +10,8 @@ from app.utils.atomic_write import atomic_write
 
 
 class LLMUsageRepository:
+    _locks: dict[str, asyncio.Lock] = {}
+
     async def get_calls(self, story_id: str) -> list[LLMUsage]:
         try:
             data = await yaml_storage.read_yaml(file_paths.llm_usage_file(story_id))
@@ -19,13 +22,15 @@ class LLMUsageRepository:
         return [self._to_domain(call) for call in document.calls]
 
     async def append(self, story_id: str, usage: LLMUsage) -> None:
-        calls = await self.get_calls(story_id)
-        calls.append(usage)
-        data = {"calls": [self._to_storage(call).model_dump(mode="json") for call in calls]}
-        await atomic_write(
-            file_paths.llm_usage_file(story_id),
-            yaml_storage.dump_yaml(data),
-        )
+        lock = self._locks.setdefault(story_id, asyncio.Lock())
+        async with lock:
+            calls = await self.get_calls(story_id)
+            calls.append(usage)
+            data = {"calls": [self._to_storage(call).model_dump(mode="json") for call in calls]}
+            await atomic_write(
+                file_paths.llm_usage_file(story_id),
+                yaml_storage.dump_yaml(data),
+            )
 
     @staticmethod
     def _to_domain(raw: LLMUsageYaml) -> LLMUsage:

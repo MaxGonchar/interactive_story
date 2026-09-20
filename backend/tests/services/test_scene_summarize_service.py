@@ -4,7 +4,8 @@ import pytest
 from unittest.mock import AsyncMock
 
 from app.exceptions import SceneFinishedError
-from app.models.domain import Message
+from app.llm.models import LLMCompletion
+from app.models.domain import Message, TokenUsage
 from app.services.scene_summarize_service import SceneSummarizeService
 from tests.factories import make_messages, make_scene_metadata
 
@@ -17,7 +18,11 @@ def make_service(
     messages: list[Message] | None = None,
     llm_return: list[str] | None = None,
     llm_side_effect: Exception | None = None,
+    usage_repository=None,
 ) -> tuple[SceneSummarizeService, AsyncMock, AsyncMock]:
+    if usage_repository is None:
+        usage_repository = AsyncMock()
+
     scene_repo = AsyncMock()
     scene_repo.get_metadata.return_value = metadata or make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID)
     scene_repo.get_messages.return_value = messages if messages is not None else make_messages()
@@ -25,10 +30,22 @@ def make_service(
     if llm_side_effect is not None:
         llm_client.invoke.side_effect = llm_side_effect
     else:
-        llm_client.invoke.return_value = llm_return if llm_return is not None else ["summary line"]
+        summary = llm_return if llm_return is not None else ["summary line"]
+        llm_client.invoke.return_value = make_completion(summary)
 
-    service = SceneSummarizeService(scene_repo, llm_client)
+    service = SceneSummarizeService(scene_repo, llm_client, usage_repository)
     return service, scene_repo, llm_client
+
+
+def make_completion(result: list[str] | None = None) -> LLMCompletion:
+    return LLMCompletion(
+        content='{"items":["Summary A"]}',
+        model_id="summary-model",
+        provider_model_id="provider-summary",
+        provider_created=1700000001,
+        duration_ms=200,
+        usage=TokenUsage(prompt_tokens=20, completion_tokens=6, total_tokens=26),
+    ).model_copy(update={"result": result or ["Summary A"]})
 
 
 @pytest.mark.asyncio
@@ -101,6 +118,24 @@ async def test_summarize_propagates_llm_error():
 
     with pytest.raises(RuntimeError, match="LLM failure"):
         await service.summarize(STORY_ID, SCENE_ID)
+
+
+@pytest.mark.asyncio
+async def test_summarize_records_usage_with_scene_reference():
+    usage_repository = AsyncMock()
+    service, _, llm_client = make_service(usage_repository=usage_repository)
+    llm_client.invoke.return_value = make_completion()
+
+    result = await service.summarize(STORY_ID, SCENE_ID)
+
+    assert result == ["Summary A"]
+    usage_repository.append.assert_awaited_once()
+    story_id, usage = usage_repository.append.call_args.args
+    assert story_id == STORY_ID
+    assert usage.operation == "scene_summary"
+    assert usage.scene_id == SCENE_ID
+    assert usage.message_id is None
+    assert usage.model_id == "summary-model"
 
 
 @pytest.mark.asyncio

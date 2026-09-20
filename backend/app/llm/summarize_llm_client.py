@@ -11,6 +11,7 @@ from app.llm.logging_config import (
     log_prompt_messages,
     log_response_content,
 )
+from app.llm.models import LLMCompletion, parse_llm_completion
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -28,7 +29,7 @@ class SummarizeLLMClient:
         self._user_template = env.get_template("summary_user.j2")
         self._logger = configure_llm_logger("app.llm.summary")
 
-    async def invoke(self, previous_summary: list[str], scene_content: str) -> list[str]:
+    async def invoke(self, previous_summary: list[str], scene_content: str) -> LLMCompletion:
         system_prompt = self._system_template.render(
             format_instructions=self._parser.get_format_instructions(),
             previous_summary=previous_summary,
@@ -45,4 +46,6 @@ class SummarizeLLMClient:
 
         log_response_content(self._logger, response.content)
         result = self._parser.parse(response.content)
-        return result.items
+        return parse_llm_completion(response).model_copy(
+            update={"result": result.items}
+        )

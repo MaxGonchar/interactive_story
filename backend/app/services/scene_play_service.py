@@ -10,11 +10,14 @@ from app.exceptions import (
     SceneFinishedError,
 )
 from app.llm.models import SceneContext
+from app.llm.models import LLMCompletion
 from app.llm.scene_llm_client import SceneLLMClientFactory
 from app.models.domain import LLMData, Message, ModelMetadata, ModelRegistry
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.scene_repository import SceneRepository
+from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.services.model_registry_service import ModelRegistryService
+from app.services.llm_usage_service import record_usage
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +29,13 @@ class ScenePlayService:
         character_repo: CharacterRepository,
         llm_client_factory: SceneLLMClientFactory,
         model_registry_service: ModelRegistryService,
+        usage_repository: LLMUsageRepository,
     ) -> None:
         self._scene_repo = scene_repo
         self._character_repo = character_repo
         self._llm_client_factory = llm_client_factory
         self._model_registry_service = model_registry_service
+        self._usage_repository = usage_repository
 
     async def play(
         self,
@@ -72,7 +77,8 @@ class ScenePlayService:
         )
 
         llm_client = self._llm_client_factory(selected_model.provider_model_id)
-        reply = await llm_client.invoke(context, user_content)
+        completion = await llm_client.invoke(context, user_content)
+        reply = completion.content
 
         user_msg = Message(id=user_id, role="user", content=user_content)
         assistant_msg = Message(
@@ -83,6 +89,15 @@ class ScenePlayService:
         )
 
         await self._scene_repo.add_messages(story_id, scene_id, [user_msg, assistant_msg])
+
+        await record_usage(
+            self._usage_repository,
+            story_id,
+            "scene_reply",
+            completion.model_copy(update={"model_id": selected_model.id}),
+            scene_id=scene_id,
+            message_id=assistant_id,
+        )
 
         return user_msg, assistant_msg
 
@@ -125,7 +140,8 @@ class ScenePlayService:
         )
 
         llm_client = self._llm_client_factory(selected_model.provider_model_id)
-        reply = await llm_client.invoke(context, user_content)
+        completion = await llm_client.invoke(context, user_content)
+        reply = completion.content
 
         last_assistant_msg = messages[-1]
         updated_msg = await self._scene_repo.update_message(
@@ -134,6 +150,14 @@ class ScenePlayService:
             last_assistant_msg.id,
             reply,
             llm_data=LLMData(model_id=selected_model.id),
+        )
+        await record_usage(
+            self._usage_repository,
+            story_id,
+            "scene_reply",
+            completion.model_copy(update={"model_id": selected_model.id}),
+            scene_id=scene_id,
+            message_id=updated_msg.id,
         )
         return updated_msg
 

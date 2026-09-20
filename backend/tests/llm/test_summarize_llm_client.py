@@ -17,7 +17,20 @@ def _make_client() -> SummarizeLLMClient:
 
 
 def _ai_response(content: str):
-    return types.SimpleNamespace(content=content)
+    return types.SimpleNamespace(
+        content=content,
+        response_metadata={
+            "provider_model_id": "provider-summary",
+            "provider_created": 1700000000,
+            "cost_usd": 0.001,
+            "duration_ms": 120,
+        },
+        usage_metadata={
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15,
+        },
+    )
 
 
 def _well_formed_json(items: list[str] | None = None) -> str:
@@ -31,9 +44,7 @@ async def test_invoke_returns_list_of_strings():
         ainvoke=AsyncMock(return_value=_ai_response(_well_formed_json()))
     )
     result = await client.invoke(previous_summary=[], scene_content=_SCENE_CONTENT)
-    assert isinstance(result, list)
-    assert all(isinstance(item, str) for item in result)
-    assert result == ["Hero entered cave.", "Troll was defeated."]
+    assert result.result == ["Hero entered cave.", "Troll was defeated."]
 
 
 @pytest.mark.asyncio

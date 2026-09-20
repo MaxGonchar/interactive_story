@@ -11,7 +11,8 @@ from app.api.dependencies import (
   get_scene_llm_client_factory,
 )
 from app.main import app
-from app.models.domain import ModelMetadata, ModelRegistry
+from app.llm.models import LLMCompletion
+from app.models.domain import ModelMetadata, ModelRegistry, TokenUsage
 
 _STORY_ID = "test-story-1"
 _SCENE_ID = 1
@@ -68,7 +69,16 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_ROOT", str(tmp_path))
 
     mock_llm = MagicMock()
-    mock_llm.invoke = AsyncMock(return_value="Assistant reply")
+    mock_llm.invoke = AsyncMock(
+      return_value=LLMCompletion(
+        content="Assistant reply",
+        model_id="provider-test",
+        provider_model_id="provider-test",
+        provider_created=1700000000,
+        duration_ms=100,
+        usage=TokenUsage(prompt_tokens=1, completion_tokens=1, total_tokens=2),
+      )
+    )
     registry_service = MagicMock()
     registry_service.get_registry = AsyncMock(
       return_value=ModelRegistry(

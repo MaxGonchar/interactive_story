@@ -9,7 +9,7 @@ from app.llm.logging_config import (
     log_prompt_messages,
     log_response_content,
 )
-from app.llm.models import SceneContext
+from app.llm.models import LLMCompletion, SceneContext, parse_llm_completion
 from app.llm.prompt_builder import PromptBuilder
 
 
@@ -22,7 +22,7 @@ class SceneLLMClient:
         self._prompt_builder = PromptBuilder()
         self._logger = configure_llm_logger("app.llm.scene")
 
-    async def invoke(self, context: SceneContext, user_message: str) -> str:
+    async def invoke(self, context: SceneContext, user_message: str) -> LLMCompletion:
         system_prompt = self._prompt_builder.build_system_prompt(context)
         history_msgs = context.messages
         history = [
@@ -34,4 +34,4 @@ class SceneLLMClient:
 
         response = await self._model.ainvoke(messages)
         log_response_content(self._logger, response.content)
-        return response.content
+        return parse_llm_completion(response)

@@ -17,7 +17,20 @@ def _make_client() -> StoryEngineClient:
 
 
 def _ai_response(content: str):
-    return types.SimpleNamespace(content=content)
+    return types.SimpleNamespace(
+        content=content,
+        response_metadata={
+            "provider_model_id": "provider-story",
+            "provider_created": 1700000000,
+            "cost_usd": 0.001,
+            "duration_ms": 120,
+        },
+        usage_metadata={
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15,
+        },
+    )
 
 
 @pytest.mark.asyncio
@@ -34,7 +47,7 @@ async def test_invoke_returns_llm_content():
         supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
         writing_style="Dark and atmospheric.",
     )
-    assert result == expected
+    assert result.content == expected
     mock_ainvoke.assert_called_once()
 
 

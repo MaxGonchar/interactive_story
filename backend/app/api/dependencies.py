@@ -12,6 +12,7 @@ from app.repositories.character_repository import CharacterRepository
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
+from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.repositories.model_registry_repository import ModelRegistryRepository
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 from app.llm.summarize_llm_client import SummarizeLLMClient
@@ -57,6 +58,10 @@ def get_scene_repository() -> SceneRepository:
     return SceneRepository()
 
 
+def get_llm_usage_repository() -> LLMUsageRepository:
+    return LLMUsageRepository()
+
+
 def get_character_repository() -> CharacterRepository:
     return CharacterRepository()
 
@@ -96,12 +101,14 @@ def get_scene_play_service(
     character_repo: CharacterRepository = Depends(get_character_repository),
     llm_client_factory: SceneLLMClientFactory = Depends(get_scene_llm_client_factory),
     model_registry_service: ModelRegistryService = Depends(get_model_registry_service),
+    usage_repository: LLMUsageRepository = Depends(get_llm_usage_repository),
 ) -> ScenePlayService:
     return ScenePlayService(
         scene_repo,
         character_repo,
         llm_client_factory,
         model_registry_service,
+        usage_repository,
     )
 
 
@@ -134,8 +141,9 @@ def get_summarize_llm_client(
 def get_scene_summarize_service(
     scene_repo: SceneRepository = Depends(get_scene_repository),
     llm_client: SummarizeLLMClient = Depends(get_summarize_llm_client),
+    usage_repository: LLMUsageRepository = Depends(get_llm_usage_repository),
 ) -> SceneSummarizeService:
-    return SceneSummarizeService(scene_repo, llm_client)
+    return SceneSummarizeService(scene_repo, llm_client, usage_repository)
 
 
 def get_choice_driven_story_repository() -> ChoiceDrivenStoryRepository:
@@ -159,10 +167,12 @@ def get_choice_driven_play_service(
     character_repo: CharacterRepository = Depends(get_character_repository),
     choice_engine_client: ChoiceEngineClient = Depends(get_choice_engine_client),
     story_engine_client: StoryEngineClient = Depends(get_story_engine_client),
+    usage_repository: LLMUsageRepository = Depends(get_llm_usage_repository),
 ) -> ChoiceDrivenPlayService:
     return ChoiceDrivenPlayService(
         repo=repo,
         character_repo=character_repo,
         choice_engine_client=choice_engine_client,
         story_engine_client=story_engine_client,
+        usage_repository=usage_repository,
     )

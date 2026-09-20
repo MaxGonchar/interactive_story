@@ -19,7 +19,20 @@ def _make_client() -> ChoiceEngineClient:
 
 
 def _ai_response(content: str):
-    return types.SimpleNamespace(content=content)
+    return types.SimpleNamespace(
+        content=content,
+        response_metadata={
+            "provider_model_id": "provider-choice",
+            "provider_created": 1700000000,
+            "cost_usd": 0.001,
+            "duration_ms": 120,
+        },
+        usage_metadata={
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15,
+        },
+    )
 
 
 def _well_formed_json() -> str:
@@ -45,11 +58,11 @@ async def test_invoke_returns_two_choices():
         user_character=DEFAULT_USER_CHARACTER,
         supporting_characters=[DEFAULT_SUPPORTING_CHARACTER],
     )
-    assert len(result) == 2
-    assert all(isinstance(c, Choice) for c in result)
-    assert result[0].action == "Sneak past the guards"
-    assert result[0].consequence == "You slip through undetected."
-    assert result[1].action == "Bribe the guards"
+    assert len(result.result) == 2
+    assert all(isinstance(c, Choice) for c in result.result)
+    assert result.result[0].action == "Sneak past the guards"
+    assert result.result[0].consequence == "You slip through undetected."
+    assert result.result[1].action == "Bribe the guards"
 
 
 @pytest.mark.asyncio
