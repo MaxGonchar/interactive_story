@@ -1,10 +1,9 @@
-import React from 'react'
-import { render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import ScenePage from './ScenePage'
-import { getScene, playScene } from '../api/scenes'
+import { getScene, playScene, regenerateLastAssistantMessage } from '../api/scenes'
 import { getModels } from '../api/models'
 import { makeScene, makeMessage, makeModel, makeModelRegistry } from '../tests/factories'
 
@@ -34,6 +33,7 @@ describe('ScenePage', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     scrollIntoViewMock.mockReset()
   })
 
@@ -185,5 +185,110 @@ describe('ScenePage', () => {
 
     expect(await screen.findByRole('combobox', { name: 'Model' })).toBeDisabled()
     expect(screen.getByRole('textbox')).toBeDisabled()
+  })
+
+  it('tracks sending time while pending and hides it after success', async () => {
+    let resolvePlay
+    playScene.mockImplementation(() => new Promise((resolve) => { resolvePlay = resolve }))
+    getScene.mockResolvedValue({ data: makeScene() })
+    renderPage()
+
+    await screen.findByRole('combobox', { name: 'Model' })
+    vi.useFakeTimers()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'A new turn' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    expect(screen.getByLabelText('Sending elapsed time')).toBeInTheDocument()
+    act(() => {
+      vi.advanceTimersByTime(12340)
+    })
+    expect(screen.getByText('00:12:340')).toBeInTheDocument()
+
+    await act(async () => {
+      resolvePlay({
+        data: {
+          user_message: makeMessage({ role: 'user', content: 'A new turn' }),
+          assistant_message: makeMessage({ role: 'assistant', content: 'The answer.', llm_data: { model_id: 'model-1' } }),
+        },
+      })
+      await Promise.resolve()
+    })
+
+    expect(screen.queryByLabelText('Sending elapsed time')).not.toBeInTheDocument()
+  })
+
+  it('hides sending time and preserves the error when sending fails', async () => {
+    let rejectPlay
+    playScene.mockImplementation(() => new Promise((resolve, reject) => { rejectPlay = reject }))
+    getScene.mockResolvedValue({ data: makeScene() })
+    renderPage()
+
+    await screen.findByRole('combobox', { name: 'Model' })
+    vi.useFakeTimers()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Try again' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    await act(async () => {
+      rejectPlay(new Error('Send failed'))
+    })
+
+    expect(screen.getByText('Send failed')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Sending elapsed time')).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toHaveValue('Try again')
+  })
+
+  it('tracks regeneration time while pending and hides it after success', async () => {
+    let resolveRegenerate
+    const assistantMessage = makeMessage({ role: 'assistant', content: 'Before regeneration' })
+    getScene.mockResolvedValue({
+      data: makeScene({ messages: [makeMessage({ role: 'user' }), assistantMessage] }),
+    })
+    regenerateLastAssistantMessage.mockImplementation(
+      () => new Promise((resolve) => { resolveRegenerate = resolve })
+    )
+    renderPage()
+
+    await screen.findByText('Before regeneration')
+    vi.useFakeTimers()
+    fireEvent.click(screen.getByLabelText('Regenerate message'))
+
+    expect(screen.getByLabelText('Regenerating elapsed time')).toBeInTheDocument()
+    act(() => {
+      vi.advanceTimersByTime(10010)
+    })
+    expect(screen.getByText('00:10:010')).toBeInTheDocument()
+
+    await act(async () => {
+      resolveRegenerate({
+        data: {
+          assistant_message: { ...assistantMessage, content: 'After regeneration' },
+        },
+      })
+    })
+
+    expect(screen.getByText('After regeneration')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Regenerating elapsed time')).not.toBeInTheDocument()
+  })
+
+  it('hides regeneration time and preserves the error when regeneration fails', async () => {
+    let rejectRegenerate
+    getScene.mockResolvedValue({
+      data: makeScene({ messages: [makeMessage({ role: 'user' }), makeMessage({ role: 'assistant' })] }),
+    })
+    regenerateLastAssistantMessage.mockImplementation(
+      () => new Promise((resolve, reject) => { rejectRegenerate = reject })
+    )
+    renderPage()
+
+    await screen.findByLabelText('Regenerate message')
+    vi.useFakeTimers()
+    fireEvent.click(screen.getByLabelText('Regenerate message'))
+
+    await act(async () => {
+      rejectRegenerate(new Error('Regeneration failed'))
+    })
+
+    expect(screen.getByText('Regeneration failed')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Regenerating elapsed time')).not.toBeInTheDocument()
   })
 })

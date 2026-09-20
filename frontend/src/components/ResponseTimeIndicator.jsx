@@ -36,7 +36,7 @@ function ResponseTimeIndicator({ verb = 'Processing', active = true, status = 'a
 
   return (
     <span className="response-time-indicator">
-      <span>{verb}</span>{' '}
+      <span>{verb}</span>
       <span className="response-time-value" aria-label={`${verb} elapsed time`}>
         {formatElapsedTime(elapsedMs)}
       </span>
