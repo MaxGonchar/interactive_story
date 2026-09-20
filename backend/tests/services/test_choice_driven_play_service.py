@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from app.exceptions import NoStepsError
-from app.models.domain import CharacterCard, Choice, ChoiceDrivenStoryMeta, Step
+from app.llm.models import LLMCompletion
+from app.models.domain import CharacterCard, Choice, ChoiceDrivenStoryMeta, Step, TokenUsage
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 from tests.factories import make_step
 
@@ -38,7 +39,11 @@ def make_service(
     steps: list[Step] | None = None,
     choice_engine_client: MagicMock | None = None,
     story_engine_client: MagicMock | None = None,
+    usage_repository=None,
 ) -> tuple[ChoiceDrivenPlayService, MagicMock, MagicMock]:
+    if usage_repository is None:
+        usage_repository = AsyncMock()
+
     if steps is None:
         steps = make_steps()
 
@@ -56,18 +61,31 @@ def make_service(
 
     if choice_engine_client is None:
         choice_engine_client = MagicMock()
-        choice_engine_client.invoke = AsyncMock(return_value=[])
+        choice_engine_client.invoke = AsyncMock(return_value=make_completion("", []))
     if story_engine_client is None:
         story_engine_client = MagicMock()
-        story_engine_client.invoke = AsyncMock(return_value="")
+        story_engine_client.invoke = AsyncMock(return_value=make_completion("", None))
 
     service = ChoiceDrivenPlayService(
         repo=repo,
         character_repo=character_repo,
         choice_engine_client=choice_engine_client,
         story_engine_client=story_engine_client,
+        usage_repository=usage_repository,
     )
     return service, repo, character_repo
+
+
+def make_completion(content: str, result) -> LLMCompletion:
+    return LLMCompletion(
+        content=content,
+        model_id="choice-model",
+        provider_model_id="provider-choice",
+        provider_created=1700000002,
+        duration_ms=300,
+        usage=TokenUsage(prompt_tokens=30, completion_tokens=8, total_tokens=38),
+        result=result,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -112,7 +130,7 @@ async def test_get_story_state_returns_meta_and_history():
 async def test_generate_choices_invokes_client_once_per_direction():
     steps = make_steps(3)
     mock_client = MagicMock()
-    mock_client.invoke = AsyncMock(return_value=[_CHOICE_A, _CHOICE_B])
+    mock_client.invoke = AsyncMock(return_value=make_completion("", [_CHOICE_A, _CHOICE_B]))
     service, repo, _ = make_service(steps=steps, choice_engine_client=mock_client)
 
     result = await service.generate_choices(_STORY_ID)
@@ -127,7 +145,7 @@ async def test_generate_choices_invokes_client_once_per_direction():
 async def test_generate_choices_passes_separated_character_context_to_client():
     steps = make_steps(2)
     mock_client = MagicMock()
-    mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
+    mock_client.invoke = AsyncMock(return_value=make_completion("", [_CHOICE_A]))
     service, _, _ = make_service(steps=steps, choice_engine_client=mock_client)
 
     await service.generate_choices(_STORY_ID)
@@ -141,7 +159,7 @@ async def test_generate_choices_passes_separated_character_context_to_client():
 async def test_generate_choices_persists_to_latest_step():
     steps = make_steps(3)
     mock_client = MagicMock()
-    mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
+    mock_client.invoke = AsyncMock(return_value=make_completion("", [_CHOICE_A]))
     service, repo, _ = make_service(steps=steps, choice_engine_client=mock_client)
 
     choices = await service.generate_choices(_STORY_ID)
@@ -158,9 +176,9 @@ async def test_generate_choices_passes_full_story_text():
 
     async def capture_invoke(
         text: str, plot_direction: str, user_character, supporting_characters
-    ) -> list[Choice]:
+    ) -> LLMCompletion:
         captured_texts.append(text)
-        return [_CHOICE_A]
+        return make_completion("", [_CHOICE_A])
 
     mock_client.invoke = capture_invoke
     service, repo, _ = make_service(steps=steps, choice_engine_client=mock_client)
@@ -174,7 +192,7 @@ async def test_generate_choices_passes_full_story_text():
 @pytest.mark.asyncio
 async def test_generate_choices_excludes_user_character_from_supporting_ids():
     mock_client = MagicMock()
-    mock_client.invoke = AsyncMock(return_value=[_CHOICE_A])
+    mock_client.invoke = AsyncMock(return_value=make_completion("", [_CHOICE_A]))
     service, _, character_repo = make_service(steps=make_steps(2), choice_engine_client=mock_client)
 
     await service.generate_choices(_STORY_ID)
@@ -189,6 +207,34 @@ async def test_generate_choices_raises_when_no_steps():
 
     with pytest.raises(NoStepsError):
         await service.generate_choices(_STORY_ID)
+
+
+@pytest.mark.asyncio
+async def test_generate_choices_records_one_usage_entry_per_parallel_call():
+    usage_repository = MagicMock()
+    usage_repository.append = AsyncMock()
+    mock_client = MagicMock()
+    mock_client.invoke = AsyncMock(
+        side_effect=[
+            make_completion("first", [_CHOICE_A]),
+            make_completion("second", [_CHOICE_B]),
+        ]
+    )
+    service, _, _ = make_service(
+        choice_engine_client=mock_client,
+        usage_repository=usage_repository,
+    )
+
+    result = await service.generate_choices(_STORY_ID)
+
+    assert result == [_CHOICE_A, _CHOICE_B]
+    assert usage_repository.append.await_count == 2
+    recorded = [call.args[1] for call in usage_repository.append.await_args_list]
+    assert [usage.operation for usage in recorded] == [
+        "choice_generation",
+        "choice_generation",
+    ]
+    assert [usage.step_id for usage in recorded] == [3, 3]
 
 
 # ---------------------------------------------------------------------------
@@ -207,9 +253,9 @@ async def test_regenerate_choices_clears_then_generates():
     async def track_clear(story_id: str, step_id: int, choices: list) -> None:
         call_order.append("clear")
 
-    async def track_generate(text: str, plot_direction: str, user_character, supporting_characters) -> list[Choice]:
+    async def track_generate(text: str, plot_direction: str, user_character, supporting_characters) -> LLMCompletion:
         call_order.append("generate")
-        return [_CHOICE_A]
+        return make_completion("", [_CHOICE_A])
 
     mock_client.invoke = track_generate
     service, repo, _ = make_service(steps=steps, choice_engine_client=mock_client)
@@ -242,7 +288,7 @@ async def test_regenerate_choices_raises_when_no_steps():
 async def test_select_choice_appends_new_step():
     steps = make_steps(3)
     mock_engine = MagicMock()
-    mock_engine.invoke = AsyncMock(return_value="New paragraph text.")
+    mock_engine.invoke = AsyncMock(return_value=make_completion("New paragraph text.", None))
     service, repo, _ = make_service(steps=steps, story_engine_client=mock_engine)
 
     result = await service.select_choice(_STORY_ID, _CHOICE_A)
@@ -257,10 +303,34 @@ async def test_select_choice_appends_new_step():
 
 
 @pytest.mark.asyncio
+async def test_select_choice_records_story_generation_usage():
+    usage_repository = MagicMock()
+    usage_repository.append = AsyncMock()
+    mock_engine = MagicMock()
+    mock_engine.invoke = AsyncMock(
+        return_value=make_completion("New paragraph text.", None)
+    )
+    service, _, _ = make_service(
+        story_engine_client=mock_engine,
+        usage_repository=usage_repository,
+    )
+
+    await service.select_choice(_STORY_ID, _CHOICE_A)
+
+    usage_repository.append.assert_awaited_once()
+    story_id, usage = usage_repository.append.call_args.args
+    assert story_id == _STORY_ID
+    assert usage.operation == "story_generation"
+    assert usage.model_id == "choice-model"
+    assert usage.scene_id is None
+    assert usage.step_id is None
+
+
+@pytest.mark.asyncio
 async def test_select_choice_passes_action_and_consequence():
     steps = make_steps(3)
     mock_engine = MagicMock()
-    mock_engine.invoke = AsyncMock(return_value="reply")
+    mock_engine.invoke = AsyncMock(return_value=make_completion("reply", None))
     service, repo, _ = make_service(steps=steps, story_engine_client=mock_engine)
 
     await service.select_choice(_STORY_ID, _CHOICE_A)
@@ -274,7 +344,7 @@ async def test_select_choice_passes_action_and_consequence():
 @pytest.mark.asyncio
 async def test_select_choice_passes_separated_character_context_to_story_engine():
     mock_engine = MagicMock()
-    mock_engine.invoke = AsyncMock(return_value="reply")
+    mock_engine.invoke = AsyncMock(return_value=make_completion("reply", None))
     service, _, _ = make_service(steps=make_steps(3), story_engine_client=mock_engine)
 
     await service.select_choice(_STORY_ID, _CHOICE_A)
@@ -297,9 +367,9 @@ async def test_select_choice_uses_last_10_paragraphs():
 
     async def capture(
         story_text: str, action: str, consequence: str, user_character, supporting_characters, writing_style
-    ) -> str:
+    ) -> LLMCompletion:
         captured_story_text.append(story_text)
-        return "reply"
+        return make_completion("reply", None)
 
     mock_engine.invoke = capture
     service, repo, _ = make_service(steps=steps, story_engine_client=mock_engine)
@@ -319,9 +389,9 @@ async def test_select_choice_window_not_exceeded_when_fewer_than_10_steps():
 
     async def capture(
         story_text: str, action: str, consequence: str, user_character, supporting_characters, writing_style
-    ) -> str:
+    ) -> LLMCompletion:
         captured_story_text.append(story_text)
-        return "reply"
+        return make_completion("reply", None)
 
     mock_engine.invoke = capture
     service, repo, _ = make_service(steps=steps, story_engine_client=mock_engine)

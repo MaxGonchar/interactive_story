@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import shutil
 from pathlib import Path
 from uuid import UUID
@@ -130,3 +131,19 @@ async def test_append_round_trips_choice_reference(writable_data_root):
     await repo.append(FIXTURE_STORY_ID, usage)
 
     assert await repo.get_calls(FIXTURE_STORY_ID) == [usage]
+
+
+@pytest.mark.asyncio
+async def test_concurrent_appends_preserve_each_record(writable_data_root):
+    repo = LLMUsageRepository()
+    first = _make_scene_usage("f58ec747-7004-4d2c-b749-67b8f0c2e848")
+    second = _make_scene_usage("f58ec747-7004-4d2c-b749-67b8f0c2e849")
+
+    await asyncio.gather(
+        repo.append(FIXTURE_STORY_ID, first),
+        repo.append(FIXTURE_STORY_ID, second),
+    )
+
+    result = await repo.get_calls(FIXTURE_STORY_ID)
+
+    assert result == [first, second]

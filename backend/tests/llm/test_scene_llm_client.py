@@ -30,12 +30,29 @@ def _make_client() -> SceneLLMClient:
     return SceneLLMClient(model=types.SimpleNamespace(ainvoke=AsyncMock()))
 
 
+def _ai_response(content: str):
+    return types.SimpleNamespace(
+        content=content,
+        response_metadata={
+            "provider_model_id": "provider-model",
+            "provider_created": 1700000000,
+            "cost_usd": 0.001,
+            "duration_ms": 120,
+        },
+        usage_metadata={
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15,
+        },
+    )
+
+
 @pytest.mark.asyncio
 async def test_invoke_returns_model_content():
     client = _make_client()
-    client._model.ainvoke.return_value = types.SimpleNamespace(content="hi")
+    client._model.ainvoke.return_value = _ai_response("hi")
     result = await client.invoke(_make_context(), "Hello")
-    assert result == "hi"
+    assert result.content == "hi"
     client._model.ainvoke.assert_called_once()
 
 
@@ -55,7 +72,7 @@ def _make_context_with_messages(messages):
 async def test_invoke_forwards_all_message_history(monkeypatch):
     # Prepare mock model with ainvoke
     mock_model = types.SimpleNamespace()
-    mock_model.ainvoke = AsyncMock(return_value=types.SimpleNamespace(content="response"))
+    mock_model.ainvoke = AsyncMock(return_value=_ai_response("response"))
     # Messages: entry-point assistant, user, assistant
     messages = [
         Message(id=1, role="assistant", content="Entry point text"),
@@ -84,7 +101,7 @@ async def test_invoke_forwards_all_message_history(monkeypatch):
 @pytest.mark.asyncio
 async def test_invoke_empty_history_sends_two_messages(monkeypatch):
     mock_model = types.SimpleNamespace()
-    mock_model.ainvoke = AsyncMock(return_value=types.SimpleNamespace(content="response"))
+    mock_model.ainvoke = AsyncMock(return_value=_ai_response("response"))
     context = _make_context_with_messages([])
     client = SceneLLMClient.__new__(SceneLLMClient)
     client._model = mock_model

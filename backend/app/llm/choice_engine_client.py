@@ -11,6 +11,7 @@ from app.llm.logging_config import (
     log_prompt_messages,
     log_response_content,
 )
+from app.llm.models import LLMCompletion, parse_llm_completion
 from app.models.domain import CharacterCard, Choice
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -51,7 +52,7 @@ class ChoiceEngineClient:
         plot_direction: str,
         user_character: CharacterCard,
         supporting_characters: list[CharacterCard],
-    ) -> list[Choice]:
+    ) -> LLMCompletion:
         system_prompt = self._build_system_prompt(plot_direction, user_character, supporting_characters)
         messages = [SystemMessage(system_prompt), HumanMessage(story_text)]
         log_prompt_messages(self._logger, messages)
@@ -59,4 +60,6 @@ class ChoiceEngineClient:
         response = await self._model.ainvoke(messages)
         log_response_content(self._logger, response.content)
         result = self._parser.parse(response.content)
-        return result.options
+        return parse_llm_completion(response).model_copy(
+            update={"result": result.options}
+        )

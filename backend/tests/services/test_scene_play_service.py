@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from app.exceptions import NoAssistantMessageError, NoUserMessageError, SceneFinishedError
-from app.models.domain import CharacterCard, LLMData, Message, ModelMetadata, ModelRegistry
+from app.llm.models import LLMCompletion
+from app.models.domain import CharacterCard, LLMData, Message, ModelMetadata, ModelRegistry, TokenUsage
 from app.services.scene_play_service import ScenePlayService
 from tests.factories import make_scene_metadata
 
@@ -18,7 +19,11 @@ def make_service(
     messages=None,
     llm_reply: str = "Assistant reply",
     llm_side_effect=None,
+    usage_repository=None,
 ) -> tuple[ScenePlayService, AsyncMock, AsyncMock, MagicMock]:
+    if usage_repository is None:
+        usage_repository = AsyncMock()
+
     scene_repo = AsyncMock()
     scene_repo.get_metadata.return_value = metadata or make_scene_metadata(story_id=STORY_ID, scene_id=SCENE_ID)
     scene_repo.get_messages.return_value = messages if messages is not None else []
@@ -31,7 +36,7 @@ def make_service(
     if llm_side_effect is not None:
         llm_client.invoke.side_effect = llm_side_effect
     else:
-        llm_client.invoke.return_value = llm_reply
+        llm_client.invoke.return_value = make_completion(llm_reply)
 
     llm_client_factory = MagicMock(return_value=llm_client)
     registry_service = MagicMock()
@@ -50,9 +55,21 @@ def make_service(
     )
 
     service = ScenePlayService(
-        scene_repo, character_repo, llm_client_factory, registry_service
+        scene_repo, character_repo, llm_client_factory, registry_service, usage_repository
     )
     return service, scene_repo, character_repo, llm_client
+
+
+def make_completion(content: str = "Assistant reply") -> LLMCompletion:
+    return LLMCompletion(
+        content=content,
+        model_id="default-model",
+        provider_model_id="provider-default",
+        provider_created=1700000000,
+        duration_ms=125,
+        usage=TokenUsage(prompt_tokens=10, completion_tokens=5, total_tokens=15),
+        cost_usd=0.001,
+    )
 
 
 @pytest.mark.asyncio
@@ -63,7 +80,7 @@ async def test_play_context_data_uses_metadata_context():
 
     async def fake_invoke(context, *_):
         captured_context["context_data"] = context.context_data
-        return "LLM reply"
+        return make_completion("LLM reply")
 
     llm_client.invoke.side_effect = fake_invoke
     await service.play(STORY_ID, SCENE_ID, "Hello")
@@ -78,7 +95,7 @@ async def test_play_context_data_empty_when_metadata_context_none():
 
     async def fake_invoke(context, *_):
         captured_context["context_data"] = context.context_data
-        return "LLM reply"
+        return make_completion("LLM reply")
 
     llm_client.invoke.side_effect = fake_invoke
     await service.play(STORY_ID, SCENE_ID, "Hello")
@@ -93,7 +110,7 @@ async def test_play_includes_user_character_in_context():
 
     async def fake_invoke(context, *_):
         captured["user_character"] = context.user_character
-        return "reply"
+        return make_completion("reply")
 
     llm_client.invoke.side_effect = fake_invoke
     await service.play(STORY_ID, SCENE_ID, "Hello")
@@ -112,7 +129,7 @@ async def test_play_uses_narrator_context_without_user_character_lookup():
 
     async def fake_invoke(context, *_):
         captured["user_character"] = context.user_character
-        return "reply"
+        return make_completion("reply")
 
     llm_client.invoke.side_effect = fake_invoke
 
@@ -132,7 +149,7 @@ async def test_regenerate_includes_user_character_in_context():
 
     async def fake_invoke(context, *_):
         captured["user_character"] = context.user_character
-        return "New reply"
+        return make_completion("New reply")
 
     llm_client.invoke.side_effect = fake_invoke
     await service.regenerate(STORY_ID, SCENE_ID)
@@ -157,7 +174,7 @@ async def test_regenerate_uses_narrator_context_without_user_character_lookup():
 
     async def fake_invoke(context, *_):
         captured["user_character"] = context.user_character
-        return "New reply"
+        return make_completion("New reply")
 
     llm_client.invoke.side_effect = fake_invoke
 
@@ -185,7 +202,7 @@ async def test_regenerate_context_data_uses_metadata_context():
 
     async def fake_invoke(context, *_):
         captured_context["context_data"] = context.context_data
-        return "New reply"
+        return make_completion("New reply")
 
     llm_client.invoke.side_effect = fake_invoke
 
@@ -226,6 +243,49 @@ async def test_play_does_not_persist_on_llm_failure():
         await service.play(STORY_ID, SCENE_ID, "Hello")
 
     scene_repo.add_messages.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_play_records_complete_usage_after_success():
+    usage_repository = AsyncMock()
+    service, _, _, llm_client = make_service(
+        llm_reply="ignored",
+        usage_repository=usage_repository,
+    )
+    llm_client.invoke.return_value = make_completion()
+
+    await service.play(STORY_ID, SCENE_ID, "Hello")
+
+    usage_repository.append.assert_awaited_once()
+    story_id, usage = usage_repository.append.call_args.args
+    assert story_id == STORY_ID
+    assert usage.model_dump(mode="json") == {
+        "id": str(usage.id),
+        "operation": "scene_reply",
+        "model_id": "default-model",
+        "provider_model_id": "provider-default",
+        "provider_created": 1700000000,
+        "duration_ms": 125,
+        "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+        "cost_usd": 0.001,
+        "scene_id": SCENE_ID,
+        "message_id": 2,
+        "step_id": None,
+    }
+
+
+@pytest.mark.asyncio
+async def test_play_keeps_success_when_usage_persistence_fails(caplog):
+    usage_repository = AsyncMock()
+    usage_repository.append.side_effect = OSError("disk full")
+    service, scene_repo, _, llm_client = make_service(usage_repository=usage_repository)
+    llm_client.invoke.return_value = make_completion()
+
+    result = await service.play(STORY_ID, SCENE_ID, "Hello")
+
+    assert result[1].content == "Assistant reply"
+    scene_repo.add_messages.assert_awaited_once()
+    assert "Failed to persist LLM usage" in caplog.text
 
 
 @pytest.mark.asyncio

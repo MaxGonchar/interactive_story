@@ -6,9 +6,12 @@ import logging
 from app.exceptions import NoStepsError
 from app.llm.choice_engine_client import ChoiceEngineClient
 from app.llm.story_engine_client import StoryEngineClient
+from app.llm.models import LLMCompletion
 from app.models.domain import Choice, ChoiceDrivenStoryMeta, Step
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
+from app.repositories.llm_usage_repository import LLMUsageRepository
+from app.services.llm_usage_service import record_usage
 
 _PARAGRAPH_WINDOW = 10
 
@@ -22,11 +25,13 @@ class ChoiceDrivenPlayService:
         character_repo: CharacterRepository,
         choice_engine_client: ChoiceEngineClient,
         story_engine_client: StoryEngineClient,
+        usage_repository: LLMUsageRepository,
     ) -> None:
         self._repo = repo
         self._character_repo = character_repo
         self._choice_engine_client = choice_engine_client
         self._story_engine_client = story_engine_client
+        self._usage_repository = usage_repository
 
     async def get_play_state(self, story_id: str) -> list[Step]:
         return await self._repo.get_history(story_id)
@@ -55,17 +60,25 @@ class ChoiceDrivenPlayService:
         )
         story_text = "\n\n".join(s.text for s in steps)
 
-        results: list[list[Choice]] = list(
-            await asyncio.gather(
-                *[
-                    self._choice_engine_client.invoke(
+        async def generate_for_direction(direction: str) -> list[Choice]:
+            completion = await self._choice_engine_client.invoke(
                         story_text,
                         plot_direction=direction,
                         user_character=user_character,
                         supporting_characters=supporting_characters,
                     )
-                    for direction in meta.plot_directions
-                ]
+            await record_usage(
+                self._usage_repository,
+                story_id,
+                "choice_generation",
+                completion,
+                step_id=steps[-1].id,
+            )
+            return completion.result
+
+        results = list(
+            await asyncio.gather(
+                *(generate_for_direction(direction) for direction in meta.plot_directions)
             )
         )
 
@@ -98,13 +111,20 @@ class ChoiceDrivenPlayService:
         window = steps[-_PARAGRAPH_WINDOW:]
         story_text = "\n\n".join(s.text for s in window)
 
-        reply = await self._story_engine_client.invoke(
+        completion = await self._story_engine_client.invoke(
             story_text,
             choice.action,
             choice.consequence,
             user_character=user_character,
             supporting_characters=supporting_characters,
             writing_style=meta.writing_style,
+        )
+        reply = completion.content
+        await record_usage(
+            self._usage_repository,
+            story_id,
+            "story_generation",
+            completion,
         )
 
         last_id = steps[-1].id if steps else 0

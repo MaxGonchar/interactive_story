@@ -9,6 +9,7 @@ from app.llm.logging_config import (
     log_prompt_messages,
     log_response_content,
 )
+from app.llm.models import LLMCompletion, parse_llm_completion
 from app.models.domain import CharacterCard
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -27,7 +28,7 @@ class StoryEngineClient:
         user_character: CharacterCard,
         supporting_characters: list[CharacterCard],
         writing_style: str,
-    ) -> str:
+    ) -> LLMCompletion:
         supporting_character_profiles = "\n\n".join(
             c.to_prompt_text() for c in supporting_characters
         )
@@ -57,4 +58,4 @@ class StoryEngineClient:
 
         response = await self._model.ainvoke(messages)
         log_response_content(self._logger, response.content)
-        return response.content
+        return parse_llm_completion(response)
