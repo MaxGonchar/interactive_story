@@ -21,6 +21,7 @@ function ScenePage() {
   const [showFinishModal, setShowFinishModal] = useState(false)
   const [sending, setSending] = useState(false)
   const [regeneratingMessageId, setRegeneratingMessageId] = useState(null)
+  const [regenerationStatus, setRegenerationStatus] = useState('idle')
 
   useEffect(() => {
     Promise.all([getScene(storyId, sceneId), getModels()])
@@ -71,6 +72,7 @@ function ScenePage() {
     const lastAssistantMessage = scene.messages.filter((m) => m.role === 'assistant').pop()
     if (!lastAssistantMessage) return
     setRegeneratingMessageId(lastAssistantMessage.id)
+    setRegenerationStatus('active')
     setBusy(true)
     try {
       const response = await regenerateLastAssistantMessage(storyId, sceneId)
@@ -83,9 +85,11 @@ function ScenePage() {
       }))
     } catch (err) {
       setOpError(err.message ?? 'Failed to regenerate message')
+      setRegenerationStatus('error')
     } finally {
       setBusy(false)
       setRegeneratingMessageId(null)
+      setRegenerationStatus('idle')
     }
   }
 
@@ -178,6 +182,7 @@ function ScenePage() {
           onRegenerate={handleRegenerate}
           disabled={scene.finished || busy}
           regeneratingMessageId={regeneratingMessageId}
+          regenerationStatus={regenerationStatus}
           endSlot={<div ref={messageEndRef} aria-hidden="true" className="scene-message-list__end-anchor" />}
         />
       </div>

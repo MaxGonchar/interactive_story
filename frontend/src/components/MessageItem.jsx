@@ -3,9 +3,9 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { inlineEditTextarea } from '../styles'
 import { DeleteIcon, EditIcon, RefreshIcon } from './icons'
-import ProcessingLabel from './ProcessingLabel'
+import ResponseTimeIndicator from './ResponseTimeIndicator'
 
-function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false, regeneratingMessageId = null }) {
+function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false, regeneratingMessageId = null, regenerationStatus = 'idle' }) {
   const isUser = message.role === 'user'
   const label = isUser ? 'You' : 'Narrator'
 
@@ -52,7 +52,10 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
   const showEdit = !disabled && Boolean(onEdit)
   const showDelete = Boolean(onDelete)
   const hasActions = showRegenerate || showEdit || showDelete
-  const isRegenerating = regeneratingMessageId === message.id
+  const effectiveRegenerationStatus = regeneratingMessageId === message.id && regenerationStatus === 'idle'
+    ? 'active'
+    : regenerationStatus
+  const isRegenerating = regeneratingMessageId === message.id && effectiveRegenerationStatus === 'active'
 
   return (
     <div className="message-wrapper" style={{ alignItems: isUser ? 'flex-end' : 'flex-start' }}>
@@ -73,7 +76,7 @@ function MessageItem({ message, onEdit, onDelete, onRegenerate, disabled = false
             </div>
           </div>
         ) : isRegenerating ? (
-          <ProcessingLabel verb="Regenerating" />
+          <ResponseTimeIndicator verb="Regenerating" />
         ) : (
           <>
             <div className="message-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown></div>

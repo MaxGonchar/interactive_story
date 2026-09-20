@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { inputBase } from '../styles'
-import ProcessingLabel from './ProcessingLabel'
+import ResponseTimeIndicator from './ResponseTimeIndicator'
 
 function MessageComposer({ onSend, disabled = false, leadingAction = null, sending = false }) {
   const [text, setText] = useState('')
@@ -32,9 +32,10 @@ function MessageComposer({ onSend, disabled = false, leadingAction = null, sendi
           className="message-composer__send"
           onClick={handleSend}
           disabled={disabled || text.trim() === '' || sending}
+          aria-label={sending ? 'Sending' : 'Send'}
           style={{ minWidth: '80px' }}
         >
-          {sending ? <ProcessingLabel verb="Sending" /> : 'Send'}
+          {sending ? <ResponseTimeIndicator verb="Sending" /> : 'Send'}
         </button>
       </div>
     </div>

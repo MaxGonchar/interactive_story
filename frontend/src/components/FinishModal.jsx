@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { generateSceneSummary } from '../api/scenes'
 import BulletTextarea from './BulletTextarea'
 import { inputBase } from '../styles'
-import ProcessingLabel from './ProcessingLabel'
+import ResponseTimeIndicator from './ResponseTimeIndicator'
 
 function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
   const [items, setItems] = useState([])
@@ -58,8 +58,13 @@ function FinishModal({ onSubmit, onCancel, storyId, sceneId }) {
           </p>
         )}
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button onClick={handleGenerate} disabled={isGenerating} style={{ minWidth: '150px' }}>
-            {isGenerating ? <ProcessingLabel verb="Generating" /> : 'Generate Summary'}
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            aria-label={isGenerating ? 'Generating' : 'Generate Summary'}
+            style={{ minWidth: '150px' }}
+          >
+            {isGenerating ? <ResponseTimeIndicator verb="Generating" /> : 'Generate Summary'}
           </button>
           <button onClick={onCancel} disabled={isGenerating}>Cancel</button>
           <button onClick={handleSubmit} disabled={isGenerating}>Submit</button>

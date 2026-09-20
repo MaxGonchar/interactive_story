@@ -1,6 +1,6 @@
 import MessageItem from './MessageItem'
 
-function MessageList({ messages = [], onEdit, onDelete, onRegenerate, disabled, className, endSlot = null, regeneratingMessageId = null }) {
+function MessageList({ messages = [], onEdit, onDelete, onRegenerate, disabled, className, endSlot = null, regeneratingMessageId = null, regenerationStatus = 'idle' }) {
   if (messages.length === 0) {
     return (
       <div className={className}>
@@ -30,6 +30,7 @@ function MessageList({ messages = [], onEdit, onDelete, onRegenerate, disabled, 
           onDelete={!disabled && index === lastUserIdx ? onDelete : undefined}
           onRegenerate={shouldShowRegenerate && index === lastAssistantIdx ? onRegenerate : undefined}
           regeneratingMessageId={regeneratingMessageId}
+          regenerationStatus={regenerationStatus}
         />
       ))}
       {endSlot}

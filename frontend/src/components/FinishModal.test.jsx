@@ -1,7 +1,6 @@
-import React from 'react'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, act, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import FinishModal from './FinishModal'
 import { generateSceneSummary } from '../api/scenes'
 
@@ -19,6 +18,10 @@ describe('FinishModal', () => {
     vi.resetAllMocks()
     defaultProps.onSubmit = vi.fn()
     defaultProps.onCancel = vi.fn()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('renders modal overlay with "Finish Scene" heading', () => {
@@ -82,5 +85,42 @@ describe('FinishModal', () => {
     render(<FinishModal {...defaultProps} />)
     await userEvent.click(screen.getByRole('button', { name: 'Generate Summary' }))
     await screen.findByText('Server error')
+  })
+
+  it('updates the generation timer while pending and hides it after success', async () => {
+    let resolveGenerate
+    generateSceneSummary.mockImplementation(
+      () => new Promise((resolve) => { resolveGenerate = resolve })
+    )
+    vi.useFakeTimers()
+    render(<FinishModal {...defaultProps} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Summary' }))
+
+    expect(screen.getByLabelText('Generating elapsed time')).toBeInTheDocument()
+    act(() => {
+      vi.advanceTimersByTime(23450)
+    })
+    expect(screen.getByText('00:23:450')).toBeInTheDocument()
+
+    await act(async () => {
+      resolveGenerate({ data: { summary: ['A completed item'] } })
+    })
+
+    expect(screen.queryByLabelText('Generating elapsed time')).not.toBeInTheDocument()
+  })
+
+  it('hides the generation timer and preserves the error on failure', async () => {
+    generateSceneSummary.mockRejectedValue(new Error('Generation failed'))
+    vi.useFakeTimers()
+    render(<FinishModal {...defaultProps} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Summary' }))
+
+    expect(screen.getByLabelText('Generating elapsed time')).toBeInTheDocument()
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(screen.getByText('Generation failed')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Generating elapsed time')).not.toBeInTheDocument()
   })
 })
