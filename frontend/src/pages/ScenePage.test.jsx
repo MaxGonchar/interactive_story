@@ -5,10 +5,12 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import ScenePage from './ScenePage'
 import { getScene, playScene, regenerateLastAssistantMessage } from '../api/scenes'
 import { getModels } from '../api/models'
-import { makeScene, makeMessage, makeModel, makeModelRegistry } from '../tests/factories'
+import { getStory } from '../api/stories'
+import { makeScene, makeMessage, makeModel, makeModelRegistry, makeStory } from '../tests/factories'
 
 vi.mock('../api/scenes')
 vi.mock('../api/models')
+vi.mock('../api/stories')
 
 const scrollIntoViewMock = vi.fn()
 
@@ -17,6 +19,7 @@ function renderPage(storyId = 'story-1', sceneId = 'scene-1') {
     <MemoryRouter initialEntries={[`/stories/${storyId}/scenes/${sceneId}`]}>
       <Routes>
         <Route path="/stories/:storyId/scenes/:sceneId" element={<ScenePage />} />
+        <Route path="/stories/:storyId" element={<p>Story scenes</p>} />
       </Routes>
     </MemoryRouter>
   )
@@ -26,6 +29,7 @@ describe('ScenePage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     getModels.mockResolvedValue({ data: makeModelRegistry() })
+    getStory.mockResolvedValue({ data: makeStory({ id: 'story-1' }) })
     Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: scrollIntoViewMock,
@@ -51,6 +55,31 @@ describe('ScenePage', () => {
 
     expect(screen.getByText('Loading...')).toBeInTheDocument()
     expect(getModels).toHaveBeenCalledTimes(1)
+  })
+
+  it('loads and links the parent story title', async () => {
+    const story = makeStory({ id: 'story-1', title: 'The Oath: Winter House' })
+    getScene.mockResolvedValue({ data: makeScene() })
+    getStory.mockResolvedValue({ data: story })
+
+    renderPage()
+
+    const storyLink = await screen.findByRole('link', { name: story.title })
+    expect(storyLink).toHaveAttribute('href', '/stories/story-1')
+    await userEvent.click(storyLink)
+    expect(screen.getByText('Story scenes')).toBeInTheDocument()
+  })
+
+  it('loads the parent story concurrently with the scene and models', async () => {
+    getScene.mockResolvedValue({ data: makeScene() })
+    getStory.mockResolvedValue({ data: makeStory({ id: 'story-1', title: 'Test Story' }) })
+
+    renderPage()
+
+    await screen.findByRole('link', { name: 'Test Story' })
+    expect(getScene).toHaveBeenCalledWith('story-1', 'scene-1')
+    expect(getModels).toHaveBeenCalledTimes(1)
+    expect(getStory).toHaveBeenCalledWith('story-1')
   })
 
   it('renders message list on success', async () => {
@@ -91,6 +120,15 @@ describe('ScenePage', () => {
     renderPage()
 
     expect(await screen.findByText('Failed to load models')).toBeInTheDocument()
+  })
+
+  it('renders an error message when the parent story cannot load', async () => {
+    getScene.mockResolvedValue({ data: makeScene() })
+    getStory.mockRejectedValue(new Error('Failed to load story'))
+
+    renderPage()
+
+    expect(await screen.findByText('Failed to load story')).toBeInTheDocument()
   })
 
   it('selects the registry default model for an empty scene', async () => {
