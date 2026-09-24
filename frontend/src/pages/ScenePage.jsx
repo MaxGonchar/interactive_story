@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getScene, playScene, finishScene, editMessage, deleteMessage, regenerateLastAssistantMessage } from '../api/scenes'
 import { getModels } from '../api/models'
+import { getStory } from '../api/stories'
 import SceneHeader from '../components/SceneHeader'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
@@ -12,6 +13,7 @@ function ScenePage() {
   const messageEndRef = useRef(null)
   const { storyId, sceneId } = useParams()
   const [scene, setScene] = useState(null)
+  const [storyTitle, setStoryTitle] = useState('')
   const [models, setModels] = useState([])
   const [selectedModelId, setSelectedModelId] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -24,8 +26,8 @@ function ScenePage() {
   const [regenerationStatus, setRegenerationStatus] = useState('idle')
 
   useEffect(() => {
-    Promise.all([getScene(storyId, sceneId), getModels()])
-      .then(([sceneResponse, modelsResponse]) => {
+    Promise.all([getScene(storyId, sceneId), getModels(), getStory(storyId)])
+      .then(([sceneResponse, modelsResponse, storyResponse]) => {
         const loadedScene = sceneResponse.data
         const registry = modelsResponse.data
         const latestAssistantMessage = [...loadedScene.messages]
@@ -33,6 +35,7 @@ function ScenePage() {
           .find((message) => message.role === 'assistant' && message.llm_data?.model_id)
 
         setScene(loadedScene)
+  setStoryTitle(storyResponse.data.title)
         setModels(
           Object.entries(registry.models).map(([id, model]) => ({ id, ...model }))
         )
@@ -168,6 +171,8 @@ function ScenePage() {
     <div className="scene-page scene-page--fixed-frame">
       <SceneHeader
         scene={scene}
+        storyId={storyId}
+        storyTitle={storyTitle}
         models={models}
         selectedModelId={selectedModelId}
         onModelChange={setSelectedModelId}

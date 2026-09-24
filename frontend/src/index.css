@@ -306,6 +306,15 @@ button {
   border-bottom: var(--border-width) solid var(--border);
 }
 
+.scene-header__story-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.scene-header__story-link:hover {
+  text-decoration: underline;
+}
+
 .scene-header__model-control {
   display: flex;
   align-items: center;
