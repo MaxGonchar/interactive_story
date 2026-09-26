@@ -77,6 +77,19 @@ Apply these rules to every ticket:
 | **Testable** | If the change can be unit- or integration-tested, tests are included in the same ticket. |
 | **Independent where possible** | Minimise dependencies between tickets. State any unavoidable dependencies explicitly. |
 
+### Ticket Naming Convention
+
+Every ticket title must follow this format:
+
+```text
+<FEATURE_ABBREVIATION>-<NUMBER>: <concise description of the task>
+```
+
+Use the feature abbreviation consistently across all tickets in the same feature plan. The number identifies the ticket in the feature's sequence. The description should be concise and action-oriented. For example:
+
+- `SSG-3: Add GET /scenes/{scene_id}/summarize endpoint`
+- `SSG-4: Frontend – generateSceneSummary API + FinishModal Generate button`
+
 ### Step 4 — Present Review Table and Wait for Approval
 
 Before writing full task bodies or creating any board items, present the proposed tickets as a compact table:
@@ -104,7 +117,7 @@ Use the template at [./assets/task-template.md](./assets/task-template.md) as th
 
 Fill in every section. Do not leave placeholder text. Mark sections "N/A" explicitly when not applicable.
 
-The **Motivation** section is mandatory. It must answer: *why do we need these changes?* — the symptom, bug, design gap, or user need that drives the task. If the motivation is already described in `plan.md` or a problem report, summarise it here in 2–4 sentences.
+The **Motivation** section is mandatory. It must answer: *why do we need these changes?* — the symptom, bug, design gap, or user need that drives the task. If the motivation is already described a problem report, summarise it here in 2–4 sentences.
 
 ### Step 7 — Create Draft Items on the Board
 
@@ -132,7 +145,7 @@ After all items are created, print a summary listing each task title and its ite
 
 Before presenting the review table (Step 4), verify each ticket:
 - [ ] After this ticket merges, all tests pass and the system behaves correctly
-- [ ] Title is concise and action-oriented
+- [ ] Title follows `<FEATURE_ABBREVIATION>-<NUMBER>: <concise description>` and is action-oriented
 - [ ] Scope is one coherent change, not a grab-bag
 - [ ] Tests are included in the same ticket as the code they cover
 - [ ] Dependencies reference other tickets in this plan by number
@@ -145,6 +158,5 @@ Before creating board items (Step 7), additionally verify:
 ## Project Context
 
 - **Stack:** FastAPI (backend) · React (frontend) · LangChain · YAML file storage
-- **Plan doc:** `docks/dev/plan.md`
 - **Endpoints spec:** `docks/dev/endpoints.md`
 - **Requirements:** `docks/dev/requirements.md`

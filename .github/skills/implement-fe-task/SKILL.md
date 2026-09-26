@@ -89,8 +89,8 @@ Read the following docs **before** planning. Do not skip.
 | Doc | Purpose |
 |-----|---------|
 | [requirements.md](../../../../docks/dev/requirements.md) | Functional requirements and feature goals |
-| [frontend_styles_guide.md](../../../../docks/dev/frontend_styles_guide.md) | Styling rules — no magic values, CSS classes for static styles, inline only for dynamic |
-| [fe-conventions.md](./fe-conventions.md) | Test tooling, file location, naming, what/what-not to test, mocking, factories |
+| [frontend_styles_guide.md](../../../docks/dev/conventions/frontend_styles_guide.md) | Styling rules — no magic values, CSS classes for static styles, inline only for dynamic |
+| [fe-conventions.md](../../../docks/dev/conventions/fe-conventions.md) | Test tooling, file location, naming, what/what-not to test, mocking, factories |
 
 Also scan the relevant source files under `frontend/src/` to identify:
 - Existing components, API modules, and utilities that can be reused
@@ -104,12 +104,12 @@ Write a numbered plan. Each step must state:
 2. **Why** — the motivation tied to the task goal or a convention from the docs
 3. **How** — brief description of the approach
 
-The plan must include a **"Write Tests"** step for every new or changed component or API module, listing the specific behaviors to be covered per [fe-conventions.md](./fe-conventions.md).
+The plan must include a **"Write Tests"** step for every new or changed component or API module, listing the specific behaviors to be covered per [fe-conventions.md](../../../docks/dev/conventions/fe-conventions.md).
 
 Rules during planning:
 - **Reuse** existing components and helpers — do not reinvent
 - **Mirror** the patterns already present in the codebase
-- **Follow** the styling rules from `frontend_styles_guide.md` — no magic values, no inline styles for static properties
+- **Follow** the styling rules from `docks/dev/conventions/frontend_styles_guide.md` — no magic values, no inline styles for static properties
 - Flag any ambiguity or missing information as explicit questions
 
 Present the plan and **wait for user approval before writing any code**.
@@ -130,7 +130,7 @@ Work step-by-step through the approved plan:
 
 ### 7. Write Tests
 
-For every new or changed component or API module, write RTL tests following [fe-conventions.md](./fe-conventions.md):
+For every new or changed component or API module, write RTL tests following [fe-conventions.md](../../../docks/dev/conventions/fe-conventions.md):
 
 - Tests are **colocated** with the source file (e.g. `MessageItem.test.jsx` next to `MessageItem.jsx`)
 - Use factory functions from `frontend/src/tests/factories.js` for test data

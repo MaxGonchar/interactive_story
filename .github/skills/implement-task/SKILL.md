@@ -85,7 +85,6 @@ Read the following docs **before** planning. Do not skip.
 
 | Doc | Purpose |
 |-----|---------|
-| [plan.md](../../../../docks/dev/plan.md) | Overall architecture and roadmap |
 | [progect_structure.md](../../../../docks/dev/progect_structure.md) | Directory layout and module conventions |
 | [data_storage_structure.md](../../../../docks/dev/data_storage_structure.md) | Data models and storage layout |
 | [endpoints.md](../../../../docks/dev/endpoints.md) | API contract and route conventions |

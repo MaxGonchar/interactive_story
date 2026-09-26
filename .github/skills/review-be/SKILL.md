@@ -26,7 +26,7 @@ At the end: discuss findings with the user, then produce a structured report fil
 
 If the user specified a path, restrict the review to that module. Otherwise review the full `backend/app/` tree.
 
-Start by reading the layer conventions in [project-rules.md](./project-rules.md) and in `docks/dev/progect_structure.md`. These define what is *expected* — violations are findings.
+Start by reading the layer conventions in [project-rules.md](../../../docks/dev/conventions/project-rules.md) and in `docks/dev/progect_structure.md`. These define what is *expected* — violations are findings.
 
 ### Step 2 — Collect source files
 
@@ -43,7 +43,7 @@ List all `.py` files under the target scope. Group them by layer:
 
 ### Step 3 — Run the checklist
 
-Read each file and apply all checks from [project-rules.md](./project-rules.md).
+Read each file and apply all checks from [project-rules.md](../../../docks/dev/conventions/project-rules.md).
 
 For every finding record:
 

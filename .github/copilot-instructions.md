@@ -30,7 +30,6 @@
 - Use `backend/.venv/bin/pip` if you must install manually (prefer `make install`)
 
 ## Key Docs
-- `docks/dev/plan.md` — milestone plan and current progress
 - `docks/dev/requirements.md` — functional requirements
 - `docks/dev/endpoints.md` — API contract
 - `docks/dev/data_storage_structure.md` — YAML storage format
@@ -38,7 +37,7 @@
 
 ## BE Tests
 
-Full reference: [`.github/skills/implement-be-task/be-conventions.md`](.github/skills/implement-be-task/be-conventions.md) (§ BE Tests)
+Full reference: [`docks/dev/conventions/be-conventions.md`](../docks/dev/conventions/be-conventions.md) (§ BE Tests)
 
 Four rules — follow them for every test you create or modify:
 
@@ -49,7 +48,7 @@ Four rules — follow them for every test you create or modify:
 
 ## Frontend Styles
 
-Full reference: [`docks/dev/frontend_styles_guide.md`](../docks/dev/frontend_styles_guide.md)
+Full reference: [`docks/dev/conventions/frontend_styles_guide.md`](../docks/dev/conventions/frontend_styles_guide.md)
 
 Four rules — follow them for every component you create or modify:
 

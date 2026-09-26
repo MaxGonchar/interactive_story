@@ -41,6 +41,7 @@ test-fe:
 	cd frontend && npm run test
 
 .PHONY: finish-task
+# TODO: remove as not used
 finish-task:
 	@if [ -z "$(id)" ]; then \
 		echo "Error: task id required — run 'make finish-task id=010'"; exit 1; \

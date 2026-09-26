@@ -30,8 +30,8 @@ Start by reading the convention docs — these define what is *expected*; violat
 
 | Doc | What it defines |
 |---|---|
-| [fe-conventions.md](../implement-fe-task/fe-conventions.md) | Test tooling, file location, naming, what/what-not to test, mocking, factories |
-| [frontend_styles_guide.md](../../../../docks/dev/frontend_styles_guide.md) | Styling rules — CSS variables, no magic values, static vs dynamic styles, `styles.js` |
+| [fe-conventions.md](../../../docks/dev/conventions/fe-conventions.md) | Test tooling, file location, naming, what/what-not to test, mocking, factories |
+| [frontend_styles_guide.md](../../../docks/dev/conventions/frontend_styles_guide.md) | Styling rules — CSS variables, no magic values, static vs dynamic styles, `styles.js` |
 
 ### Step 2 — Collect Source Files
 
@@ -79,7 +79,7 @@ For every finding record:
 
 #### Test Coverage Checks
 
-Refer to [fe-conventions.md](../implement-fe-task/fe-conventions.md) for what should be tested.
+Refer to [fe-conventions.md](../../../docks/dev/conventions/fe-conventions.md) for what should be tested.
 
 - Every component file should have a colocated `.test.jsx` file.
 - Every API module file should have a colocated `.test.js` file.

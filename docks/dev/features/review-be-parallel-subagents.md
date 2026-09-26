@@ -117,9 +117,9 @@ None to `frontend/src/` — no components or pages are affected.
 ## Candidate Specialists
 
 Draft enumeration only — not full prompt specs. Grounded in the existing checklists in
-[`review-be/project-rules.md`](../../../.github/skills/review-be/project-rules.md) and
-[`implement-fe-task/fe-conventions.md`](../../../.github/skills/implement-fe-task/fe-conventions.md) /
-[`frontend_styles_guide.md`](../frontend_styles_guide.md).
+[`project-rules.md`](../conventions/project-rules.md) and
+[`fe-conventions.md`](../conventions/fe-conventions.md) /
+[`frontend_styles_guide.md`](../conventions/frontend_styles_guide.md).
 
 ### Backend
 

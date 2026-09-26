@@ -65,7 +65,7 @@ None.
 | File | Change |
 |---|---|
 | `.github/skills/implement-fe-task/SKILL.md` | New skill, split from `implement-task`, React/RTL-aware, tests are part of done |
-| `.github/skills/implement-fe-task/fe-conventions.md` | Convention reference doc (see section below) |
+| `docks/dev/conventions/fe-conventions.md` | Convention reference doc (see section below) |
 | `.github/skills/review-fe/SKILL.md` | New skill, quality checker for React components |
 | `.github/skills/implement-be-task/SKILL.md` | Renamed/split from `implement-task`, Python/pytest-aware |
 
