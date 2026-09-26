@@ -140,7 +140,7 @@ This includes: branching on domain state, constructing domain objects, calling r
 ### 3.4 LLM client responsible for prompt construction
 **Pattern**: in `app/llm/scene_llm_client.py` — assembling the system prompt or building LangChain message lists inline rather than delegating to `PromptBuilder`  
 **Severity**: warning  
-**Why**: per `progect_structure.md` and `plan.md`, `SceneLLMClient` should call the LLM with a prepared context; `PromptBuilder` owns the prompt shape. Mixing both in the client makes either hard to test or change independently.  
+**Why**: per `progect_structure.md`, `SceneLLMClient` should call the LLM with a prepared context; `PromptBuilder` owns the prompt shape. Mixing both in the client makes either hard to test or change independently.  
 **Fix**: ensure `SceneLLMClient.invoke()` only calls `self._prompt_builder.build_*()` and `self._model.ainvoke()`. All message assembly belongs in `PromptBuilder`.
 
 ### 3.5 Class or function with more than one distinct purpose
@@ -181,7 +181,7 @@ This includes: branching on domain state, constructing domain objects, calling r
 
 ## Section 5 — Project-Specific Conventions
 
-These rules are derived from `docks/dev/progect_structure.md`, `docks/dev/plan.md`, and `docks/dev/data_storage_structure.md`.
+These rules are derived from `docks/dev/progect_structure.md`, and `docks/dev/data_storage_structure.md`.
 
 ### 5.1 Repository write not using `atomic_write`
 **Pattern**: any write to a YAML file in `app/repositories/*.py` that does NOT use the `atomic_write` utility (i.e. `open(..., "w")` directly or `yaml_storage.write` without the atomic wrapper)  
@@ -210,7 +210,7 @@ These rules are derived from `docks/dev/progect_structure.md`, `docks/dev/plan.m
 ### 5.5 `context_data` not populated before LLM call
 **Pattern**: in `app/services/scene_play_service.py` — `SceneContext` constructed with `context_data` absent or always empty, without querying prior scene summaries from `StoryRepository`  
 **Severity**: warning  
-**Why**: per the system prompt correction issue in `plan.md`, the LLM needs prior scene summaries as narrative background. Leaving `context_data=[]` always produces a context-free response.  
+**Why**: per the system prompt correction, the LLM needs prior scene summaries as narrative background. Leaving `context_data=[]` always produces a context-free response.  
 **Fix**: fetch `story_meta.scenes[*].summary` for finished scenes preceding the current one and pass them as `context_data`.
 
 ### 5.6 Message history not forwarded to LLM
@@ -222,5 +222,5 @@ These rules are derived from `docks/dev/progect_structure.md`, `docks/dev/plan.m
 ### 5.7 Console stubs left in production handlers
 **Pattern**: `console.log(...)` or `print(...)` as the only body of an event handler or service method (i.e. a stub that was never replaced with real logic)  
 **Severity**: blocking  
-**Why**: features silently do nothing. Per `plan.md`'s known issues, several handlers were stubs from M3 that survived into M6.  
+**Why**: features silently do nothing. Several handlers were stubs from M3 that survived into M6.  
 **Fix**: implement the real logic or raise `NotImplementedError` with a clear message.

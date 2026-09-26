@@ -17,20 +17,20 @@ You are **not a decision-maker**. The user leads; you ask good questions, surfac
 - **MVP flow**: stories list → story scenes → active scene chat → finish scene.
 - **Key docs** (read before the first message):
   - `docks/dev/requirements.md` — functional and non-functional requirements + MVP scope
-  - `docks/dev/plan.md` — milestone plan and current progress
   - `docks/dev/endpoints.md` — API contract
   - `docks/dev/data_storage_structure.md` — YAML storage format
   - `docks/dev/progect_structure.md` — package layout and module responsibilities
-  - `docks/dev/gap_filling_plan.md` — known gaps and planned work
+  - Relevant behavior docs under `docks/project/` and existing feature designs under `docks/dev/features/`
 
 ---
 
 ## Before You Start
 
 Before your first reply, silently do the following:
-1. Read `docks/dev/requirements.md` and `docks/dev/plan.md`.
+1. Read the key docs listed above, plus any other project docs relevant to the feature.
 2. Search the codebase for anything relevant to the feature idea the user described.
-3. Read any relevant source files (routers, services, models, frontend pages/components).
+3. Read relevant source files (routers, services, models, frontend pages/components).
+4. Compare the proposed feature with the current documented requirements, behavior, API contracts, data structures, and architecture. Identify which docs would need updates if the feature adds, removes, or changes behavior or state. Be specific about the file and the change; do not assume a doc needs updating just because it is related. If no doc changes are needed, record that conclusion and why.
 
 Use this context to ground every discussion — catch conflicts with existing design early.
 
@@ -72,6 +72,12 @@ Guide the conversation to eventually touch on all of these areas before producin
 - What's the minimal viable slice of this feature?
 - What are the main unknowns or risks?
 - What's explicitly out of scope for the first iteration?
+
+## Documentation Impact
+- Which existing project docs describe the requirements, behavior, APIs, data structures, or architecture this feature changes?
+- For each affected doc, what specific statement, section, or contract should be added, changed, or removed?
+- Are any new docs needed, or can the existing docs be updated?
+- If no documentation changes are needed, why not?
 
 ---
 
@@ -115,6 +121,9 @@ List affected or new services, repositories, and models with a brief description
 
 ## Frontend Changes
 List affected or new pages and components with a brief description of each change.
+
+## Documentation Updates
+List each project documentation file that should be updated and the specific behavior, state, API, data structure, requirement, or architecture detail to add, change, or remove. Include relevant docs under `docks/dev/` and `docks/project/`. If no updates are needed, say so and explain why. Do not modify these docs as part of producing the feature design unless the user explicitly asks.
 
 ## Open Questions
 Unresolved questions or decisions deferred to implementation.

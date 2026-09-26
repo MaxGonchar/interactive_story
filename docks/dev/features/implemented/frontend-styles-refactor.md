@@ -30,7 +30,7 @@ The frontend has accumulated styling inconsistencies across components: duplicat
 - Add `ul`/`li` reset for `StoryList`
 - Align `ChoicesGrid` values with spacing tokens
 - Align `MessageComposer` textarea with input token
-- Write `frontend_styles_guide.md`
+- Write `docks/dev/conventions/frontend_styles_guide.md`
 - Update `copilot-instructions.md` with frontend styles rules
 
 **Out of scope**
@@ -207,7 +207,7 @@ Tasks:
 
 Tasks:
 
-17. **Write `docks/dev/frontend_styles_guide.md`**  
+17. **Write `docks/dev/conventions/frontend_styles_guide.md`**
     Contents:
     - Full token reference (all `--*` variables with their intent)
     - The 4-rule decision table (CSS class vs inline vs `styles.js` vs CSS variable)
@@ -219,7 +219,7 @@ Tasks:
     - Static styles go in `index.css` as a class
     - Dynamic styles (prop/state-dependent) go inline
     - Shared JS-side constants go in `src/styles.js`
-    - Pointer to `frontend_styles_guide.md`
+    - Pointer to `docks/dev/conventions/frontend_styles_guide.md`
 
 ## Open Questions
 

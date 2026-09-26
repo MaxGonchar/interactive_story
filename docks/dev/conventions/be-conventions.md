@@ -227,7 +227,7 @@ Always run from the project root via `make test-be`. Never run `pytest` directly
 
 ## BE Tests
 
-This section is the authoritative reference for backend test conventions. See also: `docks/dev/features/be_tests_conventions.md` for the full rationale.
+This section is the authoritative reference for backend test conventions. See also: [be_tests_conventions.md](be_tests_conventions.md) for the full rationale.
 
 ---
 

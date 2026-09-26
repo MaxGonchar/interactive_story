@@ -1,77 +1,63 @@
-# Purpose
-Build a local web app that automates the interactive story playing process.
+# Product Requirements
 
-Today the full flow is executed manually in one LLM service.
-For MVP we move only the core logic (scene playing) into this app and keep between-scene updates manual.
+## Purpose
 
-# Product Context
-- Main value: playing scenes in-app (this is the core fun and primary user goal).
-- MVP should be intentionally small to enable fast usage and learning.
-- Post-MVP features are informed by real usage and flow adjustments.
+Interactive Story is a local application for playing and progressing interactive stories. It supports scene-based stories and choice-driven stories, with language models used to generate story content and responses.
 
-# Functional Requirements (MVP)
-The app must support:
-- can see stories list
-- can open a story and see scenes list
-- can open the last scene and see messages
-- can play the scene by sending a message and receiving a response from the assistant
-- can edit a message in the current active scene
-- can delete a message in the current active scene
-- can finish the scene
+The application is for a single user working with story content available on their local machine. Editing the underlying story and character definitions is done outside the application.
 
-# Out of Scope for MVP (Post-MVP)
-- create or update story content via UI/API
-- create new scenes in app
-- update scene metadata/content between scenes in app
-- update character definitions in app
-- update scene character subsets in app
-- update scene descriptions in app
-- regenerate or edit scene summaries in app
-- automated between-scene flow steps from the diagram (character/state updates, summary refinements, prompt evolution)
-- advanced message history management beyond edit and delete in the current active scene
+## Supported Capabilities
 
-# Domain Definitions
-- Story: top-level narrative container with title, ordered scenes, and references to character cards.
-- Story Character: character definition stored as a separate character card file inside a story.
-- Scene: one playable episode in a story. Has status (`active` or `finished`), ordered messages, scene description, and a subset of story characters.
-- Message: chat item in a scene with role (`user` or `assistant`) and textual content.
-- Scene Description: structured scene context with entry point, guide, and writing style.
-- Finished scene: scene that no longer accepts new user messages via the play endpoint and has a scene summary.
+### Stories and scenes
 
-# Non-Functional Requirements (MVP)
-## General
-- client-server architecture
-- REST API
-- local-first usage (single user on local machine)
+See [`docks/project/scene_driven_story_play.md`](../project/scene_driven_story_play.md) for the full scene-based story play flow, from scene creation through play, correction, and finishing.
 
-## Performance Baseline (local environment)
-- `GET /stories`, `GET /stories/{story_id}`, `GET /stories/{story_id}/scenes/{scene_id}`: p95 <= 500 ms (excluding frontend rendering)
-- scene play operation (user message to assistant response): p95 <= 20 s, excluding external LLM provider outages
-- app startup to healthy state: <= 10 s
+### Choice-driven stories
 
-## Reliability
-- all file writes must be atomic to avoid partial/corrupted YAML files
-- invalid input must return deterministic 4xx responses with error details
-- failed LLM call must not corrupt scene history
+See [`docks/project/choice_driven_story_play.md`](../project/choice_driven_story_play.md) for the full choice-driven story play flow, from choice generation through step selection and branching back.
 
-## Observability
-- structured logs for requests, validation errors, repository errors, and LLM call failures
+### Reference data
 
-## BE Stack
-- Python
-- FastAPI
-- LLM operations: LangChain
-- storage: disk space, YAML files
+- The user can view the characters available in a story and choose them when creating a scene.
+- The user can view configured language models and use the configured default or select another available model.
 
-## FE Stack
-- React
+## Behavioral Requirements
 
-# Conventions
-## Python
-- type hints
-- async functions for I/O operations
-- Pydantic models (request/response models, data models, LLM operation models)
-- dependency injection (services, repositories)
+- A story has one of two progression modes: scene-based or choice-driven. The user experience and progression rules depend on the story's mode.
+- A scene is either active or finished. New scene messages, message edits, and message deletions are not accepted for a finished scene.
+- Editing a message changes its content without changing its role. Deleting messages does not renumber the remaining message identifiers.
+- If a scene-play language-model call fails, the attempted user message and assistant response are not added to scene history.
+- Finishing a scene records its summary and prevents further scene play or message changes.
+- Returning to an earlier choice-driven step removes steps that follow it.
 
-## JavaScript
-- keep frontend code modular and API-contract driven
+## Quality Requirements
+
+### Local performance targets
+
+These are target limits for a local environment, excluding frontend rendering and external language-model provider outages where applicable. They are not a claim that performance has been measured or certified.
+
+- Story and scene reads: p95 response time of 500 ms or less.
+- Scene play, from user message submission to assistant response: p95 of 20 seconds or less, excluding provider outages.
+- Application startup to healthy state: 10 seconds or less.
+
+### Reliability and operations
+
+- Persisted changes must be written atomically so an interrupted write does not leave partial or corrupted story data.
+- Invalid requests must receive deterministic client-error responses with useful error details.
+- A failed language-model operation must not leave the affected scene or choice progression partially updated.
+- Logs must provide structured records for requests, validation failures, persistence failures, and language-model failures.
+
+## Current Limitations
+
+- The application does not create or edit story definitions or character cards; those are prepared outside the application.
+- The application is intended for local, single-user use and does not provide multi-user collaboration or account management.
+
+## Domain Terms
+
+- **Story**: a narrative with a title, story type, and progression. Scene-based stories contain ordered scenes; choice-driven stories contain ordered steps.
+- **Character**: a story character definition that can be assigned to a scene.
+- **Scene**: a playable episode in a scene-based story, with context, writing guidance, participating characters, messages, and an active or finished status.
+- **Message**: a user or assistant entry in a scene's ordered conversation.
+- **Scene summary**: a summary recorded when a scene is finished and available as context for later scenes.
+- **Choice**: an action and its consequence offered as a way to progress a choice-driven story.
+- **Step**: a segment of a choice-driven story, containing story text and any choices available to continue.

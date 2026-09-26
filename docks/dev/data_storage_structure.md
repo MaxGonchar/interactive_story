@@ -1,31 +1,15 @@
-# Data Storage Structure (MVP)
+# Data Storage Structure
 
-## Scope
-This document defines storage for MVP only.
+## Storage Roots
 
-In MVP:
-- story and scene base content is prepared manually
-- app reads/writes scene messages and scene finished status during play
-- each story has its own character set (stored as separate character files)
-- each scene defines its own character set (independent of story-level character lists)
-- each scene has scene description metadata
-- each finished scene has summary text
-- messages in the active scene can be edited and deleted
+Story data is stored as YAML under `DATA_ROOT/stories/`. `DATA_ROOT` may be configured in the environment. Relative values are resolved from the `backend/` directory. If unset, the code fallback is the repository's `data-test/` directory; the provided `backend/.env.example` sets `DATA_ROOT=../data`, which resolves to the repository's `data/` directory.
 
-Out of MVP:
-- automated between-scene updates
-- in-app creation of new stories/scenes
-- in-app management of character and scene-description content
+The model registry is stored separately. `MODEL_REGISTRY_PATH` may override its location; relative values are resolved from the repository root. Its default is `data/models.yaml`, regardless of `DATA_ROOT`.
 
-## Storage Technology
-- Local disk storage
-- YAML files
-- Single-user local usage model
-
-## Root Layout
+## Layout
 
 ```text
-data/
+<DATA_ROOT>/
   stories/
     <story_id>/
       story.yaml
@@ -35,38 +19,34 @@ data/
         <scene_id>/
           meta.yaml
           messages.yaml
+      history.yaml             # choice-driven stories
+      llm_usage.yaml           # usage records, when present
+
+<MODEL_REGISTRY_PATH>/         # defaults to repository-root data/models.yaml
 ```
 
-## File Responsibilities
-- data/stories/<story_id>/story.yaml:
-  - story-level metadata
-  - ordered scene ids for story page
-  - active scene pointer
-- data/stories/<story_id>/characters/<character_id>.yaml:
-  - full character card for a story character
-- data/stories/<story_id>/scenes/<scene_id>/meta.yaml:
-  - scene metadata (finished status, character set, user character, scene description, summary)
-- data/stories/<story_id>/scenes/<scene_id>/messages.yaml:
-  - scene message history only
+`<MODEL_REGISTRY_PATH>` above is a file path, not a directory.
 
-## ID Rules
-- story_id: UUID string — derived from the folder name `data/stories/<story_id>/`
-- scene_id: integer, unique only within a story — derived from the folder name `scenes/<scene_id>/`
-- character_id: kebab-case string, unique only within a story — derived from the filename `characters/<character_id>.yaml`
-- message_id: integer, unique only within a scene
+The application discovers stories by scanning `stories/` for directories and reading each `story.yaml`; it does not read `stories/index.yaml`. Some checked-in data roots may still contain an older `index.yaml`, but it is not part of the active storage contract. Scene IDs are discovered from numeric directories under `scenes/`; scene status comes from each directory's `meta.yaml`.
 
-ID generation rules:
-- new assistant message id = max(existing ids) + 1
-- if no messages exist, first message id = 1
-- message ids are never re-numbered after edit or delete operations
+## Identifiers and Ordering
 
-## YAML Schemas
+- `story_id` is the story directory name and is expected to be a UUID string. It is not repeated in `story.yaml`.
+- `scene_id` is the numeric scene directory name and is unique within a story. The next created scene uses one more than the largest existing scene ID, or `1` when none exist.
+- `character_id` is the character filename without `.yaml`; it is unique within a story. The storage model does not enforce a particular string format.
+- `message_id` is an integer unique within a scene. New messages use one more than the current largest ID; deleting a message does not renumber the others.
+- Choice-driven step IDs are stored in `history.yaml`; the next generated step uses one more than the last step ID.
+- LLM usage record `id` is a UUID.
 
-### 1) Story Metadata
-Path: data/stories/<story_id>/story.yaml
+Stories are listed by `created_at` descending. Scenes are listed by numeric ID ascending. Messages are returned by message ID ascending. Choice-driven steps retain their order in the `steps` list.
 
-> The story ID is derived from the enclosing folder name, not stored inside the file.
-> Scene IDs are derived from subfolder names under `scenes/`, not stored in this file.
+## YAML Documents
+
+### Story metadata
+
+Path: `<DATA_ROOT>/stories/<story_id>/story.yaml`
+
+Every story has the following fields:
 
 ```yaml
 title: "The Black Harbor"
@@ -74,159 +54,156 @@ type: "scene"
 created_at: "2024-06-01T12:00:00Z"
 ```
 
-Constraints:
-- `type` is required; valid values: `"scene"` | `"choice_driven"`
-- `created_at` is required; ISO 8601 string
-- when `type` is `"choice_driven"`, `story.yaml` additionally requires:
-  - `user_character_id`: protagonist character id
-  - `character_ids`: supporting character ids used for prompt context
-  - `writing_style`: style instructions for story engine
-  - `plot_directions`: list of plot goals for parallel choice engines
-- stories are discovered by scanning `data/stories/` for subdirectories; IDs are derived from folder names
-- stories are sorted by `created_at` desc when returned from list
-- scene IDs are discovered by listing `scenes/<scene_id>/` subfolder names (integer, sorted ascending)
-- the `finished` state for each scene is stored exclusively in that scene's `meta.yaml`
+`type` is `scene` or `choice_driven`. For a choice-driven story, the same file also contains the fields used to generate story steps and choices:
 
-### 3) Character Card
-Path: data/stories/<story_id>/characters/<character_id>.yaml
+```yaml
+title: "The Black Harbor"
+type: "choice_driven"
+created_at: "2024-06-01T12:00:00Z"
+user_character_id: "captain"
+character_ids:
+  - "navigator"
+writing_style: "Cinematic, concise prose."
+plot_directions:
+  - "Reveal a clue about the harbor."
+  - "Introduce a complication for the crew."
+```
 
-> The character ID is derived from the filename, not stored inside the file.
+Story and character content is supplied as YAML. Scene creation and choice-driven play also write application-managed files described below.
+
+### Character card
+
+Path: `<DATA_ROOT>/stories/<story_id>/characters/<character_id>.yaml`
 
 ```yaml
 name: "Captain Mora"
-appearance: "Tall, sea-worn coat, scar over left eyebrow"
-traits:
-  - "pragmatic"
-  - "suspicious"
-speech_patterns:
-  - "short direct phrases"
-body_language:
-  - "folded arms"
-  - "controlled pacing"
-likes:
-  - "clear orders"
-fears:
-  - "mutiny"
+features:
+  appearance: "A sea-worn coat and a scar over the left eyebrow."
+  traits:
+    - "pragmatic"
+    - "suspicious"
 memory:
-  - "Lost her first crew in a storm"
+  - "Lost her first crew in a storm."
 ```
 
-Constraints:
-- name must be non-empty string
+`name` is a string. `features` is a mapping whose values are either strings or lists of strings; it defaults to an empty mapping. `memory` is a list of strings and defaults to an empty list. The character ID comes from the filename, not the document.
 
-### 4) Scene Metadata
-Path: data/stories/<story_id>/scenes/<scene_id>/meta.yaml
+### Scene metadata
 
-> The scene ID is derived from the enclosing folder name, not stored inside the file.
+Path: `<DATA_ROOT>/stories/<story_id>/scenes/<scene_id>/meta.yaml`
 
 ```yaml
 finished: false
 character_ids:
-  - "captain-mora"
-user_character_id: "player"
+  - "navigator"
+user_character_id: "captain"
 scene_description:
-  general_scene_guide: "Keep tension rising with small discoveries and choices."
-  writing_style: "Cinematic, sensory details, concise dialog turns."
+  general_scene_guide: "Keep tension rising with small discoveries."
+  writing_style: "Cinematic, sensory details, concise dialogue."
 scene_summary: null
 context:
-  - "You arrived at the harbor and met Captain Mora, who warned you of dangers ahead."
-  - "You decided to explore the docks for supplies before setting out to sea."
+  - "The ship has reached the harbor."
 ```
 
-Constraints:
-- finished is boolean
-- each character_id must have a matching character file in characters/<character_id>.yaml
-- user_character_id is a character id or null; null is allowed only for scenes in a "scene" story
-- when user_character_id is non-null, it must have a matching character file in characters/<user_character_id>.yaml
-- scene_description must include: general_scene_guide, writing_style
-  
-### 5) Scene Messages
-Path: data/stories/<story_id>/scenes/<scene_id>/messages.yaml
+- `finished` is a boolean and defaults to `false` when omitted.
+- `character_ids` is the list of supporting story character IDs for the scene.
+- `user_character_id` is required and may be a character ID or `null`. A null user character is supported only for `scene` stories.
+- `scene_description` contains the required `general_scene_guide` and `writing_style` strings.
+- `scene_summary` is a list of strings or `null`; it is recorded when the scene is finished.
+- `context` is a list of strings or `null`.
+
+The scene ID comes from its directory name, not the YAML document. Scene creation validates that referenced character files exist. The story-level character definitions remain in `characters/`.
+
+### Scene messages
+
+Path: `<DATA_ROOT>/stories/<story_id>/scenes/<scene_id>/messages.yaml`
 
 ```yaml
 messages:
   - id: 1
     role: "assistant"
-    content: "You step into the foggy harbor..."
+    content: "A bell rings through the fog."
+    llm_data:
+      model_id: "story-model"
   - id: 2
     role: "user"
     content: "I look for the nearest light source."
-  - id: 3
-    role: "assistant"
-    content: "A lantern swings near a wooden post..."
 ```
 
-Constraints:
-- messages are strictly ordered by id asc
-- role must be one of: user, assistant
-- content must be non-empty string
+The document contains a `messages` list. Each item has an integer `id`, a `role` of `user` or `assistant`, and string `content`. `llm_data` is optional and, when present, contains the `model_id` used for the assistant response. Missing `messages.yaml` is treated as an empty message list. Play appends the user and assistant messages together; message edit and delete operations rewrite this file while preserving IDs of remaining messages.
 
-## Repository Invariants
-- A scene with finished=true cannot accept new user message through play operation.
-- Message edits and deletions are allowed only while scene is not finished.
-- Message ids are stable and are never re-numbered after edit or delete operations.
-- Every successful play operation appends one user message and one assistant message.
-- On LLM failure, user message append behavior must follow API contract decision (to be finalized in endpoints doc).
+### Choice-driven history
 
-## Atomic Write Strategy
-All writes must be atomic per file.
+Path: `<DATA_ROOT>/stories/<story_id>/history.yaml`
 
-Write algorithm:
-1. Serialize YAML to bytes.
-2. Write to temp file in same directory: <target>.tmp
-3. Flush and fsync temp file.
-4. Rename temp file to target file (atomic replace).
-5. Optionally fsync directory metadata.
+```yaml
+steps:
+  - id: 1
+    incoming_choice: null
+    text: "The ship enters the harbor."
+    choices:
+      - action: "Dock"
+        consequence: "The crew is noticed."
+  - id: 2
+    incoming_choice:
+      action: "Dock"
+      consequence: "The crew is noticed."
+    text: "A harbor guard approaches."
+    choices: []
+```
 
-Why same directory:
-- rename is atomic only within same filesystem boundary.
+Each step has an integer `id`, nullable `incoming_choice`, string `text`, and a `choices` list. A choice contains string `action` and `consequence` fields. Missing `history.yaml` is treated as an empty step list. Editing a step changes its text; returning to a step truncates later steps.
 
-## Concurrency Model (MVP)
-- Single-process app, local user.
-- Use per-scene in-process lock for scene write operations.
-- Lock key: story_id + scene_id.
+### LLM usage
 
-## Read/Write Mapping to MVP Operations
-- list stories:
-  - scan data/stories/ for story subdirectories
-  - read each story.yaml concurrently
-  - sort by created_at desc
-- get story and scenes list:
-  - read story.yaml
-  - read each scene meta.yaml for finished status
-- open last scene:
-  - read story.yaml -> active_scene_id
-  - read scene meta.yaml
-  - read scene messages.yaml
-- play scene:
-  - read scene meta.yaml
-  - validate not finished
-  - read scene messages.yaml
-  - append user + assistant messages
-  - atomic write messages.yaml
-- edit message:
-  - read scene meta.yaml
-  - validate not finished
-  - read scene messages.yaml
-  - update target message content in place
-  - atomic write messages.yaml
-- delete message:
-  - read scene meta.yaml
-  - validate not finished
-  - read scene messages.yaml
-  - remove target message without re-numbering remaining ids
-  - atomic write messages.yaml
-- finish scene:
-  - read scene meta.yaml
-  - set finished=true
-  - persist scene_summary
-  - atomic write meta.yaml
+Path: `<DATA_ROOT>/stories/<story_id>/llm_usage.yaml`
 
-## Validation Rules at Repository Boundary
-- reject malformed YAML as repository error
-- reject missing referenced files as not-found errors
-- reject schema-invalid documents as data integrity errors
+```yaml
+calls:
+  - id: "44cd72c8-a646-43a0-89d2-0ce256327d2a"
+    operation: "scene_reply"
+    model_id: "story-model"
+    provider_model_id: "provider/model-name"
+    provider_created: 1789898289
+    duration_ms: 2216
+    usage:
+      prompt_tokens: 2740
+      completion_tokens: 73
+      total_tokens: 2813
+    cost_usd: 0.001516
+    scene_id: 1
+    message_id: 19
+    step_id: null
+```
 
-## Manual Content Update Policy (MVP)
-- stories/scenes base content is created and modified manually outside app flows
-- manual edits must preserve schema and id invariants above
+`calls` is an ordered list. `operation` is one of `scene_reply`, `scene_summary`, `story_generation`, or `choice_generation`. Every record contains a UUID, selected and provider model IDs, provider timestamp, duration, and token usage. `cost_usd` and content references are nullable. Scene operations require `scene_id`; choice generation requires `step_id`; story generation has no scene, message, or step reference. Missing `llm_usage.yaml` is treated as an empty list.
+
+### Model registry
+
+Default path: `<repository-root>/data/models.yaml`.
+
+```yaml
+models:
+  story-model:
+    name: "Story Model"
+    providerModelID: "provider/model-name"
+    default: true
+```
+
+The mapping key is the model ID. `name` and `providerModelID` are required non-empty strings. `default` is a boolean that defaults to `false`; the registry must contain at least one model and exactly one model marked as default.
+
+## Persistence Behavior
+
+- YAML is loaded with `safe_load` and validated against Pydantic storage models.
+- Each persisted file write uses a temporary file in the same directory, flushes and `fsync`s it, then replaces the target with `os.replace`.
+- Atomic replacement applies to one file at a time. It does not make multi-file operations transactional. Scene creation writes `meta.yaml` and `messages.yaml` separately; interruption between those writes may leave only one of the files updated.
+- Scene play persists the user and assistant messages together in one atomic write to `messages.yaml`, after the LLM response succeeds. LLM usage is appended to its own file separately.
+- Choice-driven history and LLM usage are each rewritten atomically as individual files. Usage appends are protected by an in-process per-story lock; scene message writes do not use that lock.
+
+## Application-Managed Changes
+
+- Creating a scene creates its scene directory and writes `meta.yaml` and an initial assistant message in `messages.yaml`.
+- Playing, editing, regenerating, or deleting messages updates the scene's `messages.yaml`; finishing a scene updates its `meta.yaml` with `finished: true` and the summary.
+- Choice-driven generation, editing, and rewind operations update `history.yaml`.
+- LLM calls append usage records to `llm_usage.yaml` when usage metadata is available.
+- Story definitions and character cards are read from their YAML files; the application does not expose operations to edit those files.

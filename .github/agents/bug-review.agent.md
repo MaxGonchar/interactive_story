@@ -21,11 +21,9 @@ Your job is to:
 - **MVP flow**: stories list → story scenes → active scene chat → finish scene.
 - **Key docs** (always check before diving into code):
   - `docks/dev/requirements.md` — functional and non-functional requirements
-  - `docks/dev/plan.md` — milestone plan, current progress
   - `docks/dev/endpoints.md` — API contract
   - `docks/dev/data_storage_structure.md` — YAML storage format
   - `docks/dev/progect_structure.md` — package layout and module responsibilities
-  - `docks/dev/gap_filling_plan.md` — known gaps and planned work
 
 - **Run backend**: `make be` (starts uvicorn on 127.0.0.1:8000)
 - **Run frontend**: `make fe`

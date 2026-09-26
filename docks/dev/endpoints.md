@@ -1,13 +1,12 @@
-# API Contract (MVP)
+# API Contract
 
 ## Overview
 
-Base path: `/api`
-Content-Type: `application/json`
+- API base path: `/api`
+- Request and response bodies use JSON unless noted otherwise.
+- Error responses use the common shape described below.
 
-## Standard Error Response
-
-All 4xx and 5xx responses use this shape:
+## Errors
 
 ```json
 {
@@ -18,144 +17,191 @@ All 4xx and 5xx responses use this shape:
 }
 ```
 
-Common error codes:
-- `not_found` – requested resource does not exist
-- `validation_error` – request body or path parameter failed validation
-- `scene_finished` – operation rejected because scene is already finished
-- `llm_error` – LLM call failed; scene history was not modified
-- `internal_error` – unexpected server-side failure
+Request validation errors return `422` with code `validation_error`. Domain errors return their configured status and error code. Unhandled errors return `500` with code `internal_error`; LLM provider failures return `502` with code `llm_error`. Framework HTTP errors use code `http_error`.
 
----
+Common domain errors include:
 
-## Endpoints
+| Status | Code | Meaning |
+|---|---|---|
+| 404 | `not_found` | Requested story, scene, character, or message was not found. |
+| 409 | `scene_finished` | The operation is not allowed on a finished scene. |
+| 409 | `active_scene_exists` | A new scene cannot be created while one is unfinished. |
+| 409 | `narrator_mode_not_supported` | Narrator mode is only supported for `scene` stories. |
+| 409 | `no_steps` | A choice operation requires at least one existing step. |
+| 409 | `no_assistant_message` | There is no last assistant message to regenerate. |
+| 409 | `no_user_message` | There is no preceding user message to regenerate from. |
+| 422 | `validation_error` | The request is invalid or references an unavailable model. |
+| 502 | `llm_error` | An upstream language-model request failed. |
+| 500 | `internal_error` | An unexpected server or configuration error occurred. |
+
+## Health
+
+### GET /health
+
+Health check. This route is outside the `/api` prefix.
+
+**Response 200**
+
+```json
+{"status": "ok"}
+```
+
+## Stories and Reference Data
 
 ### GET /api/stories
 
-List all stories.
+List stories, ordered by `created_at` descending.
 
 **Response 200**
+
 ```json
 {
     "data": [
         {
             "id": "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
-            "title": "The Black Harbor"
+            "title": "The Black Harbor",
+            "type": "scene"
         }
     ]
 }
 ```
 
-Stories are ordered by their `order` field ascending.
-
----
+`type` is `scene` or `choice_driven`.
 
 ### GET /api/stories/{story_id}
 
-Get story metadata and its scene list.
-
-**Path parameters**
-- `story_id`: UUID string
+Return story metadata and its ordered scene references. The scenes are ordered by numeric scene ID. `active_scene_id` is `null` when no scene is unfinished.
 
 **Response 200**
+
 ```json
 {
     "data": {
         "id": "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         "title": "The Black Harbor",
         "scenes": [
-            {
-                "id": 1,
-                "finished": true
-            },
-            {
-                "id": 2,
-                "finished": true
-            },
-            {
-                "id": 3,
-                "finished": false
-            }
+            {"id": 1, "finished": true},
+            {"id": 2, "finished": false}
         ],
-        "active_scene_id": 3
+        "active_scene_id": 2
     }
 }
 ```
 
-Scenes are ordered by their `order` field ascending.
+**Response 404**: story not found.
 
-**Response 404** – story not found
+### GET /api/stories/{story_id}/characters
 
----
+List the characters available in a story.
+
+**Response 200**
+
+```json
+{
+    "data": [
+        {"id": "captain", "name": "The Captain"}
+    ]
+}
+```
+
+### GET /api/models
+
+Return configured language models and the default model ID.
+
+**Response 200**
+
+```json
+{
+    "data": {
+        "models": {
+            "story-model": {
+                "name": "Story Model",
+                "providerModelID": "provider/model-name"
+            }
+        },
+        "default_model_id": "story-model"
+    }
+}
+```
+
+## Scene Endpoints
+
+### POST /api/stories/{story_id}/scenes
+
+Create the next scene. Creation is rejected if the story already has an unfinished scene.
+
+**Request**
+
+```json
+{
+    "user_character_id": "captain",
+    "character_ids": ["navigator"],
+    "context": ["The ship has reached the harbor."],
+    "general_scene_guide": "Keep tension rising.",
+    "writing_style": "Cinematic and concise.",
+    "first_message": "A bell rings through the fog.",
+    "model_id": "story-model"
+}
+```
+
+`user_character_id` is required but may be `null`. `character_ids` may be omitted and defaults to an empty list. `context` must contain at least one item. A non-null user character cannot also appear in `character_ids`. Every referenced character and the model ID must exist. Narrator mode (`user_character_id: null`) is only supported for `scene` stories.
+
+**Response 201**
+
+```json
+{"data": {"id": 3, "finished": false}}
+```
+
+**Responses**: `404` for a missing story or character; `409` for an existing active scene or unsupported narrator mode; `422` for invalid request data or unavailable model.
 
 ### GET /api/stories/{story_id}/scenes/{scene_id}
 
-Get scene content: metadata and full message history.
-
-**Path parameters**
-- `story_id`: UUID string
-- `scene_id`: integer
+Return scene metadata and the full message history. Messages are ordered by ID. `context` and `scene_summary` are nullable; `llm_data` is omitted for messages without model metadata.
 
 **Response 200**
+
 ```json
 {
     "data": {
         "id": 3,
         "finished": false,
         "scene_description": {
-            "general_scene_guide": "Keep tension rising with small discoveries and choices.",
-            "writing_style": "Cinematic, sensory details, concise dialog turns."
+            "general_scene_guide": "Keep tension rising.",
+            "writing_style": "Cinematic and concise."
         },
         "scene_summary": null,
+        "context": ["The ship has reached the harbor."],
         "messages": [
             {
                 "id": 1,
                 "role": "assistant",
-                "content": "You step into the foggy harbor..."
-            },
-            {
-                "id": 2,
-                "role": "user",
-                "content": "I look for the nearest light source."
+                "content": "A bell rings through the fog.",
+                "llm_data": {"model_id": "story-model"}
             }
         ]
     }
 }
 ```
 
-`scene_summary` is `null` when scene is not finished, and a non-empty list of strings when finished.
-Messages are ordered by `id` ascending.
-
-**Response 404** – story or scene not found
-
----
+**Response 404**: story or scene not found.
 
 ### POST /api/stories/{story_id}/scenes/{scene_id}/play
 
-Send a user message and receive the assistant response.
-
-This is the core scene-playing operation. The server:
-1. Validates scene is not finished.
-2. Calls the LLM with scene context (characters, description, message history, new user message).
-3. On LLM success: persists user message and assistant message atomically.
-4. Returns both messages.
-
-If the LLM call fails, **neither** message is persisted. The scene history remains unchanged.
-
-**Path parameters**
-- `story_id`: UUID string
-- `scene_id`: integer
+Send a user message and receive the assistant response. The selected `model_id` is optional; when omitted, the backend uses the previous assistant message's model when available, otherwise the configured default.
 
 **Request**
+
 ```json
 {
-    "content": "I look for the nearest light source."
+    "content": "I look for the nearest light source.",
+    "model_id": "story-model"
 }
 ```
 
-Validation:
-- `content`: required, non-empty string, max 4000 characters
+`content` must contain 1–4000 characters.
 
 **Response 200**
+
 ```json
 {
     "data": {
@@ -167,118 +213,98 @@ Validation:
         "assistant_message": {
             "id": 3,
             "role": "assistant",
-            "content": "A lantern swings near a wooden post..."
+            "content": "A lantern swings near a wooden post...",
+            "llm_data": {"model_id": "story-model"}
         }
     }
 }
 ```
 
-Both messages are returned so the client can append them to the chat in the correct order without a full page reload.
+After a successful LLM response, both messages are persisted in one atomic messages-file write. If the LLM call fails, neither message is persisted. LLM usage is recorded separately.
 
-**Response 404** – story or scene not found
-**Response 422** – validation error (content missing or too long)
-**Response 409** – scene is already finished (`scene_finished` error code)
-**Response 502** – LLM call failed (`llm_error` error code); scene unchanged
+**Responses**: `404` for a missing story or scene; `409` if the scene is finished; `422` for invalid content or unavailable model; `502` if the LLM request fails.
 
-### POST /api/stories/{story_id}/scenes
+### POST /api/stories/{story_id}/scenes/{scene_id}/regenerate
 
-Create the next scene for a story when no active scene exists.
-
-For a story with `type: "scene"`, `user_character_id` may be `null` to create a narrator scene. For `type: "choice_driven"`, a valid non-null user character is required. A non-null user character must not appear in `character_ids`, and every supplied character ID must exist in the story.
-
----
-
-### PUT /api/stories/{story_id}/scenes/{scene_id}/messages/{message_id}
-
-Edit an existing message in the current scene.
-
-This endpoint is included in MVP because message correction is part of the current scene-playing workflow and is required for equivalent user experience.
-
-**Path parameters**
-- `story_id`: UUID string
-- `scene_id`: integer
-- `message_id`: integer
-
-**Request**
-```json
-{
-    "content": "I carefully inspect the lantern and the alley behind it."
-}
-```
-
-Validation:
-- `content`: required, non-empty string, max 4000 characters
+Regenerate the latest assistant message using the preceding user message. This replaces the existing assistant message rather than adding another message. The request has no body.
 
 **Response 200**
+
 ```json
 {
     "data": {
-        "id": 2,
-        "role": "user",
-        "content": "I carefully inspect the lantern and the alley behind it."
+        "assistant_message": {
+            "id": 3,
+            "role": "assistant",
+            "content": "A lantern swings near a wooden post...",
+            "llm_data": {"model_id": "story-model"}
+        }
     }
 }
 ```
 
-Rules:
-- message must exist in the scene
-- editing is allowed only while scene is not finished
-- role is immutable; only `content` can change
-- ids of other messages do not change
+**Responses**: `404` for a missing story or scene; `409` if the scene is finished, there is no assistant message to replace, or there is no preceding user message; `502` if the LLM request fails.
 
-**Response 404** – story, scene, or message not found
-**Response 422** – validation error (content missing or too long)
-**Response 409** – scene is already finished (`scene_finished` error code)
+### GET /api/stories/{story_id}/scenes/{scene_id}/summarize
 
----
+Generate and return a scene summary. This endpoint does not finish the scene or save the summary to scene metadata; use the finish endpoint to record a summary.
+
+**Response 200**
+
+```json
+{"data": {"summary": ["The hero discovered the map.", "He escaped the harbor."]}}
+```
+
+**Responses**: `404` for a missing story or scene; `409` if the scene is finished; `502` if the LLM request fails.
+
+### PUT /api/stories/{story_id}/scenes/{scene_id}/messages/{message_id}
+
+Update a message's content. The role and ID are unchanged.
+
+**Request**
+
+```json
+{"content": "I carefully inspect the lantern."}
+```
+
+`content` must contain 1–4000 characters.
+
+**Response 200**
+
+```json
+{"data": {"id": 2, "role": "user", "content": "I carefully inspect the lantern."}}
+```
+
+**Responses**: `404` for a missing story, scene, or message; `409` if the scene is finished; `422` for invalid content.
 
 ### DELETE /api/stories/{story_id}/scenes/{scene_id}/messages/{message_id}
 
-Delete an existing message from the current scene.
-
-This endpoint is included in MVP because message deletion is part of the current scene-playing workflow and is required for equivalent user experience.
-
-**Path parameters**
-- `story_id`: UUID string
-- `scene_id`: integer
-- `message_id`: integer
+Delete a message. Remaining message IDs are not renumbered.
 
 **Response 200**
+
 ```json
-{
-    "success": true
-}
+{"success": true}
 ```
 
-Rules:
-- message must exist in the scene
-- deletion is allowed only while scene is not finished
-- remaining message ids are preserved; ids are not re-numbered
-
-**Response 404** – story, scene, or message not found
-**Response 409** – scene is already finished (`scene_finished` error code)
-
----
+**Responses**: `404` for a missing story, scene, or message; `409` if the scene is finished.
 
 ### POST /api/stories/{story_id}/scenes/{scene_id}/finish
 
-Mark the scene as finished and record its summary.
-
-**Path parameters**
-- `story_id`: UUID string
-- `scene_id`: integer
+Finish a scene and persist its summary.
 
 **Request**
+
 ```json
 {
     "scene_summary": ["The hero discovered the map.", "He escaped the harbor."]
 }
 ```
 
-Validation:
-- `scene_summary`: required list of 1–100 non-empty strings
+`scene_summary` must contain 1–100 non-empty strings.
 
 **Response 200**
+
 ```json
 {
     "data": {
@@ -289,29 +315,118 @@ Validation:
 }
 ```
 
-Calling finish on an already-finished scene returns 409 with `scene_finished` error code.
+**Responses**: `404` for a missing story or scene; `409` if the scene is already finished; `422` for an invalid summary.
 
-**Response 404** – story or scene not found
-**Response 422** – validation error (summary missing or too long)
-**Response 409** – scene is already finished
+## Choice-Driven Story Endpoints
 
----
+### GET /api/stories/{story_id}/choice-play
 
-## Post-MVP Endpoints (out of scope for MVP)
+Return a choice-driven story and its ordered steps.
 
-The following endpoint from the original draft is deferred to post-MVP:
+**Response 200**
 
-- `PATCH /stories/{story_id}/scenes/{scene_id}` – general scene metadata update
+```json
+{
+    "data": {
+        "id": "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
+        "title": "The Black Harbor",
+        "steps": [
+            {
+                "id": 1,
+                "incoming_choice": null,
+                "text": "The ship enters the harbor.",
+                "choices": [{"action": "Dock", "consequence": "The crew is noticed."}]
+            }
+        ]
+    }
+}
+```
 
----
+**Response 404**: story not found.
 
-## Status Code Summary
+### POST /api/stories/{story_id}/choice-play/generate-choices
+
+Generate choices for the latest step.
+
+**Response 200**
+
+```json
+{"data": {"choices": [{"action": "Dock", "consequence": "The crew is noticed."}]}}
+```
+
+**Responses**: `404` if the story or required character is missing; `409` if the story has no steps; `502` if an LLM request fails.
+
+### POST /api/stories/{story_id}/choice-play/regenerate-choices
+
+Clear and regenerate choices for the latest step. The response shape is the same as `generate-choices`.
+
+**Responses**: `404` if the story or required character is missing; `409` if the story has no steps; `502` if an LLM request fails.
+
+### POST /api/stories/{story_id}/choice-play/select-choice
+
+Select a choice and generate the next story step.
+
+**Request**
+
+```json
+{"action": "Dock", "consequence": "The crew is noticed."}
+```
+
+**Response 200**
+
+```json
+{
+    "data": {
+        "id": 2,
+        "incoming_choice": {"action": "Dock", "consequence": "The crew is noticed."},
+        "text": "A harbor guard approaches the ship.",
+        "choices": []
+    }
+}
+```
+
+**Responses**: `404` if the story or required character is missing; `502` if an LLM request fails.
+
+### PATCH /api/stories/{story_id}/choice-play/steps/{step_id}
+
+Update a step's text.
+
+**Request**
+
+```json
+{"text": "The ship slips quietly into the harbor."}
+```
+
+`text` must contain 1–4000 characters.
+
+**Response 200**
+
+```json
+{"data": {"id": 1, "text": "The ship slips quietly into the harbor."}}
+```
+
+**Responses**: `404` if the story or step is missing; `422` for invalid text.
+
+### DELETE /api/stories/{story_id}/choice-play/steps/{step_id}/forward
+
+Truncate story history to steps whose IDs are less than or equal to `step_id`.
+
+**Response 200**
+
+```json
+{"data": {"step_id": 1}}
+```
+
+**Response 404**: story not found.
+
+## Status Codes
 
 | Code | Meaning |
-|------|---------|
-| 200  | Success |
-| 404  | Resource not found |
-| 409  | Conflict (e.g. scene already finished) |
-| 422  | Validation error |
-| 502  | Upstream LLM failure |
-| 500  | Internal server error |
+|---|---|
+| 200 | Successful read or operation. |
+| 201 | Scene created. |
+| 404 | Resource not found. |
+| 409 | Domain rule prevents the operation. |
+| 422 | Request validation failed or selected model is unavailable. |
+| 500 | Unexpected server-side or configuration error. |
+| 502 | Upstream LLM request failed. |

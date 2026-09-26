@@ -54,7 +54,7 @@ None.
 - **`frontend/src/components/ChoicesGrid.jsx`**: "Regenerate" button and each choice button render `<ProcessingLabel verb="…" />` for the one actually clicked (needs a way to know *which* control was clicked, e.g. a local `pendingAction` state: `'regenerate'` or the clicked choice key); others stay disabled without animation.
 - **`frontend/src/pages/ChoiceDrivenStoryPage.jsx`**: "Generate choices" button renders `<ProcessingLabel verb="Generating" />` while `busy`; passes down which action is pending to `ChoicesGrid`.
 - **`frontend/src/pages/ScenePage.jsx`**: tracks which specific message id (if any) is being regenerated, in addition to the existing scene-wide `busy` flag, and passes it to `MessageList`/`MessageItem`.
-- All fixed button widths and animation timing/colors go through CSS variable tokens per `docks/dev/frontend_styles_guide.md`; no raw px/hex values.
+- All fixed button widths and animation timing/colors go through CSS variable tokens per `docks/dev/conventions/frontend_styles_guide.md`; no raw px/hex values.
 
 ## Open Questions
 - Exact verb wording for "Select choice" (proposed: "Continuing") — confirm during implementation/review.
