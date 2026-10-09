@@ -34,8 +34,7 @@ class SceneCreationService:
         model_id: str,
     ) -> SceneRef:
         story = await self._story_repo.get_story(story_id)
-        # TODO: move model id validation to the model registry service (e.g., registry.validate_model_id(model_id))
-        # check for other places where we validate model ids
+        # TODO: move model id validation to the pydantic model
         registry = await self._model_registry_service.get_registry()
         if model_id not in registry.models:
             raise InvalidModelError()
