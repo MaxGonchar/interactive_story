@@ -19,6 +19,7 @@ async def record_usage(
     scene_id: int | None = None,
     message_id: int | None = None,
     step_id: int | None = None,
+    character_id: str | None = None,
 ) -> None:
     try:
         usage = LLMUsage(
@@ -33,6 +34,7 @@ async def record_usage(
             scene_id=scene_id,
             message_id=message_id,
             step_id=step_id,
+            character_id=character_id,
         )
         await repository.append(story_id, usage)
     except Exception:
@@ -44,6 +46,7 @@ async def record_usage(
                 "scene_id": scene_id,
                 "message_id": message_id,
                 "step_id": step_id,
+                "character_id": character_id,
             },
             exc_info=True,
         )

@@ -87,6 +87,7 @@ async def test_append_writes_complete_record_with_null_cost(writable_data_root):
                 "provider_model_id": "provider-model",
                 "scene_id": 2,
                 "step_id": None,
+                "character_id": None,
                 "usage": {
                     "completion_tokens": 146,
                     "prompt_tokens": 612,
@@ -131,6 +132,73 @@ async def test_append_round_trips_choice_reference(writable_data_root):
     await repo.append(FIXTURE_STORY_ID, usage)
 
     assert await repo.get_calls(FIXTURE_STORY_ID) == [usage]
+
+
+@pytest.mark.asyncio
+async def test_append_round_trips_character_reference(writable_data_root):
+    repo = LLMUsageRepository()
+    usage = LLMUsage(
+        id=UUID("f58ec747-7004-4d2c-b749-67b8f0c2e852"),
+        operation="character_action",
+        model_id="character-model",
+        provider_model_id="provider-character-model",
+        provider_created=1739928524,
+        duration_ms=1243,
+        usage=TokenUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30),
+        scene_id=1,
+        message_id=2,
+        character_id="navigator",
+    )
+
+    await repo.append(FIXTURE_STORY_ID, usage)
+
+    assert await repo.get_calls(FIXTURE_STORY_ID) == [usage]
+
+
+@pytest.mark.asyncio
+async def test_get_calls_loads_record_without_character_id(writable_data_root):
+    path = writable_data_root / "stories" / FIXTURE_STORY_ID / "llm_usage.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "calls": [
+                    {
+                        "id": "f58ec747-7004-4d2c-b749-67b8f0c2e853",
+                        "operation": "scene_reply",
+                        "model_id": "default",
+                        "provider_model_id": "provider-model",
+                        "provider_created": 1739928524,
+                        "duration_ms": 1243,
+                        "usage": {
+                            "prompt_tokens": 10,
+                            "completion_tokens": 20,
+                            "total_tokens": 30,
+                        },
+                        "scene_id": 1,
+                        "message_id": 2,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    repo = LLMUsageRepository()
+
+    result = await repo.get_calls(FIXTURE_STORY_ID)
+
+    assert result == [
+        LLMUsage(
+            id=UUID("f58ec747-7004-4d2c-b749-67b8f0c2e853"),
+            operation="scene_reply",
+            model_id="default",
+            provider_model_id="provider-model",
+            provider_created=1739928524,
+            duration_ms=1243,
+            usage=TokenUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30),
+            scene_id=1,
+            message_id=2,
+        )
+    ]
 
 
 @pytest.mark.asyncio

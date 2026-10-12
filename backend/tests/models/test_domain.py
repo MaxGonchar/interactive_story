@@ -42,6 +42,24 @@ def test_story_index_item_type_choice_driven():
     assert item.type == "choice_driven"
 
 
+def test_character_driven_story_type_is_supported_for_list_and_detail():
+    item = StoryIndexItem(
+        id="abc",
+        title="Test",
+        created_at="2024-06-01T12:00:00Z",
+        type="character_driven",
+    )
+    story = StoryMeta(
+        id="abc",
+        title="Test",
+        scenes=[],
+        active_scene_id=None,
+        type="character_driven",
+    )
+
+    assert item.type == story.type == "character_driven"
+
+
 def test_scene_ref_defaults():
     ref = SceneRef(id=2, finished=False)
     assert ref.id == 2
@@ -261,6 +279,7 @@ def test_llm_usage_contains_complete_scene_record():
         "scene_id": 2,
         "message_id": 17,
         "step_id": None,
+        "character_id": None,
     }
 
 
@@ -289,6 +308,72 @@ def test_llm_usage_rejects_missing_choice_reference():
             provider_created=1739928524,
             duration_ms=1243,
             usage=TokenUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30),
+        )
+
+
+@pytest.mark.parametrize(
+    ("operation", "references"),
+    [
+        ("character_action", {"scene_id": 1, "message_id": 2, "character_id": "navigator"}),
+        ("narration", {"scene_id": 1, "message_id": 2}),
+        ("character_memory_update", {"scene_id": 1, "character_id": "navigator"}),
+    ],
+)
+def test_llm_usage_accepts_character_driven_references(operation, references):
+    usage = LLMUsage(
+        id=UUID("f58ec747-7004-4d2c-b749-67b8f0c2e850"),
+        operation=operation,
+        model_id="default",
+        provider_model_id="provider-model",
+        provider_created=1739928524,
+        duration_ms=1243,
+        usage=TokenUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30),
+        **references,
+    )
+
+    assert usage.operation == operation
+
+
+@pytest.mark.parametrize(
+    ("operation", "references"),
+    [
+        ("character_action", {"scene_id": 1, "message_id": 2}),
+        ("character_action", {"message_id": 2, "character_id": "navigator"}),
+        ("character_action", {"scene_id": 1, "character_id": "navigator"}),
+        (
+            "character_action",
+            {"scene_id": 1, "message_id": 2, "step_id": 3, "character_id": "navigator"},
+        ),
+        ("narration", {"message_id": 2}),
+        ("narration", {"scene_id": 1}),
+        ("narration", {"scene_id": 1, "message_id": 2, "step_id": 3}),
+        (
+            "narration",
+            {"scene_id": 1, "message_id": 2, "character_id": "navigator"},
+        ),
+        ("character_memory_update", {"character_id": "navigator"}),
+        ("character_memory_update", {"scene_id": 1}),
+        (
+            "character_memory_update",
+            {"scene_id": 1, "character_id": "navigator", "message_id": 2},
+        ),
+        (
+            "character_memory_update",
+            {"scene_id": 1, "character_id": "navigator", "step_id": 3},
+        ),
+    ],
+)
+def test_llm_usage_rejects_invalid_character_driven_references(operation, references):
+    with pytest.raises(ValidationError):
+        LLMUsage(
+            id=UUID("f58ec747-7004-4d2c-b749-67b8f0c2e851"),
+            operation=operation,
+            model_id="default",
+            provider_model_id="provider-model",
+            provider_created=1739928524,
+            duration_ms=1243,
+            usage=TokenUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30),
+            **references,
         )
 
 

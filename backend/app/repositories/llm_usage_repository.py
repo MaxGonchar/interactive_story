@@ -50,6 +50,7 @@ class LLMUsageRepository:
             scene_id=raw.scene_id,
             message_id=raw.message_id,
             step_id=raw.step_id,
+            character_id=raw.character_id,
         )
 
     @staticmethod
@@ -70,4 +71,5 @@ class LLMUsageRepository:
             scene_id=usage.scene_id,
             message_id=usage.message_id,
             step_id=usage.step_id,
+            character_id=usage.character_id,
         )
