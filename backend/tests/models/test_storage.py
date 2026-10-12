@@ -39,6 +39,16 @@ def test_story_yaml_parses_fixture():
     assert story.created_at == "2024-06-01T12:00:00Z"
 
 
+def test_story_yaml_accepts_character_driven_type():
+    story = StoryYaml(
+        title="The Black Harbor",
+        type="character_driven",
+        created_at="2026-10-05T12:00:00Z",
+    )
+
+    assert story.type == "character_driven"
+
+
 def test_story_yaml_missing_title_raises():
     with pytest.raises(ValidationError):
         StoryYaml()
@@ -248,6 +258,7 @@ def test_llm_usage_yaml_round_trips_nullable_cost():
                 "scene_id": 2,
                 "message_id": None,
                 "step_id": None,
+                "character_id": None,
             }
         ]
     }
@@ -256,6 +267,74 @@ def test_llm_usage_yaml_round_trips_nullable_cost():
 def test_llm_usage_document_requires_calls():
     with pytest.raises(ValidationError):
         LLMUsageDocumentYaml()
+
+
+@pytest.mark.parametrize(
+    ("operation", "references"),
+    [
+        ("character_action", {"scene_id": 1, "message_id": 2, "character_id": "navigator"}),
+        ("narration", {"scene_id": 1, "message_id": 2}),
+        ("character_memory_update", {"scene_id": 1, "character_id": "navigator"}),
+    ],
+)
+def test_llm_usage_yaml_accepts_character_driven_references(operation, references):
+    usage = LLMUsageYaml(
+        id="f58ec747-7004-4d2c-b749-67b8f0c2e850",
+        operation=operation,
+        model_id="default",
+        provider_model_id="provider-model",
+        provider_created=1739928524,
+        duration_ms=1243,
+        usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
+        **references,
+    )
+
+    assert usage.operation == operation
+
+
+@pytest.mark.parametrize(
+    ("operation", "references"),
+    [
+        ("character_action", {"scene_id": 1, "message_id": 2}),
+        ("character_action", {"message_id": 2, "character_id": "navigator"}),
+        ("character_action", {"scene_id": 1, "character_id": "navigator"}),
+        (
+            "character_action",
+            {"scene_id": 1, "message_id": 2, "step_id": 3, "character_id": "navigator"},
+        ),
+        ("narration", {"message_id": 2}),
+        ("narration", {"scene_id": 1}),
+        ("narration", {"scene_id": 1, "message_id": 2, "step_id": 3}),
+        (
+            "narration",
+            {"scene_id": 1, "message_id": 2, "character_id": "navigator"},
+        ),
+        ("character_memory_update", {"character_id": "navigator"}),
+        ("character_memory_update", {"scene_id": 1}),
+        (
+            "character_memory_update",
+            {"scene_id": 1, "character_id": "navigator", "message_id": 2},
+        ),
+        (
+            "character_memory_update",
+            {"scene_id": 1, "character_id": "navigator", "step_id": 3},
+        ),
+    ],
+)
+def test_llm_usage_yaml_rejects_invalid_character_driven_references(
+    operation, references
+):
+    with pytest.raises(ValidationError):
+        LLMUsageYaml(
+            id="f58ec747-7004-4d2c-b749-67b8f0c2e851",
+            operation=operation,
+            model_id="default",
+            provider_model_id="provider-model",
+            provider_created=1739928524,
+            duration_ms=1243,
+            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
+            **references,
+        )
 
 
 # ---------------------------------------------------------------------------

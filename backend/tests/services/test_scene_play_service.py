@@ -271,6 +271,7 @@ async def test_play_records_complete_usage_after_success():
         "scene_id": SCENE_ID,
         "message_id": 2,
         "step_id": None,
+        "character_id": None,
     }
 
 

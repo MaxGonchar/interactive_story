@@ -5,9 +5,16 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-StoryType = Literal["scene", "choice_driven"]
+# TODO: move to Enums with methods for subset returning
+StoryType = Literal["scene", "choice_driven", "character_driven"]
 LLMUsageOperation = Literal[
-    "scene_reply", "scene_summary", "story_generation", "choice_generation"
+    "scene_reply",
+    "scene_summary",
+    "story_generation",
+    "choice_generation",
+    "character_action",
+    "narration",
+    "character_memory_update",
 ]
 
 
@@ -81,14 +88,32 @@ class LLMUsage(BaseModel):
     scene_id: int | None = Field(default=None, ge=1)
     message_id: int | None = Field(default=None, ge=1)
     step_id: int | None = Field(default=None, ge=1)
+    character_id: str | None = None
 
+    # TODO: refactor to decrease complexity
     @model_validator(mode="after")
     def validate_references(self) -> "LLMUsage":
-        if self.operation in {"scene_reply", "scene_summary"}:
+        if self.operation in {"scene_reply", "scene_summary", "character_action", "narration"}:
             if self.scene_id is None:
                 raise ValueError("scene operations require scene_id")
             if self.step_id is not None:
                 raise ValueError("scene operations cannot include step_id")
+            if self.operation in {"character_action", "narration"}:
+                if self.message_id is None:
+                    raise ValueError(f"{self.operation} requires message_id")
+                if self.operation == "character_action" and self.character_id is None:
+                    raise ValueError("character_action requires character_id")
+                if self.operation == "narration" and self.character_id is not None:
+                    raise ValueError("narration cannot include character_id")
+        elif self.operation == "character_memory_update":
+            if self.scene_id is None:
+                raise ValueError("character_memory_update requires scene_id")
+            if self.character_id is None:
+                raise ValueError("character_memory_update requires character_id")
+            if self.message_id is not None or self.step_id is not None:
+                raise ValueError(
+                    "character_memory_update cannot include message_id or step_id"
+                )
         elif self.operation == "choice_generation":
             if self.step_id is None:
                 raise ValueError("choice_generation requires step_id")
