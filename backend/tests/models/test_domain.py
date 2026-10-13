@@ -6,8 +6,12 @@ from uuid import UUID
 
 from app.models.domain import (
     CharacterCard,
+    CharacterDrivenInput,
+    CharacterDrivenLLMData,
+    CharacterDrivenMessage,
     Choice,
     ChoiceDrivenStoryMeta,
+    get_character_driven_turn_type,
     LLMUsage,
     Message,
     SceneDescription,
@@ -17,6 +21,11 @@ from app.models.domain import (
     StoryIndexItem,
     StoryMeta,
     TokenUsage,
+)
+from app.models.storage import (
+    CharacterDrivenInputYaml,
+    CharacterDrivenLLMDataYaml,
+    CharacterDrivenMessageYaml,
 )
 
 
@@ -246,6 +255,81 @@ def test_message_user_role():
 def test_message_invalid_role_raises():
     with pytest.raises(ValidationError):
         Message(id=3, role="narrator", content="Narration.")
+
+
+# ---------------------------------------------------------------------------
+# Character-driven messages
+# ---------------------------------------------------------------------------
+
+
+def test_character_driven_domain_models_construct_from_storage_models():
+    storage_input = CharacterDrivenInputYaml(
+        action="Warn the captain.",
+        author="navigator",
+        guidance="Mention the harbor master.",
+    )
+    storage_llm_data = CharacterDrivenLLMDataYaml(
+        narrator_model_id="narrator-model",
+        character_model_id="character-model",
+    )
+    storage_message = CharacterDrivenMessageYaml(
+        id=2,
+        input=storage_input,
+        narration="The navigator warns the captain.",
+        llm_data=storage_llm_data,
+    )
+
+    assert CharacterDrivenInput(**storage_input.model_dump()) == CharacterDrivenInput(
+        author="navigator",
+        action="Warn the captain.",
+        guidance="Mention the harbor master.",
+    )
+    assert CharacterDrivenLLMData(
+        **storage_llm_data.model_dump()
+    ) == CharacterDrivenLLMData(
+        narrator_model_id="narrator-model", character_model_id="character-model"
+    )
+    assert CharacterDrivenMessage(
+        **storage_message.model_dump()
+    ) == CharacterDrivenMessage(
+        id=2,
+        input=CharacterDrivenInput(
+            author="navigator",
+            action="Warn the captain.",
+            guidance="Mention the harbor master.",
+        ),
+        narration="The navigator warns the captain.",
+        llm_data=CharacterDrivenLLMData(
+            narrator_model_id="narrator-model",
+            character_model_id="character-model",
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("author", "user_character_id", "expected"),
+    [
+        (None, "captain", "player"),
+        ("captain", "captain", "player"),
+        ("navigator", "captain", "character"),
+        (None, None, "player"),
+        ("navigator", None, "character"),
+    ],
+)
+def test_get_character_driven_turn_type(author, user_character_id, expected):
+    scene_metadata = SceneMetadata(
+        id=1,
+        story_id="story-1",
+        character_ids=["navigator"],
+        user_character_id=user_character_id,
+        finished=False,
+        scene_description=SceneDescription(
+            general_scene_guide="Guide.",
+            writing_style="Style.",
+        ),
+    )
+
+    assert get_character_driven_turn_type(author, scene_metadata) == expected
 
 
 # ---------------------------------------------------------------------------
