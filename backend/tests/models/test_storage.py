@@ -8,6 +8,10 @@ from pydantic import ValidationError
 
 from app.models.storage import (
     CharacterYaml,
+    CharacterDrivenInputYaml,
+    CharacterDrivenLLMDataYaml,
+    CharacterDrivenMessageYaml,
+    CharacterDrivenMessagesYaml,
     ChoiceDrivenStoryYaml,
     ChoiceYaml,
     HistoryYaml,
@@ -219,6 +223,74 @@ def test_message_yaml_invalid_role_raises():
 def test_messages_yaml_missing_messages_raises():
     with pytest.raises(ValidationError):
         MessagesYaml()
+
+
+# ---------------------------------------------------------------------------
+# Character-driven messages
+# ---------------------------------------------------------------------------
+
+
+def test_character_driven_messages_yaml_parses_opening_and_turn_items():
+    messages = CharacterDrivenMessagesYaml(
+        messages=[
+            {
+                "id": 1,
+                "narration": "A bell rings through the fog.",
+                "llm_data": {
+                    "character_model_id": "character-model",
+                    "narrator_model_id": "narrator-model",
+                },
+            },
+            {
+                "id": 2,
+                "input": {
+                    "action": "I look for the nearest light source.",
+                    "author": None,
+                },
+                "narration": "A lantern swings near a wooden post.",
+                "llm_data": {
+                    "character_model_id": None,
+                    "narrator_model_id": "narrator-model",
+                },
+            },
+        ]
+    )
+
+    assert messages.messages[0].input is None
+    assert messages.messages[0].llm_data.character_model_id == "character-model"
+    assert messages.messages[1].input == CharacterDrivenInputYaml(
+        action="I look for the nearest light source.", author=None
+    )
+    assert messages.messages[1].llm_data == CharacterDrivenLLMDataYaml(
+        character_model_id=None, narrator_model_id="narrator-model"
+    )
+
+
+def test_character_driven_message_requires_llm_data():
+    with pytest.raises(ValidationError):
+        CharacterDrivenMessageYaml(
+            id=1,
+            narration="A bell rings through the fog.",
+        )
+
+
+@pytest.mark.parametrize(
+    "llm_data",
+    [
+        {"character_model_id": None},
+        {"character_model_id": None, "narrator_model_id": None},
+    ],
+)
+def test_character_driven_llm_data_requires_narrator_model_id(llm_data):
+    with pytest.raises(ValidationError):
+        CharacterDrivenLLMDataYaml(**llm_data)
+
+
+@pytest.mark.parametrize("author", ["navigator", None])
+def test_character_driven_input_accepts_string_or_null_author(author):
+    input_data = CharacterDrivenInputYaml(action="Take the lead.", author=author)
+
+    assert input_data.author == author
 
 
 # ---------------------------------------------------------------------------
