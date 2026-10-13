@@ -148,6 +148,32 @@ class Message(BaseModel):
     llm_data: LLMData | None = None
 
 
+class CharacterDrivenInput(BaseModel):
+    author: str | None
+    action: str
+    guidance: str | None = None
+
+
+class CharacterDrivenLLMData(BaseModel):
+    narrator_model_id: str
+    character_model_id: str | None
+
+
+class CharacterDrivenMessage(BaseModel):
+    id: int
+    input: CharacterDrivenInput | None = None
+    narration: str
+    llm_data: CharacterDrivenLLMData
+
+
+def get_character_driven_turn_type(
+    author: str | None, scene_metadata: SceneMetadata
+) -> Literal["player", "character"]:
+    if author is None or author == scene_metadata.user_character_id:
+        return "player"
+    return "character"
+
+
 class ModelMetadata(BaseModel):
     id: str
     name: str
