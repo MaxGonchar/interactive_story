@@ -133,6 +133,28 @@ class MessagesYaml(BaseModel):
     messages: list[MessageYaml]
 
 
+class CharacterDrivenInputYaml(BaseModel):
+    action: str
+    author: str | None
+    guidance: str | None = None
+
+
+class CharacterDrivenLLMDataYaml(BaseModel):
+    character_model_id: str | None
+    narrator_model_id: str
+
+
+class CharacterDrivenMessageYaml(BaseModel):
+    id: int
+    input: CharacterDrivenInputYaml | None = None
+    narration: str
+    llm_data: CharacterDrivenLLMDataYaml
+
+
+class CharacterDrivenMessagesYaml(BaseModel):
+    messages: list[CharacterDrivenMessageYaml]
+
+
 # ---------------------------------------------------------------------------
 # Model registry — data/models.yaml
 # ---------------------------------------------------------------------------
