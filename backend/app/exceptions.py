@@ -48,6 +48,18 @@ class NarratorModeNotSupportedError(DomainError):
     message = "Narrator mode is only supported for scene stories"
 
 
+class InvalidMessageAuthorError(DomainError):
+    """Message author is not valid for the scene's participants."""
+
+    http_status = 422
+    error_code = "invalid_message_author"
+    message = "Message author is not valid for this scene"
+
+    def __init__(self, message: str = "Message author is not valid for this scene") -> None:
+        self.message = message
+        super().__init__(message)
+
+
 class NotFoundError(DomainError):
     """Raised by repositories when a requested record does not exist."""
 
