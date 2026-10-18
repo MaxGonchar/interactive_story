@@ -173,6 +173,30 @@ def test_to_prompt_text_empty_features_produces_only_name_header():
     assert result == "## Ghost"
 
 
+def test_to_profile_text_renders_features_without_name_or_memory():
+    card = CharacterCard(
+        id="c", name="Ghost",
+        features={"appearance": "Tall and pale.", "traits": ["Brave"]},
+        memory=["Encountered a stranger."],
+    )
+
+    result = card.to_profile_text()
+
+    assert result == "### Appearance\nTall and pale.\n### Traits\n- Brave"
+
+
+def test_to_prompt_text_full_output_unchanged():
+    card = CharacterCard(
+        id="c", name="Ghost",
+        features={"appearance": "Tall and pale."},
+        memory=["Encountered a stranger."],
+    )
+
+    result = card.to_prompt_text()
+
+    assert result == "## Ghost\n### Appearance\nTall and pale.\n### Memory\n- Encountered a stranger."
+
+
 def test_scene_description():
     desc = SceneDescription(
         general_scene_guide="Guide text.",

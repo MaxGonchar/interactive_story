@@ -44,8 +44,8 @@ class CharacterCard(BaseModel):
     features: dict[str, str | list[str]] = {}
     memory: list[str] = []
 
-    def to_prompt_text(self) -> str:
-        lines: list[str] = [f"## {self.name}"]
+    def _feature_lines(self) -> list[str]:
+        lines: list[str] = []
         for key, value in self.features.items():
             heading = key.replace("_", " ").title()
             lines.append(f"### {heading}")
@@ -54,6 +54,13 @@ class CharacterCard(BaseModel):
                     lines.append(f"- {item}")
             else:
                 lines.append(value)
+        return lines
+
+    def to_profile_text(self) -> str:
+        return "\n".join(self._feature_lines())
+
+    def to_prompt_text(self) -> str:
+        lines: list[str] = [f"## {self.name}", *self._feature_lines()]
         if self.memory:
             lines.append("### Memory")
             for entry in self.memory:

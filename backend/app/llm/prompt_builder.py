@@ -3,8 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
+from pydantic import BaseModel
 
 from app.llm.models import SceneContext
+from app.models.domain import CharacterCard
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 _CHARACTER_DRIVEN_TEMPLATES_DIR = _TEMPLATES_DIR / "character_driven"
@@ -19,6 +21,28 @@ class CharacterDrivenPromptBuilder:
 
     def render(self, template_name: str, **context: object) -> str:
         return self._env.get_template(template_name).render(**context)
+
+
+class CharacterAgentContext(BaseModel):
+    character_name: str
+    character_profile: str
+    accumulated_memories: list[str]
+    current_scene_context: str
+    player_guidance: str | None = None
+
+
+def build_character_agent_context(
+    character: CharacterCard,
+    scene_narrations: list[str],
+    player_guidance: str | None = None,
+) -> CharacterAgentContext:
+    return CharacterAgentContext(
+        character_name=character.name,
+        character_profile=character.to_profile_text(),
+        accumulated_memories=list(character.memory),
+        current_scene_context="\n\n".join(scene_narrations),
+        player_guidance=player_guidance or None,
+    )
 
 
 class PromptBuilder:
