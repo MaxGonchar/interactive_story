@@ -10,6 +10,10 @@ from app.repositories.llm_usage_repository import LLMUsageRepository
 logger = logging.getLogger(__name__)
 
 
+def with_registry_model_id(completion: LLMCompletion, model_id: str) -> LLMCompletion:
+    return completion.model_copy(update={"model_id": model_id})
+
+
 async def record_usage(
     repository: LLMUsageRepository,
     story_id: str,

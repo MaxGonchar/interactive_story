@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from app.llm.models import SceneContext
-from app.llm.prompt_builder import PromptBuilder
+from app.llm.prompt_builder import CharacterDrivenPromptBuilder, PromptBuilder
 from app.models.domain import CharacterCard, SceneDescription
 
 
@@ -32,6 +34,17 @@ def _make_user_character() -> CharacterCard:
 
 def _build(context: SceneContext) -> str:
     return PromptBuilder().build_system_prompt(context)
+
+
+def test_character_driven_prompt_builder_loads_and_renders_template(tmp_path: Path):
+    template_path = tmp_path / "character_system.j2"
+    template_path.write_text("You are {{ character_name }}.", encoding="utf-8")
+
+    result = CharacterDrivenPromptBuilder(tmp_path).render(
+        "character_system.j2", character_name="Mira"
+    )
+
+    assert result == "You are Mira."
 
 
 # --- acceptance criteria ---
