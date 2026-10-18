@@ -5,6 +5,7 @@ import os
 from fastapi import Depends
 
 from app.llm.choice_engine_client import ChoiceEngineClient
+from app.llm.model_factory import CharacterDrivenModelFactory, make_character_driven_model_factory
 from app.llm.scene_llm_client import SceneLLMClient, SceneLLMClientFactory
 from app.llm.story_engine_client import StoryEngineClient
 from app.llm.venice_ai import VeniceAIChatModel
@@ -75,6 +76,11 @@ def get_scene_llm_client_factory() -> SceneLLMClientFactory:
         )
 
     return create_client
+
+
+def get_character_driven_model_factory() -> CharacterDrivenModelFactory:
+    api_key = os.environ["VENICE_API_KEY"]
+    return make_character_driven_model_factory(api_key)
 
 
 def get_scene_llm_client(

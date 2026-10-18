@@ -7,6 +7,18 @@ from jinja2 import Environment, FileSystemLoader
 from app.llm.models import SceneContext
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
+_CHARACTER_DRIVEN_TEMPLATES_DIR = _TEMPLATES_DIR / "character_driven"
+
+
+class CharacterDrivenPromptBuilder:
+    def __init__(self, templates_dir: Path | None = None) -> None:
+        self._env = Environment(
+            loader=FileSystemLoader(str(templates_dir or _CHARACTER_DRIVEN_TEMPLATES_DIR)),
+            keep_trailing_newline=True,
+        )
+
+    def render(self, template_name: str, **context: object) -> str:
+        return self._env.get_template(template_name).render(**context)
 
 
 class PromptBuilder:

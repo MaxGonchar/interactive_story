@@ -17,7 +17,7 @@ from app.repositories.character_repository import CharacterRepository
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.services.model_registry_service import ModelRegistryService
-from app.services.llm_usage_service import record_usage
+from app.services.llm_usage_service import record_usage, with_registry_model_id
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ class ScenePlayService:
             self._usage_repository,
             story_id,
             "scene_reply",
-            completion.model_copy(update={"model_id": selected_model.id}),
+            with_registry_model_id(completion, selected_model.id),
             scene_id=scene_id,
             message_id=assistant_id,
         )
@@ -155,7 +155,7 @@ class ScenePlayService:
             self._usage_repository,
             story_id,
             "scene_reply",
-            completion.model_copy(update={"model_id": selected_model.id}),
+            with_registry_model_id(completion, selected_model.id),
             scene_id=scene_id,
             message_id=updated_msg.id,
         )

@@ -276,6 +276,17 @@ async def test_play_records_complete_usage_after_success():
 
 
 @pytest.mark.asyncio
+async def test_play_records_registry_model_id_for_requested_model():
+    usage_repository = AsyncMock()
+    service, _, _, _ = make_service(usage_repository=usage_repository)
+
+    await service.play(STORY_ID, SCENE_ID, "Hello", model_id="alternate-model")
+
+    _, usage = usage_repository.append.call_args.args
+    assert usage.model_id == "alternate-model"
+
+
+@pytest.mark.asyncio
 async def test_play_keeps_success_when_usage_persistence_fails(caplog):
     usage_repository = AsyncMock()
     usage_repository.append.side_effect = OSError("disk full")
