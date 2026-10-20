@@ -9,12 +9,14 @@ from app.llm.model_factory import CharacterDrivenModelFactory, make_character_dr
 from app.llm.scene_llm_client import SceneLLMClient, SceneLLMClientFactory
 from app.llm.story_engine_client import StoryEngineClient
 from app.llm.venice_ai import VeniceAIChatModel
+from app.repositories.character_driven_scene_repository import CharacterDrivenSceneRepository
 from app.repositories.character_repository import CharacterRepository
 from app.repositories.choice_driven_story_repository import ChoiceDrivenStoryRepository
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
 from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.repositories.model_registry_repository import ModelRegistryRepository
+from app.services.character_driven_scene_creation_service import CharacterDrivenSceneCreationService
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 from app.llm.summarize_llm_client import SummarizeLLMClient
 from app.services.scene_creation_service import SceneCreationService
@@ -136,6 +138,20 @@ def get_scene_creation_service(
     model_registry_service: ModelRegistryService = Depends(get_model_registry_service),
 ) -> SceneCreationService:
     return SceneCreationService(story_repo, scene_repo, model_registry_service)
+
+
+def get_character_driven_scene_repository(
+    scene_repo: SceneRepository = Depends(get_scene_repository),
+) -> CharacterDrivenSceneRepository:
+    return CharacterDrivenSceneRepository(scene_repo)
+
+
+def get_character_driven_scene_creation_service(
+    story_repo: StoryRepository = Depends(get_story_repository),
+    scene_repo: CharacterDrivenSceneRepository = Depends(get_character_driven_scene_repository),
+    model_registry_service: ModelRegistryService = Depends(get_model_registry_service),
+) -> CharacterDrivenSceneCreationService:
+    return CharacterDrivenSceneCreationService(story_repo, scene_repo, model_registry_service)
 
 
 def get_summarize_llm_client(
