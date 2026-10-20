@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
 
 from app.llm.models import SceneContext
-from app.models.domain import CharacterCard
+from app.models.domain import CharacterCard, CharacterDrivenMessage
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 _CHARACTER_DRIVEN_TEMPLATES_DIR = _TEMPLATES_DIR / "character_driven"
@@ -42,6 +42,43 @@ def build_character_agent_context(
         accumulated_memories=list(character.memory),
         current_scene_context="\n\n".join(scene_narrations),
         player_guidance=player_guidance or None,
+    )
+
+
+class MemoryAgentContext(BaseModel):
+    character_name: str
+    character_profile: str
+    accumulated_memories: list[str]
+    completed_scene: str
+
+
+def build_scene_transcript(
+    messages: list[CharacterDrivenMessage],
+    character_names: dict[str, str],
+) -> str:
+    entries: list[str] = []
+    for message in messages:
+        if message.input is None:
+            entries.append(message.narration)
+            continue
+        author = message.input.author
+        actor = "Player" if author is None else character_names.get(author, author)
+        entries.append(
+            f"Actor: {actor}\n{message.input.action}\n\nNarration:\n{message.narration}"
+        )
+    return "\n\n".join(entries)
+
+
+def build_memory_agent_context(
+    character: CharacterCard,
+    messages: list[CharacterDrivenMessage],
+    character_names: dict[str, str],
+) -> MemoryAgentContext:
+    return MemoryAgentContext(
+        character_name=character.name,
+        character_profile=character.to_profile_text(),
+        accumulated_memories=list(character.memory),
+        completed_scene=build_scene_transcript(messages, character_names),
     )
 
 
