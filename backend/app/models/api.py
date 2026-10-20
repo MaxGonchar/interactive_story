@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -239,6 +239,57 @@ class CreateCharacterDrivenSceneRequest(BaseModel):
 
 class CreateCharacterDrivenSceneResponse(BaseModel):
     data: SceneListItem
+
+
+# ---------------------------------------------------------------------------
+# Character-driven scene detail — GET /api/stories/{story_id}/character-play/scenes/{scene_id}
+# ---------------------------------------------------------------------------
+
+
+class CharacterDrivenPlayerActor(BaseModel):
+    type: Literal["player"]
+
+
+class CharacterDrivenCharacterActor(BaseModel):
+    type: Literal["character"]
+    character_id: str
+
+
+class CharacterDrivenPlayerInput(BaseModel):
+    action: str
+
+
+class CharacterDrivenCharacterInput(BaseModel):
+    guidance: str | None = None
+
+
+class CharacterDrivenLLMDataModel(BaseModel):
+    character_model_id: str | None
+    narrator_model_id: str
+
+
+class CharacterDrivenSceneItem(BaseModel):
+    id: int
+    actor: CharacterDrivenPlayerActor | CharacterDrivenCharacterActor | None
+    input: CharacterDrivenPlayerInput | CharacterDrivenCharacterInput | None
+    character_action: str | None
+    narration: str
+    llm_data: CharacterDrivenLLMDataModel
+
+
+class CharacterDrivenSceneDetail(BaseModel):
+    id: int
+    finished: bool
+    user_character_id: str | None
+    character_ids: list[str]
+    scene_description: SceneDescriptionModel
+    context: list[str] | None
+    scene_summary: list[str] | None
+    items: list[CharacterDrivenSceneItem]
+
+
+class CharacterDrivenSceneDetailResponse(BaseModel):
+    data: CharacterDrivenSceneDetail
 
 
 # ---------------------------------------------------------------------------
