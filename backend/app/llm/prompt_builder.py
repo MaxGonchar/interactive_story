@@ -45,6 +45,33 @@ def build_character_agent_context(
     )
 
 
+class NarratorContext(BaseModel):
+    story_context: str
+    general_scene_guide: str
+    writing_style: str
+    current_scene_context: str
+    actor_name: str
+    current_turn: str
+
+
+def build_narrator_context(
+    story_context: list[str],
+    general_scene_guide: str,
+    writing_style: str,
+    scene_narrations: list[str],
+    actor_name: str,
+    current_turn: str,
+) -> NarratorContext:
+    return NarratorContext(
+        story_context="\n".join(f"* {item}" for item in story_context) or "(no context)",
+        general_scene_guide=general_scene_guide,
+        writing_style=writing_style,
+        current_scene_context="\n\n".join(scene_narrations),
+        actor_name=actor_name,
+        current_turn=current_turn,
+    )
+
+
 class PromptBuilder:
     def __init__(self) -> None:
         env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), keep_trailing_newline=True)
