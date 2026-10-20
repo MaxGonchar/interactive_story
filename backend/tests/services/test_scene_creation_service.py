@@ -6,6 +6,7 @@ import pytest
 
 from app.exceptions import ActiveSceneExistsError, InvalidModelError, NarratorModeNotSupportedError, NotFoundError
 from app.models.domain import LLMData, ModelMetadata, ModelRegistry, SceneDescription, SceneMetadata, SceneRef, StoryMeta
+from app.services.model_registry_service import ModelRegistryService
 from app.services.scene_creation_service import SceneCreationService
 
 
@@ -40,8 +41,8 @@ def make_service(
 ) -> tuple[SceneCreationService, AsyncMock, AsyncMock]:
     story_repo = AsyncMock()
     scene_repo = AsyncMock()
-    model_registry_service = AsyncMock()
-    model_registry_service.get_registry.return_value = ModelRegistry(
+    registry_repo = AsyncMock()
+    registry_repo.get_registry.return_value = ModelRegistry(
         models={
             "model-a": ModelMetadata(
                 id="model-a", name="Model A", provider_model_id="provider-a"
@@ -55,7 +56,7 @@ def make_service(
     else:
         story_repo.get_story = AsyncMock(return_value=story_meta or make_story_meta([]))
 
-    service = SceneCreationService(story_repo, scene_repo, model_registry_service)
+    service = SceneCreationService(story_repo, scene_repo, ModelRegistryService(registry_repo))
     return service, story_repo, scene_repo
 
 

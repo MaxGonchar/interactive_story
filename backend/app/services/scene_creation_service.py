@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from app.exceptions import ActiveSceneExistsError, InvalidModelError, NarratorModeNotSupportedError
+from app.exceptions import ActiveSceneExistsError, NarratorModeNotSupportedError
 from app.models.domain import LLMData, Message, SceneDescription, SceneMetadata, SceneRef
 from app.repositories.scene_repository import SceneRepository
 from app.repositories.story_repository import StoryRepository
@@ -34,10 +34,7 @@ class SceneCreationService:
         model_id: str,
     ) -> SceneRef:
         story = await self._story_repo.get_story(story_id)
-        # TODO: move model id validation to the pydantic model
-        registry = await self._model_registry_service.get_registry()
-        if model_id not in registry.models:
-            raise InvalidModelError()
+        await self._model_registry_service.validate_model_ids(model_id)
 
         if any(not s.finished for s in story.scenes):
             raise ActiveSceneExistsError()

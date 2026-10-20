@@ -209,6 +209,39 @@ class CreateSceneResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Character-driven scene creation  —  POST /api/stories/{story_id}/character-play/scenes
+# ---------------------------------------------------------------------------
+
+NonEmptyStr = Annotated[str, Field(min_length=1)]
+
+
+class CreateCharacterDrivenSceneRequest(BaseModel):
+    user_character_id: str | None
+    character_ids: list[str] = []
+    context: list[NonEmptyStr] = Field(min_length=1)
+    general_scene_guide: NonEmptyStr
+    writing_style: NonEmptyStr
+    first_message: str = Field(min_length=1, max_length=4000)
+    character_model_id: NonEmptyStr
+    narrator_model_id: NonEmptyStr
+
+    @model_validator(mode="after")
+    def validate_participants(self) -> "CreateCharacterDrivenSceneRequest":
+        if len(set(self.character_ids)) != len(self.character_ids):
+            raise ValueError("character_ids must not contain duplicates")
+        if (
+            self.user_character_id is not None
+            and self.user_character_id in self.character_ids
+        ):
+            raise ValueError("user_character_id must not appear in character_ids")
+        return self
+
+
+class CreateCharacterDrivenSceneResponse(BaseModel):
+    data: SceneListItem
+
+
+# ---------------------------------------------------------------------------
 # Finish scene  —  POST /api/stories/{story_id}/scenes/{scene_id}/finish
 # ---------------------------------------------------------------------------
 
