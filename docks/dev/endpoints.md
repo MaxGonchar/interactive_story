@@ -25,6 +25,8 @@ Common domain errors include:
 |---|---|---|
 | 404 | `not_found` | Requested story, scene, character, or message was not found. |
 | 409 | `scene_finished` | The operation is not allowed on a finished scene. |
+| 409 | `not_last_item` | Only the last character-driven scene item can be deleted. |
+| 409 | `opening_item_not_deletable` | The opening character-driven scene item cannot be deleted. |
 | 409 | `active_scene_exists` | A new scene cannot be created while one is unfinished. |
 | 409 | `narrator_mode_not_supported` | Narrator mode is only supported for `scene` stories. |
 | 409 | `no_steps` | A choice operation requires at least one existing step. |
@@ -358,6 +360,34 @@ Submit a player or character turn. A player turn invokes the narrator. A charact
 The generated character action is retained unparsed in `character_action`; it is passed as the narrator's current turn. For player requests, `input.action` contains the submitted action and `character_action` is `null`.
 
 **Errors**: `404 not_found` if the story, scene, or character file is missing; `409 scene_finished` if the scene is finished; `422 validation_error` if the request is invalid, a character is not part of the scene, or a selected model is unavailable; `502 llm_error` if either model call fails. A failed turn persists no item and records no model usage.
+
+### PUT /api/stories/{story_id}/character-play/scenes/{scene_id}/items/{item_id}
+
+Update only an item's narration. The actor, input, generated character action, ID, and position are unchanged. The opening item can be edited. `narration` must contain 1-4000 characters.
+
+**Request**
+
+```json
+{"narration": "The captain turns toward a wavering light."}
+```
+
+**Response 200** returns the updated full item using the same shape as a scene detail item.
+
+**Errors**: `404 not_found` for a missing story, scene, or item; `409 scene_finished` if the scene is finished; `422 validation_error` for invalid narration.
+
+### DELETE /api/stories/{story_id}/character-play/scenes/{scene_id}/items/{item_id}
+
+Delete only the current last item. Item IDs are not renumbered, and the next item uses one more than the largest remaining ID. The opening item cannot be deleted.
+
+**Response 200**
+
+```json
+{"success": true}
+```
+
+Checks run in this order: story and scene existence, scene status, item existence, and whether the item is last; the opening-item restriction is then checked. Thus a non-last opening item returns `not_last_item`, while the opening item is never deletable.
+
+**Errors**: `404 not_found` for a missing story, scene, or item; `409 scene_finished` if the scene is finished; `409 not_last_item` if the requested item is not the last item; `409 opening_item_not_deletable` if the requested item is the opening item.
 
 ## Choice-Driven Story Endpoints
 

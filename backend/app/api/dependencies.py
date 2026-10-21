@@ -19,6 +19,7 @@ from app.repositories.story_repository import StoryRepository
 from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.repositories.model_registry_repository import ModelRegistryRepository
 from app.services.character_driven_scene_creation_service import CharacterDrivenSceneCreationService
+from app.services.character_driven_scene_item_service import CharacterDrivenSceneItemService
 from app.services.character_driven_scene_query_service import CharacterDrivenSceneQueryService
 from app.services.character_driven_scene_turn_service import (
     CharacterAgentClientFactory,
@@ -170,6 +171,18 @@ def get_character_driven_scene_query_service(
     ),
 ) -> CharacterDrivenSceneQueryService:
     return CharacterDrivenSceneQueryService(
+        story_repo, scene_repo, character_driven_scene_repo
+    )
+
+
+def get_character_driven_scene_item_service(
+    story_repo: StoryRepository = Depends(get_story_repository),
+    scene_repo: SceneRepository = Depends(get_scene_repository),
+    character_driven_scene_repo: CharacterDrivenSceneRepository = Depends(
+        get_character_driven_scene_repository
+    ),
+) -> CharacterDrivenSceneItemService:
+    return CharacterDrivenSceneItemService(
         story_repo, scene_repo, character_driven_scene_repo
     )
 

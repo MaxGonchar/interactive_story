@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies import (
     get_character_driven_scene_creation_service,
+    get_character_driven_scene_item_service,
     get_character_driven_scene_query_service,
     get_character_driven_scene_turn_service,
 )
@@ -16,6 +17,8 @@ from app.exceptions import (
     InvalidModelError,
     LLMError,
     NotFoundError,
+    NotLastItemError,
+    OpeningItemNotDeletableError,
     SceneFinishedError,
 )
 from app.main import app
@@ -454,3 +457,108 @@ def test_submit_turn_errors(exc, status, code):
 
     assert resp.status_code == status
     assert resp.json()["error"]["code"] == code
+
+
+# --- PUT /character-play/scenes/{scene_id}/items/{item_id} ---
+
+_ITEM_URL = f"{_URL}/1/items"
+
+
+def _make_item_service(
+    edit_side_effect: Exception | None = None,
+    delete_side_effect: Exception | None = None,
+) -> MagicMock:
+    svc = MagicMock()
+    message = CharacterDrivenMessage(
+        id=1,
+        input=None,
+        narration="The edited opening.",
+        llm_data=CharacterDrivenLLMData(
+            character_model_id="character-model",
+            narrator_model_id="narrator-model",
+        ),
+    )
+    svc.edit_item = (
+        AsyncMock(side_effect=edit_side_effect)
+        if edit_side_effect is not None
+        else AsyncMock(return_value=(make_scene_metadata(), message))
+    )
+    svc.delete_item = (
+        AsyncMock(side_effect=delete_side_effect)
+        if delete_side_effect is not None
+        else AsyncMock(return_value=None)
+    )
+    return svc
+
+
+def test_edit_item_success_returns_updated_item():
+    svc = _make_item_service()
+    app.dependency_overrides[get_character_driven_scene_item_service] = lambda: svc
+
+    resp = TestClient(app).put(
+        f"{_ITEM_URL}/1", json={"narration": "The edited opening."}
+    )
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "data": {
+            "id": 1,
+            "actor": None,
+            "input": None,
+            "character_action": None,
+            "narration": "The edited opening.",
+            "llm_data": {
+                "character_model_id": "character-model",
+                "narrator_model_id": "narrator-model",
+            },
+        }
+    }
+    svc.edit_item.assert_awaited_once_with(
+        _STORY_ID, 1, 1, "The edited opening."
+    )
+
+
+@pytest.mark.parametrize("narration", ["", "x" * 4001])
+def test_edit_item_rejects_invalid_narration(narration):
+    svc = _make_item_service()
+    app.dependency_overrides[get_character_driven_scene_item_service] = lambda: svc
+
+    resp = TestClient(app).put(f"{_ITEM_URL}/1", json={"narration": narration})
+
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+    svc.edit_item.assert_not_awaited()
+
+
+def test_delete_item_success_returns_success():
+    svc = _make_item_service()
+    app.dependency_overrides[get_character_driven_scene_item_service] = lambda: svc
+
+    resp = TestClient(app).delete(f"{_ITEM_URL}/2")
+
+    assert resp.status_code == 200
+    assert resp.json() == {"success": True}
+    svc.delete_item.assert_awaited_once_with(_STORY_ID, 1, 2)
+
+
+@pytest.mark.parametrize(
+    "exc,status,code",
+    [
+        (NotFoundError("Item '9' not found"), 404, "not_found"),
+        (SceneFinishedError(), 409, "scene_finished"),
+        (NotLastItemError(), 409, "not_last_item"),
+        (
+            OpeningItemNotDeletableError(),
+            409,
+            "opening_item_not_deletable",
+        ),
+    ],
+)
+def test_delete_item_domain_errors(exc, status, code):
+    svc = _make_item_service(delete_side_effect=exc)
+    app.dependency_overrides[get_character_driven_scene_item_service] = lambda: svc
+
+    resp = TestClient(app).delete(f"{_ITEM_URL}/2")
+
+    assert resp.status_code == status
+    assert resp.json() == {"error": {"code": code, "message": exc.message}}
