@@ -88,5 +88,13 @@ class InvalidModelError(DomainError):
     message = "Requested model is not available"
 
 
+class TurnActorNotSupportedError(DomainError):
+    """Turn actor type is not implemented yet."""
+
+    http_status = 501
+    error_code = "not_implemented"
+    message = "Character turns are not supported yet"
+
+
 class LLMError(Exception):
     """Raised when an LLM/upstream API call fails."""

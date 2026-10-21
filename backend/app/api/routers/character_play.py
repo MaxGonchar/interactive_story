@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from app.api.dependencies import (
     get_character_driven_scene_creation_service,
     get_character_driven_scene_query_service,
+    get_character_driven_scene_turn_service,
 )
 from app.models.api import (
     CreateCharacterDrivenSceneRequest,
@@ -16,6 +17,8 @@ from app.models.api import (
     CharacterDrivenSceneDetail,
     CharacterDrivenSceneDetailResponse,
     CharacterDrivenSceneItem,
+    CharacterDrivenTurnRequest,
+    CharacterDrivenTurnResponse,
 )
 from app.models.domain import (
     CharacterDrivenMessage,
@@ -27,6 +30,9 @@ from app.services.character_driven_scene_creation_service import (
 )
 from app.services.character_driven_scene_query_service import (
     CharacterDrivenSceneQueryService,
+)
+from app.services.character_driven_scene_turn_service import (
+    CharacterDrivenSceneTurnService,
 )
 
 router = APIRouter(prefix="/stories", tags=["character-play"])
@@ -119,3 +125,19 @@ async def create_scene(
         narrator_model_id=request.narrator_model_id,
     )
     return {"data": {"id": scene_ref.id, "finished": scene_ref.finished}}
+
+
+@router.post(
+    "/{story_id}/character-play/scenes/{scene_id}/turns",
+    response_model=CharacterDrivenTurnResponse,
+)
+async def submit_turn(
+    story_id: str,
+    scene_id: int,
+    request: CharacterDrivenTurnRequest,
+    svc: CharacterDrivenSceneTurnService = Depends(
+        get_character_driven_scene_turn_service
+    ),
+):
+    metadata, message = await svc.submit_turn(story_id, scene_id, request)
+    return {"data": map_character_driven_item(message, metadata)}
