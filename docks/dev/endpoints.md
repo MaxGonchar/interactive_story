@@ -66,7 +66,7 @@ List stories, ordered by `created_at` descending.
 }
 ```
 
-`type` is `scene` or `choice_driven`.
+`type` is `scene`, `choice_driven`, or `character_driven`.
 
 ### GET /api/stories/{story_id}
 
@@ -79,6 +79,7 @@ Return story metadata and its ordered scene references. The scenes are ordered b
     "data": {
         "id": "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         "title": "The Black Harbor",
+        "type": "scene",
         "scenes": [
             {"id": 1, "finished": true},
             {"id": 2, "finished": false}
