@@ -4,11 +4,17 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from app.exceptions import LLMError, SceneFinishedError, TurnActorNotSupportedError
+from app.exceptions import CharacterNotInSceneError, LLMError, SceneFinishedError
+from app.llm.character_agent_client import CharacterAgentClient
 from app.llm.models import LLMCompletion
 from app.llm.narrator_client import NarratorClient
-from app.models.api import CharacterDrivenPlayerTurnRequest, CharacterDrivenTurnRequest
+from app.models.api import (
+    CharacterDrivenCharacterTurnRequest,
+    CharacterDrivenPlayerTurnRequest,
+    CharacterDrivenTurnRequest,
+)
 from app.models.domain import (
+    CharacterCard,
     CharacterDrivenInput,
     CharacterDrivenLLMData,
     CharacterDrivenMessage,
@@ -28,6 +34,7 @@ from app.services.model_registry_service import ModelRegistryService
 logger = logging.getLogger(__name__)
 
 NarratorClientFactory = Callable[[str], NarratorClient]
+CharacterAgentClientFactory = Callable[[str], CharacterAgentClient]
 
 DEFAULT_PLAYER_NAME = "Player"
 
@@ -38,6 +45,7 @@ class GeneratedItem:
     narration: str
     llm_data: CharacterDrivenLLMData
     narration_completion: LLMCompletion
+    character_action_completion: LLMCompletion | None = None
 
 
 class CharacterDrivenSceneTurnService:
@@ -50,6 +58,7 @@ class CharacterDrivenSceneTurnService:
         model_registry_service: ModelRegistryService,
         usage_repository: LLMUsageRepository,
         narrator_client_factory: NarratorClientFactory,
+        character_agent_client_factory: CharacterAgentClientFactory,
     ) -> None:
         self._story_repo = story_repo
         self._scene_repo = scene_repo
@@ -58,6 +67,7 @@ class CharacterDrivenSceneTurnService:
         self._model_registry_service = model_registry_service
         self._usage_repository = usage_repository
         self._narrator_client_factory = narrator_client_factory
+        self._character_agent_client_factory = character_agent_client_factory
 
     async def submit_turn(
         self, story_id: str, scene_id: int, request: CharacterDrivenTurnRequest
@@ -67,23 +77,36 @@ class CharacterDrivenSceneTurnService:
         if metadata.finished:
             raise SceneFinishedError()
 
-        if not isinstance(request, CharacterDrivenPlayerTurnRequest):
-            raise TurnActorNotSupportedError()
-
         await self._model_registry_service.validate_model_ids(
             request.character_model_id, request.narrator_model_id
         )
         registry = await self._model_registry_service.get_registry()
+        character_model = registry.models[request.character_model_id]
         narrator_model = registry.models[request.narrator_model_id]
 
         history = await self._character_driven_scene_repo.get_messages(
             story_id, scene_id
         )
-        player_name = await self._get_player_name(story_id, metadata)
-
-        generated = await self.generate_player_turn(
-            metadata, history, request, narrator_model, player_name
-        )
+        if isinstance(request, CharacterDrivenPlayerTurnRequest):
+            player_name = await self._get_player_name(story_id, metadata)
+            generated = await self.generate_player_turn(
+                metadata, history, request, narrator_model, player_name
+            )
+        else:
+            character_id = request.actor.character_id
+            if character_id not in metadata.character_ids:
+                raise CharacterNotInSceneError()
+            character = await self._character_repo.get_character(
+                story_id, character_id
+            )
+            generated = await self.generate_character_turn(
+                metadata,
+                history,
+                request,
+                character,
+                character_model,
+                narrator_model,
+            )
 
         message = await self._character_driven_scene_repo.append_message(
             story_id,
@@ -92,6 +115,18 @@ class CharacterDrivenSceneTurnService:
             generated.narration,
             generated.llm_data,
         )
+        if generated.character_action_completion is not None:
+            await record_usage(
+                self._usage_repository,
+                story_id,
+                "character_action",
+                with_registry_model_id(
+                    generated.character_action_completion, character_model.id
+                ),
+                scene_id=scene_id,
+                message_id=message.id,
+                character_id=generated.input.author,
+            )
         await record_usage(
             self._usage_repository,
             story_id,
@@ -138,6 +173,65 @@ class CharacterDrivenSceneTurnService:
                 narrator_model_id=request.narrator_model_id,
             ),
             narration_completion=completion,
+        )
+
+    async def generate_character_turn(
+        self,
+        metadata: SceneMetadata,
+        history: list[CharacterDrivenMessage],
+        request: CharacterDrivenCharacterTurnRequest,
+        character: CharacterCard,
+        character_model: ModelMetadata,
+        narrator_model: ModelMetadata,
+    ) -> GeneratedItem:
+        character_agent = self._character_agent_client_factory(
+            character_model.provider_model_id
+        )
+        try:
+            character_completion = await character_agent.invoke(
+                character=character,
+                scene_narrations=[message.narration for message in history],
+                player_guidance=request.guidance,
+            )
+        except LLMError:
+            logger.error(
+                "Turn generation failed story_id=%s scene_id=%s stage=character_action",
+                metadata.story_id,
+                metadata.id,
+            )
+            raise
+
+        narrator = self._narrator_client_factory(narrator_model.provider_model_id)
+        try:
+            narration_completion = await narrator.invoke(
+                story_context=metadata.context or [],
+                general_scene_guide=metadata.scene_description.general_scene_guide,
+                writing_style=metadata.scene_description.writing_style,
+                scene_narrations=[message.narration for message in history],
+                actor_name=character.name,
+                current_turn=character_completion.content,
+            )
+        except LLMError:
+            logger.error(
+                "Turn generation failed story_id=%s scene_id=%s stage=narration",
+                metadata.story_id,
+                metadata.id,
+            )
+            raise
+
+        return GeneratedItem(
+            input=CharacterDrivenInput(
+                author=character.id,
+                action=character_completion.content,
+                guidance=request.guidance,
+            ),
+            narration=narration_completion.content,
+            llm_data=CharacterDrivenLLMData(
+                character_model_id=request.character_model_id,
+                narrator_model_id=request.narrator_model_id,
+            ),
+            narration_completion=narration_completion,
+            character_action_completion=character_completion,
         )
 
     async def _get_player_name(self, story_id: str, metadata: SceneMetadata) -> str:

@@ -60,6 +60,14 @@ class InvalidMessageAuthorError(DomainError):
         super().__init__(message)
 
 
+class CharacterNotInSceneError(DomainError):
+    """Character turn rejected because the character is not a scene participant."""
+
+    http_status = 422
+    error_code = "validation_error"
+    message = "Character is not part of this scene"
+
+
 class NotFoundError(DomainError):
     """Raised by repositories when a requested record does not exist."""
 
@@ -86,14 +94,6 @@ class InvalidModelError(DomainError):
     http_status = 422
     error_code = "validation_error"
     message = "Requested model is not available"
-
-
-class TurnActorNotSupportedError(DomainError):
-    """Turn actor type is not implemented yet."""
-
-    http_status = 501
-    error_code = "not_implemented"
-    message = "Character turns are not supported yet"
 
 
 class LLMError(Exception):

@@ -318,6 +318,47 @@ Finish a scene and persist its summary.
 
 **Responses**: `404` for a missing story or scene; `409` if the scene is already finished; `422` for an invalid summary.
 
+## Character-Driven Story Endpoints
+
+### POST /api/stories/{story_id}/character-play/scenes/{scene_id}/turns
+
+Submit a player or character turn. A player turn invokes the narrator. A character turn invokes the selected character agent and then the narrator. The server persists one item only after all required model calls succeed.
+
+**Character request**
+
+```json
+{
+    "actor": {"type": "character", "character_id": "navigator"},
+    "guidance": "Warn the captain about the harbor master.",
+    "character_model_id": "character-model",
+    "narrator_model_id": "narrator-model"
+}
+```
+
+`guidance` is optional; an omitted or empty value means no additional direction. `character_model_id` and `narrator_model_id` are required. The character must be included in the scene's `character_ids`.
+
+**Response 200**
+
+```json
+{
+    "data": {
+        "id": 2,
+        "actor": {"type": "character", "character_id": "navigator"},
+        "input": {"guidance": "Warn the captain about the harbor master."},
+        "character_action": "INTERNAL: ... ACTION: ... SPEECH: ... TONE: ...",
+        "narration": "The navigator leans close and warns the captain.",
+        "llm_data": {
+            "character_model_id": "character-model",
+            "narrator_model_id": "narrator-model"
+        }
+    }
+}
+```
+
+The generated character action is retained unparsed in `character_action`; it is passed as the narrator's current turn. For player requests, `input.action` contains the submitted action and `character_action` is `null`.
+
+**Errors**: `404 not_found` if the story, scene, or character file is missing; `409 scene_finished` if the scene is finished; `422 validation_error` if the request is invalid, a character is not part of the scene, or a selected model is unavailable; `502 llm_error` if either model call fails. A failed turn persists no item and records no model usage.
+
 ## Choice-Driven Story Endpoints
 
 ### GET /api/stories/{story_id}/choice-play
