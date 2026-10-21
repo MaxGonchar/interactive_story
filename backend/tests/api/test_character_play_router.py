@@ -12,11 +12,11 @@ from app.api.dependencies import (
 )
 from app.exceptions import (
     ActiveSceneExistsError,
+    CharacterNotInSceneError,
     InvalidModelError,
     LLMError,
     NotFoundError,
     SceneFinishedError,
-    TurnActorNotSupportedError,
 )
 from app.main import app
 from app.models.domain import (
@@ -37,6 +37,13 @@ _VALID_PAYLOAD = {
     "general_scene_guide": "Keep tension rising.",
     "writing_style": "Cinematic and concise.",
     "first_message": "A bell rings through the fog.",
+    "character_model_id": "character-model",
+    "narrator_model_id": "narrator-model",
+}
+
+_CHARACTER_TURN_PAYLOAD = {
+    "actor": {"type": "character", "character_id": "c1"},
+    "guidance": "",
     "character_model_id": "character-model",
     "narrator_model_id": "narrator-model",
 }
@@ -323,9 +330,12 @@ _PLAYER_TURN_PAYLOAD = {
 }
 
 
-def _make_turn_service(side_effect: Exception | None = None) -> MagicMock:
+def _make_turn_service(
+    side_effect: Exception | None = None,
+    message: CharacterDrivenMessage | None = None,
+) -> MagicMock:
     svc = MagicMock()
-    message = CharacterDrivenMessage(
+    message = message or CharacterDrivenMessage(
         id=2,
         input=CharacterDrivenInput(author="max", action="I look for light."),
         narration="A lantern flickers.",
@@ -365,6 +375,40 @@ def test_submit_player_turn_success():
     assert svc.submit_turn.await_args.args[:2] == (_STORY_ID, 1)
 
 
+def test_submit_character_turn_success():
+    message = CharacterDrivenMessage(
+        id=2,
+        input=CharacterDrivenInput(
+            author="c1", action="ACTION: She raises the lantern.", guidance=""
+        ),
+        narration="The lantern cuts through the fog.",
+        llm_data=CharacterDrivenLLMData(
+            character_model_id="character-model",
+            narrator_model_id="narrator-model",
+        ),
+    )
+    svc = _make_turn_service(message=message)
+    app.dependency_overrides[get_character_driven_scene_turn_service] = lambda: svc
+
+    resp = TestClient(app).post(_TURN_URL, json=_CHARACTER_TURN_PAYLOAD)
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "data": {
+            "id": 2,
+            "actor": {"type": "character", "character_id": "c1"},
+            "input": {"guidance": ""},
+            "character_action": "ACTION: She raises the lantern.",
+            "narration": "The lantern cuts through the fog.",
+            "llm_data": {
+                "character_model_id": "character-model",
+                "narrator_model_id": "narrator-model",
+            },
+        }
+    }
+    svc.submit_turn.assert_awaited_once()
+
+
 @pytest.mark.parametrize(
     "payload",
     [
@@ -375,6 +419,10 @@ def test_submit_player_turn_success():
         {key: v for key, v in _PLAYER_TURN_PAYLOAD.items() if key != "narrator_model_id"},
         {**_PLAYER_TURN_PAYLOAD, "actor": {"type": "unknown"}},
         {key: v for key, v in _PLAYER_TURN_PAYLOAD.items() if key != "actor"},
+        {
+            **_CHARACTER_TURN_PAYLOAD,
+            "actor": {"type": "character"},
+        },
     ],
 )
 def test_submit_turn_invalid_payload(payload):
@@ -394,7 +442,7 @@ def test_submit_turn_invalid_payload(payload):
         (NotFoundError("Scene '1' not found"), 404, "not_found"),
         (SceneFinishedError(), 409, "scene_finished"),
         (InvalidModelError(), 422, "validation_error"),
-        (TurnActorNotSupportedError(), 501, "not_implemented"),
+        (CharacterNotInSceneError(), 422, "validation_error"),
         (LLMError("boom"), 502, "llm_error"),
     ],
 )

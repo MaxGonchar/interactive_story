@@ -5,6 +5,7 @@ import os
 from fastapi import Depends
 
 from app.llm.choice_engine_client import ChoiceEngineClient
+from app.llm.character_agent_client import CharacterAgentClient
 from app.llm.model_factory import CharacterDrivenModelFactory, make_character_driven_model_factory
 from app.llm.narrator_client import NarratorClient
 from app.llm.scene_llm_client import SceneLLMClient, SceneLLMClientFactory
@@ -20,6 +21,7 @@ from app.repositories.model_registry_repository import ModelRegistryRepository
 from app.services.character_driven_scene_creation_service import CharacterDrivenSceneCreationService
 from app.services.character_driven_scene_query_service import CharacterDrivenSceneQueryService
 from app.services.character_driven_scene_turn_service import (
+    CharacterAgentClientFactory,
     CharacterDrivenSceneTurnService,
     NarratorClientFactory,
 )
@@ -181,6 +183,15 @@ def get_narrator_client_factory(
     return create_client
 
 
+def get_character_agent_client_factory(
+    model_factory: CharacterDrivenModelFactory = Depends(get_character_driven_model_factory),
+) -> CharacterAgentClientFactory:
+    def create_client(provider_model_id: str) -> CharacterAgentClient:
+        return CharacterAgentClient(model_factory(provider_model_id))
+
+    return create_client
+
+
 def get_character_driven_scene_turn_service(
     story_repo: StoryRepository = Depends(get_story_repository),
     scene_repo: SceneRepository = Depends(get_scene_repository),
@@ -191,6 +202,9 @@ def get_character_driven_scene_turn_service(
     model_registry_service: ModelRegistryService = Depends(get_model_registry_service),
     usage_repository: LLMUsageRepository = Depends(get_llm_usage_repository),
     narrator_client_factory: NarratorClientFactory = Depends(get_narrator_client_factory),
+    character_agent_client_factory: CharacterAgentClientFactory = Depends(
+        get_character_agent_client_factory
+    ),
 ) -> CharacterDrivenSceneTurnService:
     return CharacterDrivenSceneTurnService(
         story_repo,
@@ -200,6 +214,7 @@ def get_character_driven_scene_turn_service(
         model_registry_service,
         usage_repository,
         narrator_client_factory,
+        character_agent_client_factory,
     )
 
 
