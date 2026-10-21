@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.api.dependencies import (
     get_character_driven_scene_creation_service,
+    get_character_driven_scene_item_service,
     get_character_driven_scene_query_service,
     get_character_driven_scene_turn_service,
 )
@@ -17,8 +18,11 @@ from app.models.api import (
     CharacterDrivenSceneDetail,
     CharacterDrivenSceneDetailResponse,
     CharacterDrivenSceneItem,
+    CharacterDrivenSceneItemResponse,
     CharacterDrivenTurnRequest,
     CharacterDrivenTurnResponse,
+    DeleteCharacterDrivenSceneItemResponse,
+    UpdateCharacterDrivenSceneItemRequest,
 )
 from app.models.domain import (
     CharacterDrivenMessage,
@@ -27,6 +31,9 @@ from app.models.domain import (
 )
 from app.services.character_driven_scene_creation_service import (
     CharacterDrivenSceneCreationService,
+)
+from app.services.character_driven_scene_item_service import (
+    CharacterDrivenSceneItemService,
 )
 from app.services.character_driven_scene_query_service import (
     CharacterDrivenSceneQueryService,
@@ -141,3 +148,38 @@ async def submit_turn(
 ):
     metadata, message = await svc.submit_turn(story_id, scene_id, request)
     return {"data": map_character_driven_item(message, metadata)}
+
+
+@router.put(
+    "/{story_id}/character-play/scenes/{scene_id}/items/{item_id}",
+    response_model=CharacterDrivenSceneItemResponse,
+)
+async def edit_item(
+    story_id: str,
+    scene_id: int,
+    item_id: int,
+    request: UpdateCharacterDrivenSceneItemRequest,
+    svc: CharacterDrivenSceneItemService = Depends(
+        get_character_driven_scene_item_service
+    ),
+):
+    metadata, message = await svc.edit_item(
+        story_id, scene_id, item_id, request.narration
+    )
+    return {"data": map_character_driven_item(message, metadata)}
+
+
+@router.delete(
+    "/{story_id}/character-play/scenes/{scene_id}/items/{item_id}",
+    response_model=DeleteCharacterDrivenSceneItemResponse,
+)
+async def delete_item(
+    story_id: str,
+    scene_id: int,
+    item_id: int,
+    svc: CharacterDrivenSceneItemService = Depends(
+        get_character_driven_scene_item_service
+    ),
+):
+    await svc.delete_item(story_id, scene_id, item_id)
+    return {"success": True}

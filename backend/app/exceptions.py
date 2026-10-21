@@ -13,6 +13,20 @@ class SceneFinishedError(DomainError):
     message = "Scene is already finished"
 
 
+class NotLastItemError(DomainError):
+    """Deletion rejected because the item is not the last scene item."""
+
+    error_code = "not_last_item"
+    message = "Only the last item can be deleted"
+
+
+class OpeningItemNotDeletableError(DomainError):
+    """Deletion rejected because the item is the scene opening."""
+
+    error_code = "opening_item_not_deletable"
+    message = "The opening item cannot be deleted"
+
+
 class NoAssistantMessageError(DomainError):
     """Regenerate rejected: last message is not from the assistant."""
 

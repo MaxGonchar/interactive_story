@@ -278,6 +278,18 @@ class CharacterDrivenSceneItem(BaseModel):
     llm_data: CharacterDrivenLLMDataModel
 
 
+class UpdateCharacterDrivenSceneItemRequest(BaseModel):
+    narration: str = Field(min_length=1, max_length=4000)
+
+
+class CharacterDrivenSceneItemResponse(BaseModel):
+    data: CharacterDrivenSceneItem
+
+
+class DeleteCharacterDrivenSceneItemResponse(BaseModel):
+    success: bool
+
+
 class CharacterDrivenSceneDetail(BaseModel):
     id: int
     finished: bool
