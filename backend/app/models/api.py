@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, model_validator
 
 from app.models.domain import StoryType
 
@@ -410,3 +410,43 @@ class ReturnToStepData(BaseModel):
 
 class ReturnToStepResponse(BaseModel):
     data: ReturnToStepData
+
+
+# ---------------------------------------------------------------------------
+# Character-driven turn — POST /api/stories/{story_id}/character-play/scenes/{scene_id}/turns
+# ---------------------------------------------------------------------------
+
+
+class CharacterDrivenPlayerTurnRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    actor: CharacterDrivenPlayerActor
+    action: NonEmptyStr
+    character_model_id: NonEmptyStr
+    narrator_model_id: NonEmptyStr
+
+
+class CharacterDrivenCharacterTurnRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    actor: CharacterDrivenCharacterActor
+    guidance: str | None = None
+    character_model_id: NonEmptyStr
+    narrator_model_id: NonEmptyStr
+
+
+def _turn_actor_type(value: object) -> str | None:
+    actor = value.get("actor") if isinstance(value, dict) else getattr(value, "actor", None)
+    actor_type = actor.get("type") if isinstance(actor, dict) else getattr(actor, "type", None)
+    return actor_type if actor_type in ("player", "character") else None
+
+
+CharacterDrivenTurnRequest = Annotated[
+    Annotated[CharacterDrivenPlayerTurnRequest, Tag("player")]
+    | Annotated[CharacterDrivenCharacterTurnRequest, Tag("character")],
+    Discriminator(_turn_actor_type),
+]
+
+
+class CharacterDrivenTurnResponse(BaseModel):
+    data: CharacterDrivenSceneItem

@@ -6,6 +6,7 @@ from fastapi import Depends
 
 from app.llm.choice_engine_client import ChoiceEngineClient
 from app.llm.model_factory import CharacterDrivenModelFactory, make_character_driven_model_factory
+from app.llm.narrator_client import NarratorClient
 from app.llm.scene_llm_client import SceneLLMClient, SceneLLMClientFactory
 from app.llm.story_engine_client import StoryEngineClient
 from app.llm.venice_ai import VeniceAIChatModel
@@ -18,6 +19,10 @@ from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.repositories.model_registry_repository import ModelRegistryRepository
 from app.services.character_driven_scene_creation_service import CharacterDrivenSceneCreationService
 from app.services.character_driven_scene_query_service import CharacterDrivenSceneQueryService
+from app.services.character_driven_scene_turn_service import (
+    CharacterDrivenSceneTurnService,
+    NarratorClientFactory,
+)
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 from app.llm.summarize_llm_client import SummarizeLLMClient
 from app.services.scene_creation_service import SceneCreationService
@@ -164,6 +169,37 @@ def get_character_driven_scene_query_service(
 ) -> CharacterDrivenSceneQueryService:
     return CharacterDrivenSceneQueryService(
         story_repo, scene_repo, character_driven_scene_repo
+    )
+
+
+def get_narrator_client_factory(
+    model_factory: CharacterDrivenModelFactory = Depends(get_character_driven_model_factory),
+) -> NarratorClientFactory:
+    def create_client(provider_model_id: str) -> NarratorClient:
+        return NarratorClient(model_factory(provider_model_id))
+
+    return create_client
+
+
+def get_character_driven_scene_turn_service(
+    story_repo: StoryRepository = Depends(get_story_repository),
+    scene_repo: SceneRepository = Depends(get_scene_repository),
+    character_driven_scene_repo: CharacterDrivenSceneRepository = Depends(
+        get_character_driven_scene_repository
+    ),
+    character_repo: CharacterRepository = Depends(get_character_repository),
+    model_registry_service: ModelRegistryService = Depends(get_model_registry_service),
+    usage_repository: LLMUsageRepository = Depends(get_llm_usage_repository),
+    narrator_client_factory: NarratorClientFactory = Depends(get_narrator_client_factory),
+) -> CharacterDrivenSceneTurnService:
+    return CharacterDrivenSceneTurnService(
+        story_repo,
+        scene_repo,
+        character_driven_scene_repo,
+        character_repo,
+        model_registry_service,
+        usage_repository,
+        narrator_client_factory,
     )
 
 

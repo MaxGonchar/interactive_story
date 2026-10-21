@@ -8,8 +8,16 @@ from fastapi.testclient import TestClient
 from app.api.dependencies import (
     get_character_driven_scene_creation_service,
     get_character_driven_scene_query_service,
+    get_character_driven_scene_turn_service,
 )
-from app.exceptions import ActiveSceneExistsError, InvalidModelError, NotFoundError
+from app.exceptions import (
+    ActiveSceneExistsError,
+    InvalidModelError,
+    LLMError,
+    NotFoundError,
+    SceneFinishedError,
+    TurnActorNotSupportedError,
+)
 from app.main import app
 from app.models.domain import (
     CharacterDrivenInput,
@@ -301,3 +309,100 @@ def test_get_scene_not_found_returns_404(missing):
     assert resp.json() == {
         "error": {"code": "not_found", "message": f"{missing} not found"}
     }
+
+
+# --- POST /character-play/scenes/{scene_id}/turns ---
+
+_TURN_URL = f"{_URL}/1/turns"
+
+_PLAYER_TURN_PAYLOAD = {
+    "actor": {"type": "player"},
+    "action": "I look for the nearest light source.",
+    "character_model_id": "character-model",
+    "narrator_model_id": "narrator-model",
+}
+
+
+def _make_turn_service(side_effect: Exception | None = None) -> MagicMock:
+    svc = MagicMock()
+    message = CharacterDrivenMessage(
+        id=2,
+        input=CharacterDrivenInput(author="max", action="I look for light."),
+        narration="A lantern flickers.",
+        llm_data=CharacterDrivenLLMData(
+            character_model_id=None, narrator_model_id="narrator-model"
+        ),
+    )
+    svc.submit_turn = (
+        AsyncMock(side_effect=side_effect)
+        if side_effect is not None
+        else AsyncMock(return_value=(make_scene_metadata(), message))
+    )
+    return svc
+
+
+def test_submit_player_turn_success():
+    svc = _make_turn_service()
+    app.dependency_overrides[get_character_driven_scene_turn_service] = lambda: svc
+
+    resp = TestClient(app).post(_TURN_URL, json=_PLAYER_TURN_PAYLOAD)
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "data": {
+            "id": 2,
+            "actor": {"type": "player"},
+            "input": {"action": "I look for light."},
+            "character_action": None,
+            "narration": "A lantern flickers.",
+            "llm_data": {
+                "character_model_id": None,
+                "narrator_model_id": "narrator-model",
+            },
+        }
+    }
+    svc.submit_turn.assert_awaited_once()
+    assert svc.submit_turn.await_args.args[:2] == (_STORY_ID, 1)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {**_PLAYER_TURN_PAYLOAD, "action": ""},
+        {key: v for key, v in _PLAYER_TURN_PAYLOAD.items() if key != "action"},
+        {**_PLAYER_TURN_PAYLOAD, "guidance": "Be careful"},
+        {key: v for key, v in _PLAYER_TURN_PAYLOAD.items() if key != "character_model_id"},
+        {key: v for key, v in _PLAYER_TURN_PAYLOAD.items() if key != "narrator_model_id"},
+        {**_PLAYER_TURN_PAYLOAD, "actor": {"type": "unknown"}},
+        {key: v for key, v in _PLAYER_TURN_PAYLOAD.items() if key != "actor"},
+    ],
+)
+def test_submit_turn_invalid_payload(payload):
+    svc = _make_turn_service()
+    app.dependency_overrides[get_character_driven_scene_turn_service] = lambda: svc
+
+    resp = TestClient(app).post(_TURN_URL, json=payload)
+
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+    svc.submit_turn.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "exc,status,code",
+    [
+        (NotFoundError("Scene '1' not found"), 404, "not_found"),
+        (SceneFinishedError(), 409, "scene_finished"),
+        (InvalidModelError(), 422, "validation_error"),
+        (TurnActorNotSupportedError(), 501, "not_implemented"),
+        (LLMError("boom"), 502, "llm_error"),
+    ],
+)
+def test_submit_turn_errors(exc, status, code):
+    svc = _make_turn_service(side_effect=exc)
+    app.dependency_overrides[get_character_driven_scene_turn_service] = lambda: svc
+
+    resp = TestClient(app).post(_TURN_URL, json=_PLAYER_TURN_PAYLOAD)
+
+    assert resp.status_code == status
+    assert resp.json()["error"]["code"] == code
