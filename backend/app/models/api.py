@@ -84,6 +84,7 @@ class SceneListItem(BaseModel):
 class StoryDetail(BaseModel):
     id: str
     title: str
+    type: StoryType
     scenes: list[SceneListItem]
     active_scene_id: int | None
 

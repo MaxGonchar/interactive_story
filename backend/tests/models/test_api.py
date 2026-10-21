@@ -38,17 +38,33 @@ def test_story_detail_fields():
     detail = StoryDetail(
         id="8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         title="Mila and Bun",
+        type="scene",
         scenes=[SceneListItem(id=1, finished=True)],
         active_scene_id=1,
     )
     assert detail.id == "8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8"
     assert detail.title == "Mila and Bun"
+    assert detail.type == "scene"
+
+
+@pytest.mark.parametrize("story_type", ["scene", "choice_driven", "character_driven"])
+def test_story_detail_supports_all_story_types(story_type):
+    detail = StoryDetail(
+        id="story-1",
+        title="Test Story",
+        type=story_type,
+        scenes=[],
+        active_scene_id=None,
+    )
+
+    assert detail.type == story_type
 
 
 def test_story_detail_active_scene_id_none():
     detail = StoryDetail(
         id="8fa93a9e-8dad-4fcb-b9cf-8e39f1707ec8",
         title="Mila and Bun",
+        type="scene",
         scenes=[SceneListItem(id=1, finished=True)],
         active_scene_id=None,
     )
