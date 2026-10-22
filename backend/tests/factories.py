@@ -28,12 +28,14 @@ def make_scene_metadata(
     context: list[str] | None = None,
     story_id: str = _DEFAULT_STORY_ID,
     scene_id: int = _DEFAULT_SCENE_ID,
+    character_ids: list[str] | None = None,
+    user_character_id: str | None = "max",
 ) -> SceneMetadata:
     return SceneMetadata(
         id=scene_id,
         story_id=story_id,
-        character_ids=["c1"],
-        user_character_id="max",
+        character_ids=character_ids if character_ids is not None else ["c1"],
+        user_character_id=user_character_id,
         finished=finished,
         scene_description=SceneDescription(
             general_scene_guide="Guide text.",

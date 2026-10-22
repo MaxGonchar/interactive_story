@@ -26,6 +26,8 @@ from app.services.character_driven_scene_turn_service import (
     CharacterDrivenSceneTurnService,
     NarratorClientFactory,
 )
+from app.llm.memory_agent_client import MemoryAgentClient
+from app.services.character_driven_scene_memory_service import CharacterDrivenSceneMemoryService
 from app.services.character_driven_scene_summary_service import CharacterDrivenSceneSummaryService
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 from app.llm.summarize_llm_client import SummarizeLLMClient
@@ -259,6 +261,32 @@ def get_character_driven_scene_summary_service(
         story_repo,
         scene_repo,
         character_driven_scene_repo,
+        llm_client,
+        usage_repository,
+    )
+
+
+def get_memory_agent_client(
+    model: VeniceAIChatModel = Depends(get_summary_model),
+) -> MemoryAgentClient:
+    return MemoryAgentClient(model)
+
+
+def get_character_driven_scene_memory_service(
+    story_repo: StoryRepository = Depends(get_story_repository),
+    scene_repo: SceneRepository = Depends(get_scene_repository),
+    character_driven_scene_repo: CharacterDrivenSceneRepository = Depends(
+        get_character_driven_scene_repository
+    ),
+    character_repo: CharacterRepository = Depends(get_character_repository),
+    llm_client: MemoryAgentClient = Depends(get_memory_agent_client),
+    usage_repository: LLMUsageRepository = Depends(get_llm_usage_repository),
+) -> CharacterDrivenSceneMemoryService:
+    return CharacterDrivenSceneMemoryService(
+        story_repo,
+        scene_repo,
+        character_driven_scene_repo,
+        character_repo,
         llm_client,
         usage_repository,
     )

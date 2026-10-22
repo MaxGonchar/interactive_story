@@ -313,6 +313,15 @@ class CharacterDrivenSummaryDraftResponse(BaseModel):
     data: CharacterDrivenSummaryDraft
 
 
+class CharacterMemoryDraft(BaseModel):
+    character_id: str
+    memory_updates: list[str]
+
+
+class CharacterMemoryDraftResponse(BaseModel):
+    data: CharacterMemoryDraft
+
+
 # ---------------------------------------------------------------------------
 # Finish scene  —  POST /api/stories/{story_id}/scenes/{scene_id}/finish
 # ---------------------------------------------------------------------------

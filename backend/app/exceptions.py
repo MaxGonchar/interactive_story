@@ -89,6 +89,13 @@ class CharacterNotInSceneError(DomainError):
     message = "Character is not part of this scene"
 
 
+class CharacterNotParticipantError(DomainError):
+    """Memory draft requested for a character that is not a scene participant."""
+
+    error_code = "character_not_in_scene"
+    message = "Character is not part of this scene"
+
+
 class NotFoundError(DomainError):
     """Raised by repositories when a requested record does not exist."""
 
