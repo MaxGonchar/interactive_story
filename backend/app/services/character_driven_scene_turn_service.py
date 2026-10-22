@@ -4,7 +4,14 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from app.exceptions import CharacterNotInSceneError, LLMError, SceneFinishedError
+from app.exceptions import (
+    CharacterNotInSceneError,
+    ItemNotReplaceableError,
+    LLMError,
+    NotFoundError,
+    NotLastItemError,
+    SceneFinishedError,
+)
 from app.llm.character_agent_client import CharacterAgentClient
 from app.llm.models import LLMCompletion
 from app.llm.narrator_client import NarratorClient
@@ -72,11 +79,79 @@ class CharacterDrivenSceneTurnService:
     async def submit_turn(
         self, story_id: str, scene_id: int, request: CharacterDrivenTurnRequest
     ) -> tuple[SceneMetadata, CharacterDrivenMessage]:
+        metadata = await self._get_active_scene(story_id, scene_id)
+        history = await self._character_driven_scene_repo.get_messages(
+            story_id, scene_id
+        )
+        generated, character_model, narrator_model = await self._generate(
+            story_id, metadata, history, request
+        )
+
+        message = await self._character_driven_scene_repo.append_message(
+            story_id,
+            scene_id,
+            generated.input,
+            generated.narration,
+            generated.llm_data,
+        )
+        await self._record_generated_usage(
+            story_id, scene_id, message.id, generated, character_model, narrator_model
+        )
+        return metadata, message
+
+    async def replace_turn(
+        self,
+        story_id: str,
+        scene_id: int,
+        item_id: int,
+        request: CharacterDrivenTurnRequest,
+    ) -> tuple[SceneMetadata, CharacterDrivenMessage]:
+        metadata = await self._get_active_scene(story_id, scene_id)
+        messages = await self._character_driven_scene_repo.get_messages(
+            story_id, scene_id
+        )
+        item_index = next(
+            (index for index, message in enumerate(messages) if message.id == item_id),
+            None,
+        )
+        if item_index is None:
+            raise NotFoundError(f"Item '{item_id}' not found")
+        if item_index != len(messages) - 1:
+            raise NotLastItemError()
+        if messages[item_index].input is None:
+            raise ItemNotReplaceableError()
+
+        generated, character_model, narrator_model = await self._generate(
+            story_id, metadata, messages[:item_index], request
+        )
+
+        message = await self._character_driven_scene_repo.replace_message(
+            story_id,
+            scene_id,
+            item_id,
+            generated.input,
+            generated.narration,
+            generated.llm_data,
+        )
+        await self._record_generated_usage(
+            story_id, scene_id, message.id, generated, character_model, narrator_model
+        )
+        return metadata, message
+
+    async def _get_active_scene(self, story_id: str, scene_id: int) -> SceneMetadata:
         await self._story_repo.get_story(story_id)
         metadata = await self._scene_repo.get_metadata(story_id, scene_id)
         if metadata.finished:
             raise SceneFinishedError()
+        return metadata
 
+    async def _generate(
+        self,
+        story_id: str,
+        metadata: SceneMetadata,
+        history: list[CharacterDrivenMessage],
+        request: CharacterDrivenTurnRequest,
+    ) -> tuple[GeneratedItem, ModelMetadata, ModelMetadata]:
         await self._model_registry_service.validate_model_ids(
             request.character_model_id, request.narrator_model_id
         )
@@ -84,9 +159,6 @@ class CharacterDrivenSceneTurnService:
         character_model = registry.models[request.character_model_id]
         narrator_model = registry.models[request.narrator_model_id]
 
-        history = await self._character_driven_scene_repo.get_messages(
-            story_id, scene_id
-        )
         if isinstance(request, CharacterDrivenPlayerTurnRequest):
             player_name = await self._get_player_name(story_id, metadata)
             generated = await self.generate_player_turn(
@@ -107,14 +179,17 @@ class CharacterDrivenSceneTurnService:
                 character_model,
                 narrator_model,
             )
+        return generated, character_model, narrator_model
 
-        message = await self._character_driven_scene_repo.append_message(
-            story_id,
-            scene_id,
-            generated.input,
-            generated.narration,
-            generated.llm_data,
-        )
+    async def _record_generated_usage(
+        self,
+        story_id: str,
+        scene_id: int,
+        message_id: int,
+        generated: GeneratedItem,
+        character_model: ModelMetadata,
+        narrator_model: ModelMetadata,
+    ) -> None:
         if generated.character_action_completion is not None:
             await record_usage(
                 self._usage_repository,
@@ -124,7 +199,7 @@ class CharacterDrivenSceneTurnService:
                     generated.character_action_completion, character_model.id
                 ),
                 scene_id=scene_id,
-                message_id=message.id,
+                message_id=message_id,
                 character_id=generated.input.author,
             )
         await record_usage(
@@ -133,9 +208,8 @@ class CharacterDrivenSceneTurnService:
             "narration",
             with_registry_model_id(generated.narration_completion, narrator_model.id),
             scene_id=scene_id,
-            message_id=message.id,
+            message_id=message_id,
         )
-        return metadata, message
 
     async def generate_player_turn(
         self,
