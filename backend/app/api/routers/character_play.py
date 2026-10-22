@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Response
 
 from app.api.dependencies import (
     get_character_driven_scene_creation_service,
+    get_character_driven_scene_finish_service,
     get_character_driven_scene_item_service,
     get_character_driven_scene_memory_service,
     get_character_driven_scene_query_service,
@@ -23,6 +24,8 @@ from app.models.api import (
     CharacterDrivenSceneItemResponse,
     CharacterDrivenSummaryDraftResponse,
     CharacterMemoryDraftResponse,
+    FinishCharacterDrivenSceneRequest,
+    FinishCharacterDrivenSceneResponse,
     CharacterDrivenTurnRequest,
     CharacterDrivenTurnResponse,
     DeleteCharacterDrivenSceneItemResponse,
@@ -35,6 +38,9 @@ from app.models.domain import (
 )
 from app.services.character_driven_scene_creation_service import (
     CharacterDrivenSceneCreationService,
+)
+from app.services.character_driven_scene_finish_service import (
+    CharacterDrivenSceneFinishService,
 )
 from app.services.character_driven_scene_item_service import (
     CharacterDrivenSceneItemService,
@@ -245,3 +251,31 @@ async def get_memory_draft(
     memory_updates = await svc.draft(story_id, scene_id, character_id)
     response.headers["Cache-Control"] = "no-store"
     return {"data": {"character_id": character_id, "memory_updates": memory_updates}}
+
+
+@router.post(
+    "/{story_id}/character-play/scenes/{scene_id}/finish",
+    response_model=FinishCharacterDrivenSceneResponse,
+)
+async def finish_scene(
+    story_id: str,
+    scene_id: int,
+    request: FinishCharacterDrivenSceneRequest,
+    svc: CharacterDrivenSceneFinishService = Depends(
+        get_character_driven_scene_finish_service
+    ),
+):
+    metadata = await svc.finish(
+        story_id,
+        scene_id,
+        request.scene_summary,
+        request.character_memory_updates,
+    )
+    return {
+        "data": {
+            "id": metadata.id,
+            "finished": metadata.finished,
+            "scene_summary": request.scene_summary,
+            "character_memory_updates": request.character_memory_updates,
+        }
+    }

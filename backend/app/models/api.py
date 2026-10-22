@@ -323,6 +323,27 @@ class CharacterMemoryDraftResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Finish character-driven scene
+# ---------------------------------------------------------------------------
+
+
+class FinishCharacterDrivenSceneRequest(BaseModel):
+    scene_summary: list[NonEmptyStr] = Field(min_length=1, max_length=100)
+    character_memory_updates: dict[str, list[NonEmptyStr]]
+
+
+class FinishedCharacterDrivenSceneData(BaseModel):
+    id: int
+    finished: bool
+    scene_summary: list[str]
+    character_memory_updates: dict[str, list[str]]
+
+
+class FinishCharacterDrivenSceneResponse(BaseModel):
+    data: FinishedCharacterDrivenSceneData
+
+
+# ---------------------------------------------------------------------------
 # Finish scene  —  POST /api/stories/{story_id}/scenes/{scene_id}/finish
 # ---------------------------------------------------------------------------
 
