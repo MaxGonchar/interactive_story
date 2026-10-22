@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies import (
     get_character_driven_scene_creation_service,
+    get_character_driven_scene_finish_service,
     get_character_driven_scene_item_service,
     get_character_driven_scene_memory_service,
     get_character_driven_scene_query_service,
@@ -17,6 +18,7 @@ from app.exceptions import (
     ActiveSceneExistsError,
     CharacterNotInSceneError,
     CharacterNotParticipantError,
+    InvalidCharacterMemoryUpdatesError,
     InvalidModelError,
     ItemNotReplaceableError,
     LLMError,
@@ -53,6 +55,15 @@ _CHARACTER_TURN_PAYLOAD = {
     "guidance": "",
     "character_model_id": "character-model",
     "narrator_model_id": "narrator-model",
+}
+
+_FINISH_URL = f"{_URL}/1/finish"
+_FINISH_PAYLOAD = {
+    "scene_summary": ["The crew uncovered a betrayal."],
+    "character_memory_updates": {
+        "navigator": ["The harbor master cannot be trusted."],
+        "hero": [],
+    },
 }
 
 
@@ -737,3 +748,84 @@ def test_memory_draft_errors(exc, status, code):
 
     assert resp.status_code == status
     assert resp.json()["error"]["code"] == code
+
+
+# --- POST /character-play/scenes/{scene_id}/finish ---
+
+
+def test_finish_scene_success_returns_saved_payload():
+    metadata = make_scene_metadata(
+        story_id=_STORY_ID,
+        scene_id=1,
+        character_ids=["navigator"],
+        user_character_id="hero",
+    ).model_copy(update={"finished": True, "scene_summary": _FINISH_PAYLOAD["scene_summary"]})
+    svc = MagicMock()
+    svc.finish = AsyncMock(return_value=metadata)
+    app.dependency_overrides[get_character_driven_scene_finish_service] = lambda: svc
+
+    resp = TestClient(app).post(_FINISH_URL, json=_FINISH_PAYLOAD)
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "data": {
+            "id": 1,
+            "finished": True,
+            "scene_summary": ["The crew uncovered a betrayal."],
+            "character_memory_updates": {
+                "navigator": ["The harbor master cannot be trusted."],
+                "hero": [],
+            },
+        }
+    }
+    svc.finish.assert_awaited_once_with(
+        _STORY_ID,
+        1,
+        _FINISH_PAYLOAD["scene_summary"],
+        _FINISH_PAYLOAD["character_memory_updates"],
+    )
+
+
+@pytest.mark.parametrize(
+    "exc,status,code",
+    [
+        (NotFoundError("Scene '1' not found"), 404, "not_found"),
+        (SceneFinishedError(), 409, "scene_finished"),
+        (InvalidCharacterMemoryUpdatesError(), 422, "validation_error"),
+    ],
+)
+def test_finish_scene_domain_errors(exc, status, code):
+    svc = MagicMock()
+    svc.finish = AsyncMock(side_effect=exc)
+    app.dependency_overrides[get_character_driven_scene_finish_service] = lambda: svc
+
+    resp = TestClient(app).post(_FINISH_URL, json=_FINISH_PAYLOAD)
+
+    assert resp.status_code == status
+    assert resp.json()["error"]["code"] == code
+
+
+@pytest.mark.parametrize(
+    "override",
+    [
+        {"scene_summary": []},
+        {"scene_summary": [""]},
+        {"scene_summary": ["summary"] * 101},
+        {
+            "character_memory_updates": {
+                "navigator": [""],
+                "hero": [],
+            }
+        },
+    ],
+)
+def test_finish_scene_invalid_payload(override):
+    svc = MagicMock()
+    svc.finish = AsyncMock()
+    app.dependency_overrides[get_character_driven_scene_finish_service] = lambda: svc
+
+    resp = TestClient(app).post(_FINISH_URL, json={**_FINISH_PAYLOAD, **override})
+
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+    svc.finish.assert_not_awaited()

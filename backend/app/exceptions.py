@@ -89,6 +89,14 @@ class CharacterNotInSceneError(DomainError):
     message = "Character is not part of this scene"
 
 
+class InvalidCharacterMemoryUpdatesError(DomainError):
+    """Finish rejected because memory updates do not match scene participants."""
+
+    http_status = 422
+    error_code = "validation_error"
+    message = "Memory updates must match the scene participants"
+
+
 class CharacterNotParticipantError(DomainError):
     """Memory draft requested for a character that is not a scene participant."""
 
