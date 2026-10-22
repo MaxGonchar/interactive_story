@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from app.api.dependencies import (
     get_character_driven_scene_creation_service,
     get_character_driven_scene_item_service,
     get_character_driven_scene_query_service,
+    get_character_driven_scene_summary_service,
     get_character_driven_scene_turn_service,
 )
 from app.models.api import (
@@ -19,6 +20,7 @@ from app.models.api import (
     CharacterDrivenSceneDetailResponse,
     CharacterDrivenSceneItem,
     CharacterDrivenSceneItemResponse,
+    CharacterDrivenSummaryDraftResponse,
     CharacterDrivenTurnRequest,
     CharacterDrivenTurnResponse,
     DeleteCharacterDrivenSceneItemResponse,
@@ -37,6 +39,9 @@ from app.services.character_driven_scene_item_service import (
 )
 from app.services.character_driven_scene_query_service import (
     CharacterDrivenSceneQueryService,
+)
+from app.services.character_driven_scene_summary_service import (
+    CharacterDrivenSceneSummaryService,
 )
 from app.services.character_driven_scene_turn_service import (
     CharacterDrivenSceneTurnService,
@@ -200,3 +205,20 @@ async def delete_item(
 ):
     await svc.delete_item(story_id, scene_id, item_id)
     return {"success": True}
+
+
+@router.get(
+    "/{story_id}/character-play/scenes/{scene_id}/summary/draft",
+    response_model=CharacterDrivenSummaryDraftResponse,
+)
+async def get_summary_draft(
+    story_id: str,
+    scene_id: int,
+    response: Response,
+    svc: CharacterDrivenSceneSummaryService = Depends(
+        get_character_driven_scene_summary_service
+    ),
+):
+    summary = await svc.draft(story_id, scene_id)
+    response.headers["Cache-Control"] = "no-store"
+    return {"data": {"summary": summary}}

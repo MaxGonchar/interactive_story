@@ -26,6 +26,7 @@ from app.services.character_driven_scene_turn_service import (
     CharacterDrivenSceneTurnService,
     NarratorClientFactory,
 )
+from app.services.character_driven_scene_summary_service import CharacterDrivenSceneSummaryService
 from app.services.choice_driven_play_service import ChoiceDrivenPlayService
 from app.llm.summarize_llm_client import SummarizeLLMClient
 from app.services.scene_creation_service import SceneCreationService
@@ -243,6 +244,24 @@ def get_scene_summarize_service(
     usage_repository: LLMUsageRepository = Depends(get_llm_usage_repository),
 ) -> SceneSummarizeService:
     return SceneSummarizeService(scene_repo, llm_client, usage_repository)
+
+
+def get_character_driven_scene_summary_service(
+    story_repo: StoryRepository = Depends(get_story_repository),
+    scene_repo: SceneRepository = Depends(get_scene_repository),
+    character_driven_scene_repo: CharacterDrivenSceneRepository = Depends(
+        get_character_driven_scene_repository
+    ),
+    llm_client: SummarizeLLMClient = Depends(get_summarize_llm_client),
+    usage_repository: LLMUsageRepository = Depends(get_llm_usage_repository),
+) -> CharacterDrivenSceneSummaryService:
+    return CharacterDrivenSceneSummaryService(
+        story_repo,
+        scene_repo,
+        character_driven_scene_repo,
+        llm_client,
+        usage_repository,
+    )
 
 
 def get_choice_driven_story_repository() -> ChoiceDrivenStoryRepository:
