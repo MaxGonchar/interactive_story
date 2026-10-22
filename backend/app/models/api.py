@@ -305,6 +305,14 @@ class CharacterDrivenSceneDetailResponse(BaseModel):
     data: CharacterDrivenSceneDetail
 
 
+class CharacterDrivenSummaryDraft(BaseModel):
+    summary: list[str]
+
+
+class CharacterDrivenSummaryDraftResponse(BaseModel):
+    data: CharacterDrivenSummaryDraft
+
+
 # ---------------------------------------------------------------------------
 # Finish scene  —  POST /api/stories/{story_id}/scenes/{scene_id}/finish
 # ---------------------------------------------------------------------------

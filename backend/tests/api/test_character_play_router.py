@@ -9,6 +9,7 @@ from app.api.dependencies import (
     get_character_driven_scene_creation_service,
     get_character_driven_scene_item_service,
     get_character_driven_scene_query_service,
+    get_character_driven_scene_summary_service,
     get_character_driven_scene_turn_service,
 )
 from app.exceptions import (
@@ -632,3 +633,46 @@ def test_delete_item_domain_errors(exc, status, code):
 
     assert resp.status_code == status
     assert resp.json() == {"error": {"code": code, "message": exc.message}}
+
+
+# --- GET /character-play/scenes/{scene_id}/summary/draft ---
+
+_SUMMARY_DRAFT_URL = f"{_URL}/1/summary/draft"
+
+
+def _make_summary_service(
+    result: list[str] | None = None, side_effect: Exception | None = None
+) -> MagicMock:
+    svc = MagicMock()
+    svc.draft = AsyncMock(return_value=result, side_effect=side_effect)
+    return svc
+
+
+def test_summary_draft_success_returns_items_and_no_store_header():
+    svc = _make_summary_service(["The crew uncovered a betrayal."])
+    app.dependency_overrides[get_character_driven_scene_summary_service] = lambda: svc
+
+    resp = TestClient(app).get(_SUMMARY_DRAFT_URL)
+
+    assert resp.status_code == 200
+    assert resp.json() == {"data": {"summary": ["The crew uncovered a betrayal."]}}
+    assert resp.headers["cache-control"] == "no-store"
+    svc.draft.assert_awaited_once_with(_STORY_ID, 1)
+
+
+@pytest.mark.parametrize(
+    "exc,status,code",
+    [
+        (NotFoundError("Scene '1' not found"), 404, "not_found"),
+        (SceneFinishedError(), 409, "scene_finished"),
+        (LLMError("boom"), 502, "llm_error"),
+    ],
+)
+def test_summary_draft_errors(exc, status, code):
+    svc = _make_summary_service(side_effect=exc)
+    app.dependency_overrides[get_character_driven_scene_summary_service] = lambda: svc
+
+    resp = TestClient(app).get(_SUMMARY_DRAFT_URL)
+
+    assert resp.status_code == status
+    assert resp.json()["error"]["code"] == code
