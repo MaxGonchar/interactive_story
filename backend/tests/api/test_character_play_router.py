@@ -15,6 +15,7 @@ from app.exceptions import (
     ActiveSceneExistsError,
     CharacterNotInSceneError,
     InvalidModelError,
+    ItemNotReplaceableError,
     LLMError,
     NotFoundError,
     NotLastItemError,
@@ -351,6 +352,11 @@ def _make_turn_service(
         if side_effect is not None
         else AsyncMock(return_value=(make_scene_metadata(), message))
     )
+    svc.replace_turn = (
+        AsyncMock(side_effect=side_effect)
+        if side_effect is not None
+        else AsyncMock(return_value=(make_scene_metadata(), message))
+    )
     return svc
 
 
@@ -454,6 +460,70 @@ def test_submit_turn_errors(exc, status, code):
     app.dependency_overrides[get_character_driven_scene_turn_service] = lambda: svc
 
     resp = TestClient(app).post(_TURN_URL, json=_PLAYER_TURN_PAYLOAD)
+
+    assert resp.status_code == status
+    assert resp.json()["error"]["code"] == code
+
+
+# --- POST /character-play/scenes/{scene_id}/turns/{item_id}/replace ---
+
+_REPLACE_URL = f"{_TURN_URL}/2/replace"
+
+
+def test_replace_turn_success():
+    svc = _make_turn_service()
+    app.dependency_overrides[get_character_driven_scene_turn_service] = lambda: svc
+
+    resp = TestClient(app).post(_REPLACE_URL, json=_PLAYER_TURN_PAYLOAD)
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "data": {
+            "id": 2,
+            "actor": {"type": "player"},
+            "input": {"action": "I look for light."},
+            "character_action": None,
+            "narration": "A lantern flickers.",
+            "llm_data": {
+                "character_model_id": None,
+                "narrator_model_id": "narrator-model",
+            },
+        }
+    }
+    svc.replace_turn.assert_awaited_once()
+    assert svc.replace_turn.await_args.args[:3] == (_STORY_ID, 1, 2)
+    svc.submit_turn.assert_not_awaited()
+
+
+def test_replace_turn_invalid_payload():
+    svc = _make_turn_service()
+    app.dependency_overrides[get_character_driven_scene_turn_service] = lambda: svc
+
+    resp = TestClient(app).post(
+        _REPLACE_URL, json={**_PLAYER_TURN_PAYLOAD, "action": ""}
+    )
+
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+    svc.replace_turn.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "exc,status,code",
+    [
+        (NotFoundError("Item '2' not found"), 404, "not_found"),
+        (SceneFinishedError(), 409, "scene_finished"),
+        (NotLastItemError(), 409, "not_last_item"),
+        (ItemNotReplaceableError(), 409, "not_replaceable"),
+        (InvalidModelError(), 422, "validation_error"),
+        (LLMError("boom"), 502, "llm_error"),
+    ],
+)
+def test_replace_turn_errors(exc, status, code):
+    svc = _make_turn_service(side_effect=exc)
+    app.dependency_overrides[get_character_driven_scene_turn_service] = lambda: svc
+
+    resp = TestClient(app).post(_REPLACE_URL, json=_PLAYER_TURN_PAYLOAD)
 
     assert resp.status_code == status
     assert resp.json()["error"]["code"] == code

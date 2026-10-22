@@ -150,6 +150,23 @@ async def submit_turn(
     return {"data": map_character_driven_item(message, metadata)}
 
 
+@router.post(
+    "/{story_id}/character-play/scenes/{scene_id}/turns/{item_id}/replace",
+    response_model=CharacterDrivenTurnResponse,
+)
+async def replace_turn(
+    story_id: str,
+    scene_id: int,
+    item_id: int,
+    request: CharacterDrivenTurnRequest,
+    svc: CharacterDrivenSceneTurnService = Depends(
+        get_character_driven_scene_turn_service
+    ),
+):
+    metadata, message = await svc.replace_turn(story_id, scene_id, item_id, request)
+    return {"data": map_character_driven_item(message, metadata)}
+
+
 @router.put(
     "/{story_id}/character-play/scenes/{scene_id}/items/{item_id}",
     response_model=CharacterDrivenSceneItemResponse,

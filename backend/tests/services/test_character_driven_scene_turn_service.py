@@ -7,8 +7,10 @@ import pytest
 from app.exceptions import (
     CharacterNotInSceneError,
     InvalidModelError,
+    ItemNotReplaceableError,
     LLMError,
     NotFoundError,
+    NotLastItemError,
     SceneFinishedError,
 )
 from app.llm.models import LLMCompletion
@@ -426,3 +428,165 @@ async def test_submit_turn_missing_scene_propagates_not_found():
         await service.submit_turn(STORY_ID, SCENE_ID, make_request())
 
     cd_repo.append_message.assert_not_awaited()
+
+
+# --- replace_turn ---
+
+_LAST_ITEM = CharacterDrivenMessage(
+    id=2,
+    input=CharacterDrivenInput(author="hero", action="Old action."),
+    narration="Old narration.",
+    llm_data=CharacterDrivenLLMData(
+        character_model_id=None, narrator_model_id="model-a"
+    ),
+)
+
+
+def make_replace_service(**kwargs):
+    parts = make_service(**kwargs)
+    cd_repo = parts[1]
+    cd_repo.get_messages.return_value = [_OPENING, _LAST_ITEM]
+    cd_repo.replace_message.side_effect = lambda s, sc, mid, inp, narration, llm: (
+        CharacterDrivenMessage(id=mid, input=inp, narration=narration, llm_data=llm)
+    )
+    return parts
+
+
+@pytest.mark.asyncio
+async def test_replace_player_turn_overwrites_item_and_excludes_it_from_history():
+    service, cd_repo, usage_repo, narrator, _, _, _, _ = make_replace_service()
+
+    _, message = await service.replace_turn(
+        STORY_ID, SCENE_ID, 2, make_request("New action.")
+    )
+
+    assert message == CharacterDrivenMessage(
+        id=2,
+        input=CharacterDrivenInput(author="hero", action="New action."),
+        narration="The hero steps forward.",
+        llm_data=CharacterDrivenLLMData(
+            character_model_id=None, narrator_model_id="model-b"
+        ),
+    )
+    assert narrator.invoke.await_args.kwargs["scene_narrations"] == ["A bell rings."]
+    cd_repo.append_message.assert_not_awaited()
+    cd_repo.replace_message.assert_awaited_once_with(
+        STORY_ID,
+        SCENE_ID,
+        2,
+        message.input,
+        message.narration,
+        message.llm_data,
+    )
+    usage_repo.append.assert_awaited_once()
+    _, usage = usage_repo.append.await_args.args
+    assert (usage.operation, usage.model_id, usage.message_id) == (
+        "narration",
+        "model-b",
+        2,
+    )
+
+
+@pytest.mark.asyncio
+async def test_replace_character_turn_excludes_item_and_records_both_usages():
+    service, cd_repo, usage_repo, narrator, _, character_agent, _, _ = (
+        make_replace_service()
+    )
+
+    _, message = await service.replace_turn(
+        STORY_ID, SCENE_ID, 2, make_character_request(guidance="Hurry.")
+    )
+
+    assert message.id == 2
+    assert message.input.author == "villain"
+    assert character_agent.invoke.await_args.kwargs["scene_narrations"] == [
+        "A bell rings."
+    ]
+    assert narrator.invoke.await_args.kwargs["scene_narrations"] == ["A bell rings."]
+    operations = [call.args[1].operation for call in usage_repo.append.await_args_list]
+    assert operations == ["character_action", "narration"]
+    assert {call.args[1].message_id for call in usage_repo.append.await_args_list} == {2}
+
+
+@pytest.mark.asyncio
+async def test_replace_turn_llm_failure_leaves_item_untouched():
+    service, cd_repo, usage_repo, _, _, _, _, _ = make_replace_service(
+        narrator_error=LLMError("boom")
+    )
+
+    with pytest.raises(LLMError):
+        await service.replace_turn(STORY_ID, SCENE_ID, 2, make_request())
+
+    cd_repo.replace_message.assert_not_awaited()
+    usage_repo.append.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_replace_turn_rejects_finished_scene():
+    service, cd_repo, _, narrator, _, _, _, _ = make_replace_service(
+        metadata=make_metadata(finished=True)
+    )
+
+    with pytest.raises(SceneFinishedError):
+        await service.replace_turn(STORY_ID, SCENE_ID, 2, make_request())
+
+    narrator.invoke.assert_not_awaited()
+    cd_repo.replace_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_replace_turn_missing_scene_propagates_not_found():
+    service, cd_repo, _, _, _, _, _, _ = make_replace_service()
+    service._scene_repo.get_metadata.side_effect = NotFoundError("missing")
+
+    with pytest.raises(NotFoundError):
+        await service.replace_turn(STORY_ID, SCENE_ID, 2, make_request())
+
+    cd_repo.replace_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_replace_turn_unknown_item_raises_not_found():
+    service, cd_repo, _, narrator, _, _, _, _ = make_replace_service()
+
+    with pytest.raises(NotFoundError):
+        await service.replace_turn(STORY_ID, SCENE_ID, 99, make_request())
+
+    narrator.invoke.assert_not_awaited()
+    cd_repo.replace_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_replace_turn_non_last_item_raises_not_last_item():
+    service, cd_repo, _, narrator, _, _, _, _ = make_replace_service()
+
+    with pytest.raises(NotLastItemError):
+        await service.replace_turn(STORY_ID, SCENE_ID, 1, make_request())
+
+    narrator.invoke.assert_not_awaited()
+    cd_repo.replace_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_replace_turn_opening_item_raises_not_replaceable():
+    service, cd_repo, _, narrator, _, _, _, _ = make_replace_service()
+    cd_repo.get_messages.return_value = [_OPENING]
+
+    with pytest.raises(ItemNotReplaceableError):
+        await service.replace_turn(STORY_ID, SCENE_ID, 1, make_request())
+
+    narrator.invoke.assert_not_awaited()
+    cd_repo.replace_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_replace_turn_rejects_unknown_model():
+    service, cd_repo, usage_repo, narrator, _, _, _, _ = make_replace_service()
+    request = make_request().model_copy(update={"narrator_model_id": "unknown"})
+
+    with pytest.raises(InvalidModelError):
+        await service.replace_turn(STORY_ID, SCENE_ID, 2, request)
+
+    narrator.invoke.assert_not_awaited()
+    cd_repo.replace_message.assert_not_awaited()
+    usage_repo.append.assert_not_awaited()

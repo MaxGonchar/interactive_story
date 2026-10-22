@@ -27,6 +27,13 @@ class OpeningItemNotDeletableError(DomainError):
     message = "The opening item cannot be deleted"
 
 
+class ItemNotReplaceableError(DomainError):
+    """Replace rejected because the item has no turn input (e.g. the opening)."""
+
+    error_code = "not_replaceable"
+    message = "This item cannot be replaced"
+
+
 class NoAssistantMessageError(DomainError):
     """Regenerate rejected: last message is not from the assistant."""
 
