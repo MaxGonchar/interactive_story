@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.api.dependencies import (
     get_character_driven_scene_creation_service,
     get_character_driven_scene_item_service,
+    get_character_driven_scene_memory_service,
     get_character_driven_scene_query_service,
     get_character_driven_scene_summary_service,
     get_character_driven_scene_turn_service,
@@ -15,6 +16,7 @@ from app.api.dependencies import (
 from app.exceptions import (
     ActiveSceneExistsError,
     CharacterNotInSceneError,
+    CharacterNotParticipantError,
     InvalidModelError,
     ItemNotReplaceableError,
     LLMError,
@@ -673,6 +675,65 @@ def test_summary_draft_errors(exc, status, code):
     app.dependency_overrides[get_character_driven_scene_summary_service] = lambda: svc
 
     resp = TestClient(app).get(_SUMMARY_DRAFT_URL)
+
+    assert resp.status_code == status
+    assert resp.json()["error"]["code"] == code
+
+
+# --- GET /character-play/scenes/{scene_id}/characters/{character_id}/memory/draft ---
+
+_MEMORY_DRAFT_URL = f"{_URL}/1/characters/navigator/memory/draft"
+
+
+def _make_memory_service(
+    result: list[str] | None = None, side_effect: Exception | None = None
+) -> MagicMock:
+    svc = MagicMock()
+    svc.draft = AsyncMock(return_value=result, side_effect=side_effect)
+    return svc
+
+
+def test_memory_draft_success_returns_items_and_no_store_header():
+    svc = _make_memory_service(["The captain trusted the navigator's warning."])
+    app.dependency_overrides[get_character_driven_scene_memory_service] = lambda: svc
+
+    resp = TestClient(app).get(_MEMORY_DRAFT_URL)
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "data": {
+            "character_id": "navigator",
+            "memory_updates": ["The captain trusted the navigator's warning."],
+        }
+    }
+    assert resp.headers["cache-control"] == "no-store"
+    svc.draft.assert_awaited_once_with(_STORY_ID, 1, "navigator")
+
+
+def test_memory_draft_empty_updates_is_valid():
+    svc = _make_memory_service([])
+    app.dependency_overrides[get_character_driven_scene_memory_service] = lambda: svc
+
+    resp = TestClient(app).get(_MEMORY_DRAFT_URL)
+
+    assert resp.status_code == 200
+    assert resp.json() == {"data": {"character_id": "navigator", "memory_updates": []}}
+
+
+@pytest.mark.parametrize(
+    "exc,status,code",
+    [
+        (NotFoundError("Character 'navigator' not found"), 404, "not_found"),
+        (SceneFinishedError(), 409, "scene_finished"),
+        (CharacterNotParticipantError(), 409, "character_not_in_scene"),
+        (LLMError("boom"), 502, "llm_error"),
+    ],
+)
+def test_memory_draft_errors(exc, status, code):
+    svc = _make_memory_service(side_effect=exc)
+    app.dependency_overrides[get_character_driven_scene_memory_service] = lambda: svc
+
+    resp = TestClient(app).get(_MEMORY_DRAFT_URL)
 
     assert resp.status_code == status
     assert resp.json()["error"]["code"] == code
