@@ -4,6 +4,7 @@ import StoriesPage from './pages/StoriesPage'
 import StoryPage from './pages/StoryPage'
 import ScenePage from './pages/ScenePage'
 import NewScenePage from './pages/NewScenePage'
+import NewCharacterScenePage from './pages/NewCharacterScenePage'
 import ChoiceDrivenStoryPage from './pages/ChoiceDrivenStoryPage'
 
 function App() {
@@ -21,7 +22,7 @@ function App() {
             <Route path="/stories/:storyId/scenes/:sceneId" element={<ScenePage />} />
             <Route
               path="/stories/:storyId/character-scenes/new"
-              element={<p>Character scene creation page is not available yet.</p>}
+              element={<NewCharacterScenePage />}
             />
             <Route
               path="/stories/:storyId/character-scenes/:sceneId"
