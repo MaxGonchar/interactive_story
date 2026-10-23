@@ -23,6 +23,19 @@ describe('StoryList', () => {
     expect(screen.getByText('Beta')).toBeInTheDocument()
   })
 
+  it('renders the Character label for character-driven stories', () => {
+    const stories = [
+      makeStory({ type: 'scene' }),
+      makeStory({ type: 'choice_driven' }),
+      makeStory({ type: 'character_driven' }),
+    ]
+    render(<StoryList stories={stories} onSelect={vi.fn()} />)
+
+    expect(screen.getByText('Scene')).toBeInTheDocument()
+    expect(screen.getByText('Choice')).toBeInTheDocument()
+    expect(screen.getByText('Character')).toBeInTheDocument()
+  })
+
   it('clicking a story item calls onSelect with the story object', async () => {
     const story = makeStory({ title: 'My Story' })
     const onSelect = vi.fn()
