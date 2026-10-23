@@ -25,17 +25,19 @@ function StoryPage() {
     return <p>{error}</p>
   }
 
+  const scenePath = story.type === 'character_driven' ? 'character-scenes' : 'scenes'
+
   return (
     <>
       <h1>{story.title}</h1>
       <SceneList
         scenes={story.scenes}
         activeSceneId={story.active_scene_id}
-        onSelect={(sceneId) => navigate(`/stories/${storyId}/scenes/${sceneId}`)}
+        onSelect={(sceneId) => navigate(`/stories/${storyId}/${scenePath}/${sceneId}`)}
       />
       <button
         disabled={story.active_scene_id !== null}
-        onClick={() => navigate(`/stories/${storyId}/scenes/new`)}
+        onClick={() => navigate(`/stories/${storyId}/${scenePath}/new`)}
       >
         Create new scene
       </button>

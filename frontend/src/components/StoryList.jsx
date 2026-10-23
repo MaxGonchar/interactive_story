@@ -10,7 +10,11 @@ function StoryList({ stories = [], onSelect }) {
           {story.title}
           {story.type && (
             <span className="story-type-badge">
-              {story.type === 'choice_driven' ? 'Choice' : 'Scene'}
+              {story.type === 'choice_driven'
+                ? 'Choice'
+                : story.type === 'character_driven'
+                  ? 'Character'
+                  : 'Scene'}
             </span>
           )}
         </li>
