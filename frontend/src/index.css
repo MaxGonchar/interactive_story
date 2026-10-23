@@ -534,6 +534,13 @@ button {
   color: var(--text);
 }
 
+.new-scene-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: min(100%, var(--input-width-lg));
+}
+
 .new-scene-page__legend {
   color: var(--text-h);
   font-weight: 600;
