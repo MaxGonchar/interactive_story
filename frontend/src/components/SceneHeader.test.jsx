@@ -24,6 +24,22 @@ describe('SceneHeader', () => {
     expect(screen.getByRole('option', { name: 'Alternate Model' })).toBeInTheDocument()
   })
 
+  it('renders a custom model label', () => {
+    const model = makeModel({ id: 'model-primary', name: 'Primary Model' })
+
+    render(<MemoryRouter><SceneHeader
+      scene={makeScene()}
+      storyId="story-1"
+      storyTitle="Test Story"
+      models={[model]}
+      selectedModelId={model.id}
+      onModelChange={vi.fn()}
+      modelLabel="LLM"
+    /></MemoryRouter>)
+
+    expect(screen.getByRole('combobox', { name: 'LLM' })).toHaveValue(model.id)
+  })
+
   it('renders the parent story link before the scene title', () => {
     const story = makeStory({ title: 'A Story, With Punctuation!' })
 

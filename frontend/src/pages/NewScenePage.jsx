@@ -5,6 +5,10 @@ import { getScene, createScene } from '../api/scenes'
 import { getCharacters } from '../api/characters'
 import { getModels } from '../api/models'
 import BulletTextarea from '../components/BulletTextarea'
+import CharacterCheckboxList from '../components/CharacterCheckboxList'
+import CharacterSelect from '../components/CharacterSelect'
+import ModelSelect from '../components/ModelSelect'
+import { updateParticipantSelection } from './participantSelection'
 import { inputBase } from '../styles'
 
 const NARRATOR_CHARACTER_ID = '__narrator__'
@@ -82,22 +86,21 @@ function NewScenePage() {
   }, [storyId])
 
   function handleUserCharacterChange(characterId) {
-    setUserCharacterId(characterId)
-    if (characterId !== NARRATOR_CHARACTER_ID) {
-      setSceneCharacterIds((prev) => prev.filter((id) => id !== characterId))
-    }
+    const selection = updateParticipantSelection(
+      { playerCharacterId: userCharacterId, npcCharacterIds: sceneCharacterIds },
+      { type: 'player', characterId }
+    )
+    setUserCharacterId(selection.playerCharacterId)
+    setSceneCharacterIds(selection.npcCharacterIds)
   }
 
   function handleSceneCharacterToggle(characterId) {
-    setSceneCharacterIds((prev) => {
-      if (prev.includes(characterId)) {
-        return prev.filter((id) => id !== characterId)
-      }
-      return [...prev, characterId]
-    })
-    if (userCharacterId === characterId) {
-      setUserCharacterId('')
-    }
+    const selection = updateParticipantSelection(
+      { playerCharacterId: userCharacterId, npcCharacterIds: sceneCharacterIds },
+      { type: 'npc', characterId }
+    )
+    setUserCharacterId(selection.playerCharacterId)
+    setSceneCharacterIds(selection.npcCharacterIds)
   }
 
   function validate() {
@@ -164,44 +167,29 @@ function NewScenePage() {
       <h1 className="new-scene-page__heading">New Scene</h1>
       <form onSubmit={handleSubmit} className="new-scene-page__form">
         <div className="new-scene-page__field">
-          <label htmlFor="userCharacter" className="new-scene-page__label">User character</label>
-          <select
+          <CharacterSelect
             id="userCharacter"
+            label="User character"
+            characters={characters}
             value={userCharacterId}
-            onChange={(e) => handleUserCharacterChange(e.target.value)}
-            style={inputBase}
+            onChange={handleUserCharacterChange}
+            includeNarrator
+            narratorValue={NARRATOR_CHARACTER_ID}
             className="new-scene-page__select"
-          >
-            <option value="">— select —</option>
-            <option value={NARRATOR_CHARACTER_ID}>Narrator</option>
-            {characters.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          />
           {validationErrors.userCharacterId && (
             <p className="new-scene-page__error">{validationErrors.userCharacterId}</p>
           )}
         </div>
 
         <div className="new-scene-page__field">
-          <fieldset className="new-scene-page__fieldset">
-            <legend className="new-scene-page__legend">Scene characters</legend>
-            <div className="new-scene-page__checkbox-list">
-              {characters.map((c) => (
-                <label key={c.id} className="new-scene-page__checkbox-row">
-                  <input
-                    type="checkbox"
-                    checked={sceneCharacterIds.includes(c.id)}
-                    disabled={c.id === userCharacterId}
-                    onChange={() => handleSceneCharacterToggle(c.id)}
-                  />
-                  {c.name}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <CharacterCheckboxList
+            label="Scene characters"
+            characters={characters}
+            selectedIds={sceneCharacterIds}
+            onToggle={handleSceneCharacterToggle}
+            disabledCharacterId={userCharacterId}
+          />
         </div>
 
         <div className="new-scene-page__field">
@@ -265,18 +253,14 @@ function NewScenePage() {
         </div>
 
         <div className="new-scene-page__field">
-          <label htmlFor="model" className="new-scene-page__label">Model</label>
-          <select
+          <ModelSelect
             id="model"
+            label="Model"
+            models={models}
             value={selectedModelId}
-            onChange={(e) => setSelectedModelId(e.target.value)}
-            style={inputBase}
+            onChange={setSelectedModelId}
             className="new-scene-page__select"
-          >
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>{model.name}</option>
-            ))}
-          </select>
+          />
         </div>
 
         {submitError && <p className="new-scene-page__error">{submitError}</p>}

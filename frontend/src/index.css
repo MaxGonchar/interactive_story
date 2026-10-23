@@ -539,6 +539,16 @@ button {
   font-weight: 600;
 }
 
+.form-control__select {
+  font-family: var(--sans);
+  font-size: var(--font-size-base-compact);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  color: var(--text);
+  background: var(--bg);
+}
+
 .new-scene-page__checkbox-list {
   display: flex;
   flex-direction: column;
