@@ -23,6 +23,36 @@ export function makeScene(overrides = {}) {
   }
 }
 
+export function makeCharacterSceneItem(overrides = {}) {
+  return {
+    id: uid(),
+    actor: null,
+    input: null,
+    character_action: null,
+    narration: 'A scene begins.',
+    llm_data: {
+      character_model_id: 'character-model',
+      narrator_model_id: 'narrator-model',
+    },
+    ...overrides,
+  }
+}
+
+export function makeCharacterScene(overrides = {}) {
+  return {
+    id: uid(),
+    finished: false,
+    context: [],
+    scene_summary: null,
+    scene_description: {
+      general_scene_guide: '',
+      writing_style: '',
+    },
+    items: [],
+    ...overrides,
+  }
+}
+
 export function makeModel(overrides = {}) {
   return {
     name: 'Test Model',
