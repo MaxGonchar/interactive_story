@@ -5,7 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   deleteCharacterSceneItem,
   editCharacterSceneItem,
+  finishCharacterScene,
+  getCharacterMemoryDraft,
   getCharacterScene,
+  getCharacterSceneSummaryDraft,
   replaceCharacterTurn,
   submitCharacterTurn,
 } from '../api/character_play'
@@ -35,6 +38,7 @@ function renderPage() {
           path="/stories/:storyId/character-scenes/:sceneId"
           element={<CharacterScenePage />}
         />
+        <Route path="/stories/:storyId" element={<p>Story page reached</p>} />
       </Routes>
     </MemoryRouter>
   )
@@ -503,5 +507,78 @@ describe('CharacterScenePage', () => {
 
     await screen.findByText('This scene is finished.')
     expect(screen.queryByRole('group', { name: 'Turn composer' })).not.toBeInTheDocument()
+  })
+
+  it('generates and edits finish drafts, then finishes the scene and navigates to the story', async () => {
+    getCharacterSceneSummaryDraft.mockResolvedValue({
+      data: { summary: ['Generated summary'] },
+    })
+    getCharacterMemoryDraft.mockImplementation(async (_storyId, _sceneId, characterId) => ({
+      data: { character_id: characterId, memory_updates: [`Memory for ${characterId}`] },
+    }))
+    finishCharacterScene.mockResolvedValue({ data: { finished: true } })
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('First.')
+
+    await user.click(screen.getByRole('button', { name: 'Finish' }))
+
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'SummaryEmpty',
+      'HeroEmpty',
+      'Harbor GuardEmpty',
+    ])
+    expect(screen.getByRole('textbox', { name: 'Summary editor' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Generate all' }))
+    expect(await screen.findByRole('tab', { name: /Harbor Guard.*Generated/ })).toBeInTheDocument()
+    await user.clear(screen.getByRole('textbox', { name: 'Summary editor' }))
+    await user.type(screen.getByRole('textbox', { name: 'Summary editor' }), 'Reviewed summary')
+    await user.click(screen.getByRole('tab', { name: /Hero/ }))
+    await user.clear(screen.getByRole('textbox', { name: 'Hero editor' }))
+    await user.type(screen.getByRole('textbox', { name: 'Hero editor' }), 'Edited hero memory')
+    await user.click(screen.getByRole('button', { name: 'Finish scene' }))
+
+    expect(finishCharacterScene).toHaveBeenCalledWith(
+      'story-1',
+      'scene-1',
+      ['Reviewed summary'],
+      {
+        hero: ['Edited hero memory'],
+        guard: ['Memory for guard'],
+      }
+    )
+    expect(await screen.findByText('Story page reached')).toBeInTheDocument()
+  })
+
+  it('keeps the finish modal open and shows an inline error when finishing fails', async () => {
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({
+        user_character_id: null,
+        character_ids: [],
+        items: [makeCharacterSceneItem({ narration: 'Opening.' })],
+      }),
+    })
+    finishCharacterScene.mockRejectedValue(new Error('Finish failed'))
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Opening.')
+
+    await user.click(screen.getByRole('button', { name: 'Finish' }))
+    await user.type(screen.getByRole('textbox', { name: 'Summary editor' }), 'Reviewed summary')
+    await user.click(screen.getByRole('button', { name: 'Finish scene' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Finish failed')
+    expect(screen.getByRole('textbox', { name: 'Summary editor' })).toHaveValue(
+      '- Reviewed summary'
+    )
+    expect(screen.getByRole('button', { name: 'Finish scene' })).toBeInTheDocument()
+    expect(finishCharacterScene).toHaveBeenCalledWith(
+      'story-1',
+      'scene-1',
+      ['Reviewed summary'],
+      {}
+    )
   })
 })

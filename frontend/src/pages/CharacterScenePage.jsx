@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { getCharacters } from '../api/characters'
 import {
   deleteCharacterSceneItem,
   editCharacterSceneItem,
+  finishCharacterScene,
   getCharacterScene,
   replaceCharacterTurn,
   submitCharacterTurn,
@@ -13,9 +14,11 @@ import { getStory } from '../api/stories'
 import SceneHeader from '../components/SceneHeader'
 import StoryTimeline from '../components/StoryTimeline'
 import TurnComposer, { PLAYER_ACTOR } from '../components/TurnComposer'
+import CharacterFinishModal from '../components/CharacterFinishModal'
 import { deriveModelDefaults } from './characterSceneHelpers'
 
 function CharacterScenePage() {
+  const navigate = useNavigate()
   const { storyId, sceneId } = useParams()
   const [scene, setScene] = useState(null)
   const [storyTitle, setStoryTitle] = useState('')
@@ -33,6 +36,7 @@ function CharacterScenePage() {
   const [turnError, setTurnError] = useState(null)
   const [itemOperationBusy, setItemOperationBusy] = useState(false)
   const [itemOperationError, setItemOperationError] = useState(null)
+  const [showFinishModal, setShowFinishModal] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -165,6 +169,16 @@ function CharacterScenePage() {
     }
   }
 
+  async function handleFinish({ sceneSummary, characterMemoryUpdates }) {
+    await finishCharacterScene(
+      storyId,
+      sceneId,
+      sceneSummary,
+      characterMemoryUpdates
+    )
+    navigate(`/stories/${storyId}`)
+  }
+
   if (loading) return <p>Loading...</p>
   if (error) return <p className="scene-page__error">{error}</p>
 
@@ -173,6 +187,12 @@ function CharacterScenePage() {
   const playerName = scene.user_character_id ? nameOf(scene.user_character_id) : 'Narrator'
   const npcCharacters = (scene.character_ids ?? []).map((id) => ({ id, name: nameOf(id) }))
   const npcNames = npcCharacters.map((character) => character.name)
+  const participants = [
+    ...(scene.user_character_id
+      ? [{ id: scene.user_character_id, name: nameOf(scene.user_character_id) }]
+      : []),
+    ...npcCharacters,
+  ]
 
   return (
     <div className="scene-page scene-page--fixed-frame">
@@ -222,10 +242,28 @@ function CharacterScenePage() {
               retrying={retryItemId !== null}
               onCancelRetry={handleCancelRetry}
               sending={sending}
+              leadingAction={
+                <button
+                  type="button"
+                  onClick={() => setShowFinishModal(true)}
+                  disabled={sending || itemOperationBusy}
+                >
+                  Finish
+                </button>
+              }
             />
           </>
         )}
       </div>
+      {showFinishModal && (
+        <CharacterFinishModal
+          storyId={storyId}
+          sceneId={sceneId}
+          participants={participants}
+          onSubmit={handleFinish}
+          onCancel={() => setShowFinishModal(false)}
+        />
+      )}
     </div>
   )
 }
