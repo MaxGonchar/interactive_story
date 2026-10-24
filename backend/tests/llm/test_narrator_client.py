@@ -70,7 +70,11 @@ async def test_user_message_has_history_then_actor_then_turn():
 
     await _invoke(client)
 
-    assert captured[0][1].content == f"SCENE SO FAR\nOpening.\n\nSecond.\n\nCURRENT TURN\nActor: Mira\n{_TURN}\n"
+    assert captured[0][1].content == (
+        "SCENE SO FAR\nOpening.\n\nSecond.\n\n"
+        f"TURN TO NARRATE (not yet in the scene)\nActor: Mira\n{_TURN}\n\n"
+        "Write the next paragraph so it narrates this turn first.\n"
+    )
 
 
 @pytest.mark.asyncio
@@ -83,6 +87,18 @@ async def test_system_prompt_contains_configuration():
     assert "* Fact one\n* Fact two" in system
     assert "## General Direction of Development\nTense standoff" in system
     assert "## Style of Telling\nNoir" in system
+
+
+@pytest.mark.asyncio
+async def test_system_prompt_requires_narrating_the_turn():
+    client, captured = _client()
+
+    await _invoke(client)
+
+    system = captured[0][0].content
+    assert "MUST begin by narrating the current turn" in system
+    assert "The current turn is not history" in system
+    assert "never output the field labels" in system
 
 
 # --- response handling ---
