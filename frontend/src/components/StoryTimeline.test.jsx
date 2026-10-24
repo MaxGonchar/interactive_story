@@ -78,6 +78,38 @@ describe('StoryTimeline', () => {
     expect(onDelete).toHaveBeenCalledWith('last')
   })
 
+  it('offers Retry only on the last non-opening paragraph and forwards the item', async () => {
+    const user = userEvent.setup()
+    const onRetry = vi.fn()
+    const opening = makeCharacterSceneItem({ id: 'opening', narration: 'Opening.' })
+    const last = makeCharacterSceneItem({ id: 'last', narration: 'Last.' })
+    render(<StoryTimeline items={[opening, last]} onRetry={onRetry} />)
+
+    const retryButtons = screen.getAllByRole('button', { name: 'Retry paragraph' })
+    expect(retryButtons).toHaveLength(1)
+    await user.click(retryButtons[0])
+
+    expect(onRetry).toHaveBeenCalledWith(last)
+  })
+
+  it('disables paragraph actions when retry mode is active', () => {
+    render(
+      <StoryTimeline
+        items={[makeCharacterSceneItem({ id: 'opening' }), makeCharacterSceneItem({ id: 'last' })]}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onRetry={vi.fn()}
+        actionsDisabled
+      />
+    )
+
+    expect(screen.getAllByRole('button', { name: 'Edit paragraph' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'Edit paragraph' }).every((button) => button.disabled))
+      .toBe(true)
+    expect(screen.getByRole('button', { name: 'Delete paragraph' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Retry paragraph' })).toBeDisabled()
+  })
+
   it('hides paragraph actions when disabled', () => {
     render(
       <StoryTimeline

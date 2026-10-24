@@ -14,6 +14,8 @@ function TurnComposer({
   characterModelId,
   onCharacterModelChange,
   onSubmit,
+  retrying = false,
+  onCancelRetry,
   sending = false,
   disabled = false,
   leadingAction = null,
@@ -24,6 +26,11 @@ function TurnComposer({
 
   return (
     <div className="turn-composer" role="group" aria-label="Turn composer">
+      {retrying && (
+        <p className="turn-composer__retry-status" role="status">
+          Retrying last paragraph
+        </p>
+      )}
       <div className="turn-composer__selects">
         <label htmlFor="turn-actor" className="new-scene-page__field">
           <span className="new-scene-page__label">Actor</span>
@@ -60,13 +67,22 @@ function TurnComposer({
       />
       <div className="turn-composer__actions">
         {leadingAction}
+        {retrying && (
+          <button
+            onClick={onCancelRetry}
+            disabled={sending}
+            type="button"
+          >
+            Cancel retry
+          </button>
+        )}
         {sending && <ResponseTimeIndicator verb={progressVerb} />}
         <button
           className="turn-composer__submit"
           onClick={onSubmit}
           disabled={!canSubmit}
         >
-          {isPlayer ? 'Send' : 'Trigger'}
+          {retrying ? 'Replace last paragraph' : isPlayer ? 'Send' : 'Trigger'}
         </button>
       </div>
     </div>

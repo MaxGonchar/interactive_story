@@ -2,7 +2,7 @@ import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { inlineEditTextarea } from '../styles'
-import { DeleteIcon, EditIcon } from './icons'
+import { DeleteIcon, EditIcon, RefreshIcon } from './icons'
 
 function StoryItem({
   item,
@@ -10,7 +10,9 @@ function StoryItem({
   isLast = false,
   onEdit,
   onDelete,
+  onRetry,
   disabled = false,
+  actionsDisabled = false,
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(item.narration)
@@ -37,6 +39,7 @@ function StoryItem({
   }
 
   const showDelete = isLast && !isOpening && Boolean(onDelete)
+  const showRetry = isLast && !isOpening && Boolean(onRetry)
   const saveDisabled = saving || draft.trim() === '' || draft === item.narration
 
   return (
@@ -79,6 +82,7 @@ function StoryItem({
                   aria-label="Edit paragraph"
                   title="Edit"
                   type="button"
+                  disabled={actionsDisabled}
                 >
                   <EditIcon className="msg-action-icon" />
                 </button>
@@ -90,8 +94,21 @@ function StoryItem({
                   aria-label="Delete paragraph"
                   title="Delete"
                   type="button"
+                  disabled={actionsDisabled}
                 >
                   <DeleteIcon className="msg-action-icon" />
+                </button>
+              )}
+              {showRetry && (
+                <button
+                  className="msg-action-btn"
+                  onClick={() => onRetry(item)}
+                  aria-label="Retry paragraph"
+                  title="Retry"
+                  type="button"
+                  disabled={actionsDisabled}
+                >
+                  <RefreshIcon className="msg-action-icon" />
                 </button>
               )}
             </div>

@@ -5,6 +5,7 @@ import {
   deleteCharacterSceneItem,
   editCharacterSceneItem,
   getCharacterScene,
+  replaceCharacterTurn,
   submitCharacterTurn,
 } from '../api/character_play'
 import { getModels } from '../api/models'
@@ -26,6 +27,8 @@ function CharacterScenePage() {
   const [error, setError] = useState(null)
   const [actor, setActor] = useState(PLAYER_ACTOR)
   const [text, setText] = useState('')
+  const [retryItemId, setRetryItemId] = useState(null)
+  const [retryDraft, setRetryDraft] = useState(null)
   const [sending, setSending] = useState(false)
   const [turnError, setTurnError] = useState(null)
   const [itemOperationBusy, setItemOperationBusy] = useState(false)
@@ -78,11 +81,22 @@ function CharacterScenePage() {
     setTurnError(null)
     setSending(true)
     try {
-      const response = await submitCharacterTurn(storyId, sceneId, payload)
+      const response = retryItemId
+        ? await replaceCharacterTurn(storyId, sceneId, retryItemId, payload)
+        : await submitCharacterTurn(storyId, sceneId, payload)
       const item = response.data
-      setScene((current) => ({ ...current, items: [...(current.items ?? []), item] }))
+      setScene((current) => ({
+        ...current,
+        items: retryItemId
+          ? current.items.map((currentItem) =>
+              currentItem.id === retryItemId ? item : currentItem
+            )
+          : [...(current.items ?? []), item],
+      }))
       setText('')
       setActor(PLAYER_ACTOR)
+      setRetryItemId(null)
+      setRetryDraft(null)
       if (item.llm_data?.character_model_id != null) {
         setCharacterModelId(item.llm_data.character_model_id)
       }
@@ -94,6 +108,32 @@ function CharacterScenePage() {
     } finally {
       setSending(false)
     }
+  }
+
+  function handleRetry(item) {
+    const isPlayer = item.actor?.type === 'player'
+    setRetryDraft({ actor, text, characterModelId, narratorModelId })
+    setRetryItemId(item.id)
+    setActor(isPlayer ? PLAYER_ACTOR : item.actor.character_id)
+    setText(isPlayer ? item.input?.action ?? '' : item.input?.guidance ?? '')
+    setCharacterModelId(item.llm_data?.character_model_id ?? characterModelId)
+    setNarratorModelId(item.llm_data?.narrator_model_id ?? narratorModelId)
+    setTurnError(null)
+  }
+
+  function handleCancelRetry() {
+    if (retryDraft) {
+      setActor(retryDraft.actor)
+      setText(retryDraft.text)
+      setCharacterModelId(retryDraft.characterModelId)
+      setNarratorModelId(retryDraft.narratorModelId)
+    } else {
+      setActor(PLAYER_ACTOR)
+      setText('')
+    }
+    setRetryItemId(null)
+    setRetryDraft(null)
+    setTurnError(null)
   }
 
   async function handleEditItem(itemId, narration) {
@@ -155,7 +195,9 @@ function CharacterScenePage() {
           items={scene.items ?? []}
           onEdit={handleEditItem}
           onDelete={handleDeleteItem}
+          onRetry={handleRetry}
           disabled={scene.finished || sending || itemOperationBusy}
+          actionsDisabled={retryItemId !== null}
         />
       </div>
       <div className="scene-page__footer">
@@ -177,6 +219,8 @@ function CharacterScenePage() {
               characterModelId={characterModelId}
               onCharacterModelChange={setCharacterModelId}
               onSubmit={handleSubmit}
+              retrying={retryItemId !== null}
+              onCancelRetry={handleCancelRetry}
               sending={sending}
             />
           </>
