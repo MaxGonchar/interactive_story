@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getCharacters } from '../api/characters'
-import { getCharacterScene, submitCharacterTurn } from '../api/character_play'
+import {
+  deleteCharacterSceneItem,
+  editCharacterSceneItem,
+  getCharacterScene,
+  submitCharacterTurn,
+} from '../api/character_play'
 import { getModels } from '../api/models'
 import { getStory } from '../api/stories'
 import SceneHeader from '../components/SceneHeader'
@@ -23,6 +28,8 @@ function CharacterScenePage() {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [turnError, setTurnError] = useState(null)
+  const [itemOperationBusy, setItemOperationBusy] = useState(false)
+  const [itemOperationError, setItemOperationError] = useState(null)
 
   useEffect(() => {
     async function load() {
@@ -89,6 +96,35 @@ function CharacterScenePage() {
     }
   }
 
+  async function handleEditItem(itemId, narration) {
+    setItemOperationBusy(true)
+    try {
+      const response = await editCharacterSceneItem(storyId, sceneId, itemId, narration)
+      setScene((current) => ({
+        ...current,
+        items: current.items.map((item) => item.id === itemId ? response.data : item),
+      }))
+    } finally {
+      setItemOperationBusy(false)
+    }
+  }
+
+  async function handleDeleteItem(itemId) {
+    setItemOperationBusy(true)
+    setItemOperationError(null)
+    try {
+      await deleteCharacterSceneItem(storyId, sceneId, itemId)
+      setScene((current) => ({
+        ...current,
+        items: current.items.filter((item) => item.id !== itemId),
+      }))
+    } catch (err) {
+      setItemOperationError(err.message ?? 'Failed to delete paragraph')
+    } finally {
+      setItemOperationBusy(false)
+    }
+  }
+
   if (loading) return <p>Loading...</p>
   if (error) return <p className="scene-page__error">{error}</p>
 
@@ -115,13 +151,21 @@ function CharacterScenePage() {
         {npcNames.length > 0 && <span>Characters: {npcNames.join(', ')}</span>}
       </p>
       <div className="scene-page__messages" role="log" aria-label="Scene story">
-        <StoryTimeline items={scene.items ?? []} />
+        <StoryTimeline
+          items={scene.items ?? []}
+          onEdit={handleEditItem}
+          onDelete={handleDeleteItem}
+          disabled={scene.finished || sending || itemOperationBusy}
+        />
       </div>
       <div className="scene-page__footer">
         {scene.finished ? (
           <p className="scene-page__finished" role="status">This scene is finished.</p>
         ) : (
           <>
+            {itemOperationError && (
+              <p className="scene-page__error" role="alert">{itemOperationError}</p>
+            )}
             {turnError && <p className="scene-page__error" role="alert">{turnError}</p>}
             <TurnComposer
               actor={actor}

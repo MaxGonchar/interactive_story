@@ -681,6 +681,46 @@ button {
   text-align: left;
 }
 
+.story-item__content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.story-item__content > .message-md {
+  flex: 1;
+  min-width: 0;
+}
+
+.story-item__actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-xs);
+}
+
+.story-item__edit-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.story-item__error {
+  margin-top: var(--space-sm);
+  color: var(--error);
+  font-size: var(--font-size-error);
+}
+
+.story-item:hover .msg-action-btn,
+.story-item:focus-within .msg-action-btn {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .story-item .msg-action-btn {
+    opacity: 1;
+  }
+}
+
 .scene-page__participants {
   display: flex;
   flex-wrap: wrap;

@@ -1,8 +1,13 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getCharacterScene, submitCharacterTurn } from '../api/character_play'
+import {
+  deleteCharacterSceneItem,
+  editCharacterSceneItem,
+  getCharacterScene,
+  submitCharacterTurn,
+} from '../api/character_play'
 import { getCharacters } from '../api/characters'
 import { getModels } from '../api/models'
 import { getStory } from '../api/stories'
@@ -117,6 +122,8 @@ describe('CharacterScenePage', () => {
 
     expect(await screen.findByText('This scene is finished.')).toBeInTheDocument()
     expect(screen.getByLabelText('LLM')).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Edit paragraph' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete paragraph' })).not.toBeInTheDocument()
   })
 
   it('does not show the finished state for an active scene', async () => {
@@ -231,6 +238,97 @@ describe('CharacterScenePage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Send' }))
 
     expect(screen.getByText('Narrator is writing')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit paragraph' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete paragraph' })).not.toBeInTheDocument()
+  })
+
+  // --- paragraph actions ---
+
+  it('edits any paragraph in place and keeps Delete off the opening item', async () => {
+    const user = userEvent.setup()
+    const opening = makeCharacterSceneItem({ id: 'opening', narration: 'Opening.' })
+    const last = makeCharacterSceneItem({ id: 'last', narration: 'Last.' })
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({ items: [opening, last] }),
+    })
+    editCharacterSceneItem.mockResolvedValue({
+      data: { ...last, narration: 'Updated last paragraph.' },
+    })
+    renderPage()
+    await screen.findByText('Opening.')
+
+    const articles = screen.getAllByRole('article')
+    expect(within(articles[0]).getByRole('button', { name: 'Edit paragraph' })).toBeInTheDocument()
+    expect(within(articles[0]).queryByRole('button', { name: 'Delete paragraph' })).not.toBeInTheDocument()
+    expect(within(articles[1]).getByRole('button', { name: 'Delete paragraph' })).toBeInTheDocument()
+    await user.click(within(articles[1]).getByRole('button', { name: 'Edit paragraph' }))
+    await user.clear(screen.getByRole('textbox', { name: 'Edit paragraph' }))
+    await user.type(screen.getByRole('textbox', { name: 'Edit paragraph' }), 'Updated last paragraph.')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(editCharacterSceneItem).toHaveBeenCalledWith(
+      'story-1',
+      'scene-1',
+      'last',
+      'Updated last paragraph.'
+    )
+    expect(await screen.findByText('Updated last paragraph.')).toBeInTheDocument()
+    expect(screen.queryByText('Last.')).not.toBeInTheDocument()
+  })
+
+  it('keeps a failed edit draft open and displays its error', async () => {
+    const user = userEvent.setup()
+    const last = makeCharacterSceneItem({ id: 'last', narration: 'Last.' })
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({ items: [makeCharacterSceneItem(), last] }),
+    })
+    editCharacterSceneItem.mockRejectedValue(new Error('Edit failed'))
+    renderPage()
+    await screen.findByText('Last.')
+
+    const articles = screen.getAllByRole('article')
+    await user.click(within(articles[1]).getByRole('button', { name: 'Edit paragraph' }))
+    await user.clear(screen.getByRole('textbox', { name: 'Edit paragraph' }))
+    await user.type(screen.getByRole('textbox', { name: 'Edit paragraph' }), 'Keep this draft.')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Edit failed')
+    expect(screen.getByRole('textbox', { name: 'Edit paragraph' })).toHaveValue('Keep this draft.')
+  })
+
+  it('deletes the last paragraph after the API succeeds', async () => {
+    const user = userEvent.setup()
+    const opening = makeCharacterSceneItem({ id: 'opening', narration: 'Opening.' })
+    const last = makeCharacterSceneItem({ id: 'last', narration: 'Last.' })
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({ items: [opening, last] }),
+    })
+    deleteCharacterSceneItem.mockResolvedValue({ data: { success: true } })
+    renderPage()
+    await screen.findByText('Last.')
+
+    await user.click(screen.getByRole('button', { name: 'Delete paragraph' }))
+
+    expect(deleteCharacterSceneItem).toHaveBeenCalledWith('story-1', 'scene-1', 'last')
+    expect(await screen.findByText('Opening.')).toBeInTheDocument()
+    expect(screen.queryByText('Last.')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete paragraph' })).not.toBeInTheDocument()
+  })
+
+  it('shows an error when deleting the last paragraph fails', async () => {
+    const user = userEvent.setup()
+    const last = makeCharacterSceneItem({ id: 'last', narration: 'Last.' })
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({ items: [makeCharacterSceneItem(), last] }),
+    })
+    deleteCharacterSceneItem.mockRejectedValue(new Error('Delete failed'))
+    renderPage()
+    await screen.findByText('Last.')
+
+    await user.click(screen.getByRole('button', { name: 'Delete paragraph' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Delete failed')
+    expect(screen.getByText('Last.')).toBeInTheDocument()
   })
 
   it('hides the composer for a finished scene', async () => {
