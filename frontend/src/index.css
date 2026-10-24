@@ -29,6 +29,7 @@
   --input-width-md: 600px;
   --input-width-lg: 800px;
   --modal-width: 576px;
+  --modal-width-lg: 720px;
   --modal-max-width: 90vw;
 
   --font-size-base: 18px;
@@ -512,6 +513,89 @@ button {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+}
+
+.finish-modal__panel {
+  width: var(--modal-width-lg);
+}
+
+.finish-modal__title {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.finish-modal__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.finish-modal__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.finish-modal__tab[aria-selected='true'] {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.finish-modal__badge {
+  font-size: 0.75em;
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--border);
+}
+
+.finish-modal__badge--error {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.finish-modal__badge--done {
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.finish-modal__panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.finish-modal__editor {
+  font-family: var(--sans);
+  font-size: var(--font-size-base-compact);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  color: var(--text);
+  background: var(--bg);
+  resize: vertical;
+}
+
+.finish-modal__status {
+  margin: 0;
+  font-size: var(--font-size-error);
+}
+
+.finish-modal__error {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--font-size-error);
+}
+
+.finish-modal__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.finish-modal__spacer {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-sm);
 }
 
 @media (max-width: 1024px) {
