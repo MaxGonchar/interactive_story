@@ -1,7 +1,8 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getCharacterScene } from '../api/character_play'
+import { getCharacterScene, submitCharacterTurn } from '../api/character_play'
 import { getCharacters } from '../api/characters'
 import { getModels } from '../api/models'
 import { getStory } from '../api/stories'
@@ -147,5 +148,98 @@ describe('CharacterScenePage', () => {
     await screen.findByText('First.')
 
     expect(scrollIntoView).toHaveBeenCalledTimes(1)
+  })
+
+  // --- send a turn ---
+
+  it('sends a player turn, appends the item and resets the composer', async () => {
+    submitCharacterTurn.mockResolvedValue({
+      data: makeCharacterSceneItem({
+        narration: 'Light appears.',
+        llm_data: { character_model_id: null, narrator_model_id: 'model-a' },
+      }),
+    })
+    renderPage()
+    await screen.findByText('First.')
+
+    await userEvent.type(screen.getByLabelText('Action'), 'Look for light')
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    expect(await screen.findByText('Light appears.')).toBeInTheDocument()
+    expect(submitCharacterTurn).toHaveBeenCalledWith('story-1', 'scene-1', {
+      actor: { type: 'player' },
+      action: 'Look for light',
+      character_model_id: 'model-a',
+      narrator_model_id: 'model-b',
+    })
+    expect(screen.getByLabelText('Action')).toHaveValue('')
+    expect(screen.getByLabelText('LLM')).toHaveValue('model-a')
+  })
+
+  it('blocks a player turn with empty text', async () => {
+    renderPage()
+    await screen.findByText('First.')
+
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
+  })
+
+  it('triggers a character with empty guidance, then resets the actor to Player', async () => {
+    submitCharacterTurn.mockResolvedValue({
+      data: makeCharacterSceneItem({
+        narration: 'The guard speaks.',
+        llm_data: { character_model_id: 'model-b', narrator_model_id: 'model-b' },
+      }),
+    })
+    renderPage()
+    await screen.findByText('First.')
+
+    await userEvent.selectOptions(screen.getByLabelText('Actor'), 'guard')
+    await userEvent.selectOptions(screen.getByLabelText('Character LLM'), 'model-a')
+    await userEvent.click(screen.getByRole('button', { name: 'Trigger' }))
+
+    expect(await screen.findByText('The guard speaks.')).toBeInTheDocument()
+    expect(submitCharacterTurn).toHaveBeenCalledWith('story-1', 'scene-1', {
+      actor: { type: 'character', character_id: 'guard' },
+      guidance: '',
+      character_model_id: 'model-a',
+      narrator_model_id: 'model-b',
+    })
+    expect(screen.getByLabelText('Actor')).toHaveValue('player')
+    expect(screen.getByLabelText('Character LLM')).toHaveValue('model-b')
+  })
+
+  it('keeps the inputs and shows an error when the turn fails', async () => {
+    submitCharacterTurn.mockRejectedValue(new Error('LLM failed'))
+    renderPage()
+    await screen.findByText('First.')
+
+    await userEvent.type(screen.getByLabelText('Action'), 'Look')
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('LLM failed')
+    expect(screen.getByLabelText('Action')).toHaveValue('Look')
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled())
+    expect(screen.getAllByRole('article')).toHaveLength(2)
+  })
+
+  it('shows the progress label for the selected actor type while sending', async () => {
+    submitCharacterTurn.mockReturnValue(new Promise(() => {}))
+    renderPage()
+    await screen.findByText('First.')
+
+    await userEvent.type(screen.getByLabelText('Action'), 'Look')
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    expect(screen.getByText('Narrator is writing')).toBeInTheDocument()
+  })
+
+  it('hides the composer for a finished scene', async () => {
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({ finished: true, items: [makeCharacterSceneItem()] }),
+    })
+    renderPage()
+
+    await screen.findByText('This scene is finished.')
+    expect(screen.queryByRole('group', { name: 'Turn composer' })).not.toBeInTheDocument()
   })
 })
