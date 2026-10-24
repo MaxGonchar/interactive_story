@@ -28,6 +28,8 @@ Common domain errors include:
 | 409 | `not_last_item` | Only the last character-driven scene item can be deleted. |
 | 409 | `opening_item_not_deletable` | The opening character-driven scene item cannot be deleted. |
 | 409 | `active_scene_exists` | A new scene cannot be created while one is unfinished. |
+| 409 | `not_replaceable` | The requested character-driven item has no turn input to replace. |
+| 409 | `character_not_in_scene` | A memory draft was requested for a character that is not a scene participant. |
 | 409 | `narrator_mode_not_supported` | Narrator mode is only supported for `scene` stories. |
 | 409 | `no_steps` | A choice operation requires at least one existing step. |
 | 409 | `no_assistant_message` | There is no last assistant message to regenerate. |
@@ -322,9 +324,87 @@ Finish a scene and persist its summary.
 
 ## Character-Driven Story Endpoints
 
+### POST /api/stories/{story_id}/character-play/scenes
+
+Create the next character-driven scene. Creation is rejected while the story has an unfinished scene.
+
+**Request**
+
+```json
+{
+    "user_character_id": "captain",
+    "character_ids": ["navigator"],
+    "context": ["The ship has reached the harbor."],
+    "general_scene_guide": "Keep the tension rising.",
+    "writing_style": "Cinematic and concise.",
+    "first_message": "A bell rings through the fog.",
+    "character_model_id": "character-model",
+    "narrator_model_id": "narrator-model"
+}
+```
+
+`user_character_id` is required and may be `null`. `character_ids` defaults to an empty list and must not contain duplicates or the player character. Every referenced character and both model IDs must exist. `context` must contain at least one non-empty string; the guide, style, and opening narration must be non-empty. The opening narration is limited to 4000 characters. The opening item stores both model IDs selected at creation.
+
+**Response 201**
+
+```json
+{"data": {"id": 1, "finished": false}}
+```
+
+**Errors**: `404 not_found` for a missing story or character; `409 active_scene_exists` if another scene is unfinished; `422 validation_error` for invalid fields or unavailable models.
+
+### GET /api/stories/{story_id}/character-play/scenes/{scene_id}
+
+Return the scene setup, lifecycle state, summary, and ordered story items.
+
+**Response 200**
+
+```json
+{
+    "data": {
+        "id": 1,
+        "finished": false,
+        "user_character_id": "captain",
+        "character_ids": ["navigator"],
+        "scene_description": {
+            "general_scene_guide": "Keep the tension rising.",
+            "writing_style": "Cinematic and concise."
+        },
+        "context": ["The ship has reached the harbor."],
+        "scene_summary": null,
+        "items": [
+            {
+                "id": 1,
+                "actor": null,
+                "input": null,
+                "character_action": null,
+                "narration": "A bell rings through the fog.",
+                "llm_data": {
+                    "character_model_id": "character-model",
+                    "narrator_model_id": "narrator-model"
+                }
+            }
+        ]
+    }
+}
+```
+
+The opening item has null `actor`, `input`, and `character_action`. Player items use `actor: {"type": "player"}`, `input.action`, and a null `character_model_id`. Character items use `actor: {"type": "character", "character_id": "..."}`, optional `input.guidance`, and the generated `character_action`. Every item contains its narration and the model IDs used. **Errors**: `404 not_found` if the story or scene does not exist.
+
 ### POST /api/stories/{story_id}/character-play/scenes/{scene_id}/turns
 
 Submit a player or character turn. A player turn invokes the narrator. A character turn invokes the selected character agent and then the narrator. The server persists one item only after all required model calls succeed.
+
+**Player request**
+
+```json
+{
+    "actor": {"type": "player"},
+    "action": "I look for the nearest light source.",
+    "character_model_id": "character-model",
+    "narrator_model_id": "narrator-model"
+}
+```
 
 **Character request**
 
@@ -337,7 +417,7 @@ Submit a player or character turn. A player turn invokes the narrator. A charact
 }
 ```
 
-`guidance` is optional; an omitted or empty value means no additional direction. `character_model_id` and `narrator_model_id` are required. The character must be included in the scene's `character_ids`.
+For a player actor, `action` is required and `guidance` is not accepted. Character actors do not accept `action`; their `guidance` is optional, and an omitted or empty value means no additional direction. Both model IDs are required in either request. A character must be included in the scene's `character_ids`.
 
 **Response 200**
 
@@ -357,9 +437,17 @@ Submit a player or character turn. A player turn invokes the narrator. A charact
 }
 ```
 
-The generated character action is retained unparsed in `character_action`; it is passed as the narrator's current turn. For player requests, `input.action` contains the submitted action and `character_action` is `null`.
+The generated character action is retained unparsed in `character_action` and passed to the narrator. For player requests, `input.action` contains the submitted action and `character_action` is `null`. Turn IDs use one more than the highest existing item ID.
 
 **Errors**: `404 not_found` if the story, scene, or character file is missing; `409 scene_finished` if the scene is finished; `422 validation_error` if the request is invalid, a character is not part of the scene, or a selected model is unavailable; `502 llm_error` if either model call fails. A failed turn persists no item and records no model usage.
+
+### POST /api/stories/{story_id}/character-play/scenes/{scene_id}/turns/{item_id}/replace
+
+Replace the latest turn using the same player or character request body as turn submission. The opening item and non-latest items cannot be replaced. The replacement keeps the existing item ID and is saved only after all required model calls succeed; on failure the original item remains unchanged.
+
+**Response 200** returns the replaced item using the same shape as a scene-detail item.
+
+**Errors**: `404 not_found` for a missing story, scene, or item; `409 scene_finished`; `409 not_last_item` if the item is not latest; `409 not_replaceable` if the item has no turn input; `422 validation_error` for invalid input, character selection, or model IDs; `502 llm_error` if a model call fails.
 
 ### PUT /api/stories/{story_id}/character-play/scenes/{scene_id}/items/{item_id}
 
@@ -385,9 +473,74 @@ Delete only the current last item. Item IDs are not renumbered, and the next ite
 {"success": true}
 ```
 
-Checks run in this order: story and scene existence, scene status, item existence, and whether the item is last; the opening-item restriction is then checked. Thus a non-last opening item returns `not_last_item`, while the opening item is never deletable.
+Checks run in this order: story and scene existence, scene status, item existence, and whether the item is last; the opening-item restriction is then checked. Thus a non-last opening item returns `not_last_item`, while the opening item is never deletable. Remaining IDs are not renumbered.
 
 **Errors**: `404 not_found` for a missing story, scene, or item; `409 scene_finished` if the scene is finished; `409 not_last_item` if the requested item is not the last item; `409 opening_item_not_deletable` if the requested item is the opening item.
+
+### GET /api/stories/{story_id}/character-play/scenes/{scene_id}/summary/draft
+
+Generate a fresh scene-summary draft using the configured `SUMMARY_MODEL`. This request does not save the summary or finish the scene and takes no model ID.
+
+**Response 200**
+
+```json
+{"data": {"summary": ["The crew uncovered a betrayal."]}}
+```
+
+The response has `Cache-Control: no-store`. **Errors**: `404 not_found`; `409 scene_finished`; `502 llm_error`.
+
+### GET /api/stories/{story_id}/character-play/scenes/{scene_id}/characters/{character_id}/memory/draft
+
+Generate a fresh memory-update draft for one participating character, including the player character when assigned. Draft generation does not update the character file and uses the configured `SUMMARY_MODEL`. An empty `memory_updates` list is valid.
+
+**Response 200**
+
+```json
+{
+    "data": {
+        "character_id": "navigator",
+        "memory_updates": ["The captain trusted the navigator's warning."]
+    }
+}
+```
+
+The response has `Cache-Control: no-store`. **Errors**: `404 not_found` for a missing story, scene, or character; `409 scene_finished`; `409 character_not_in_scene`; `502 llm_error`.
+
+### POST /api/stories/{story_id}/character-play/scenes/{scene_id}/finish
+
+Save the reviewed summary and memory updates, then mark the scene finished.
+
+**Request**
+
+```json
+{
+    "scene_summary": ["The crew uncovered a betrayal."],
+    "character_memory_updates": {
+        "captain": ["The navigator warned her about the harbor master."],
+        "navigator": []
+    }
+}
+```
+
+`scene_summary` must contain 1–100 non-empty strings. `character_memory_updates` must contain exactly one key for every scene participant, including the player character if assigned; each list may be empty. New memory entries are appended to character files, skipping entries already present.
+
+**Response 200**
+
+```json
+{
+    "data": {
+        "id": 1,
+        "finished": true,
+        "scene_summary": ["The crew uncovered a betrayal."],
+        "character_memory_updates": {
+            "captain": ["The navigator warned her about the harbor master."],
+            "navigator": []
+        }
+    }
+}
+```
+
+The scene summary and memories are saved only by this endpoint, not by draft requests. **Errors**: `404 not_found`; `409 scene_finished`; `422 validation_error` for invalid summary or memory updates that do not match scene participants.
 
 ## Choice-Driven Story Endpoints
 
