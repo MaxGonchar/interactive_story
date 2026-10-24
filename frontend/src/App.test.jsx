@@ -1,11 +1,20 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
+import { getCharacterScene } from './api/character_play'
 import { getCharacters } from './api/characters'
 import { getModels } from './api/models'
 import { getStory } from './api/stories'
-import { makeCharacter, makeModel, makeModelRegistry, makeStory } from './tests/factories'
+import {
+  makeCharacter,
+  makeCharacterScene,
+  makeCharacterSceneItem,
+  makeModel,
+  makeModelRegistry,
+  makeStory,
+} from './tests/factories'
 import App from './App'
 
+vi.mock('./api/character_play')
 vi.mock('./api/characters')
 vi.mock('./api/models')
 vi.mock('./api/stories')
@@ -41,10 +50,21 @@ describe('App character-scene routes', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders the character-scene placeholder', () => {
+  it('renders the character scene page', async () => {
     window.history.replaceState({}, '', '/stories/story-1/character-scenes/scene-1')
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({ id: 'scene-1', items: [makeCharacterSceneItem({ narration: 'Opening.' })] }),
+    })
+    getStory.mockResolvedValue({ data: makeStory({ id: 'story-1', title: 'Story' }) })
+    getCharacters.mockResolvedValue({ data: [] })
+    getModels.mockResolvedValue({
+      data: makeModelRegistry({
+        default_model_id: 'model-a',
+        models: { 'model-a': makeModel({ name: 'Model A' }) },
+      }),
+    })
     render(<App />)
 
-    expect(screen.getByText('Character scene page is not available yet.')).toBeInTheDocument()
+    expect(await screen.findByText('Opening.')).toBeInTheDocument()
   })
 })

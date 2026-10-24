@@ -639,3 +639,30 @@ button {
   animation: pulse-dots var(--animation-duration-dots) steps(4, end) infinite;
   color: var(--text-h);
 }
+
+.story-timeline {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.story-item {
+  padding: var(--space-md) 0;
+  border-bottom: var(--border-width) solid var(--border);
+  text-align: left;
+}
+
+.scene-page__participants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin: 0;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-error);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.scene-page__finished {
+  margin: 0;
+  text-align: left;
+}
