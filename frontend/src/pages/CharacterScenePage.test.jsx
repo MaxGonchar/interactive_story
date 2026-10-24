@@ -6,6 +6,7 @@ import {
   deleteCharacterSceneItem,
   editCharacterSceneItem,
   getCharacterScene,
+  replaceCharacterTurn,
   submitCharacterTurn,
 } from '../api/character_play'
 import { getCharacters } from '../api/characters'
@@ -329,6 +330,169 @@ describe('CharacterScenePage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Delete failed')
     expect(screen.getByText('Last.')).toBeInTheDocument()
+  })
+
+  // --- retry a turn ---
+
+  it('stages the last player turn and restores the prior draft when canceled', async () => {
+    const opening = makeCharacterSceneItem({
+      id: 'opening',
+      narration: 'Opening.',
+      llm_data: { character_model_id: 'model-a', narrator_model_id: 'model-a' },
+    })
+    const last = makeCharacterSceneItem({
+      id: 'last',
+      actor: { type: 'player' },
+      input: { action: 'Original action' },
+      narration: 'Last.',
+      llm_data: { character_model_id: null, narrator_model_id: 'model-b' },
+    })
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({
+        user_character_id: 'hero',
+        character_ids: ['guard'],
+        items: [opening, last],
+      }),
+    })
+    renderPage()
+    await screen.findByText('Last.')
+
+    await userEvent.selectOptions(screen.getByLabelText('Actor'), 'guard')
+    await userEvent.type(screen.getByLabelText('Guidance'), 'Unsaved guidance')
+    await userEvent.selectOptions(screen.getByLabelText('Character LLM'), 'model-b')
+    await userEvent.selectOptions(screen.getByLabelText('LLM'), 'model-a')
+    await userEvent.click(screen.getByRole('button', { name: 'Retry paragraph' }))
+
+    expect(screen.getByLabelText('Actor')).toHaveValue('player')
+    expect(screen.getByLabelText('Action')).toHaveValue('Original action')
+    expect(screen.getByLabelText('Character LLM')).toHaveValue('model-b')
+    expect(screen.getByLabelText('LLM')).toHaveValue('model-b')
+    expect(screen.getAllByRole('button', { name: 'Edit paragraph' }).every((button) => button.disabled))
+      .toBe(true)
+    expect(screen.getByRole('button', { name: 'Delete paragraph' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Retry paragraph' })).toBeDisabled()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel retry' }))
+
+    expect(screen.getByLabelText('Actor')).toHaveValue('guard')
+    expect(screen.getByLabelText('Guidance')).toHaveValue('Unsaved guidance')
+    expect(screen.getByLabelText('Character LLM')).toHaveValue('model-b')
+    expect(screen.getByLabelText('LLM')).toHaveValue('model-a')
+    expect(screen.getByRole('button', { name: 'Trigger' })).toBeEnabled()
+  })
+
+  it('stages the last character turn, replaces it in place, and resets the composer', async () => {
+    const opening = makeCharacterSceneItem({
+      id: 'opening',
+      narration: 'Opening.',
+      llm_data: { character_model_id: 'model-a', narrator_model_id: 'model-a' },
+    })
+    const last = makeCharacterSceneItem({
+      id: 'last',
+      actor: { type: 'character', character_id: 'guard' },
+      input: { guidance: 'Original guidance' },
+      narration: 'Last.',
+      llm_data: { character_model_id: 'model-b', narrator_model_id: 'model-a' },
+    })
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({
+        user_character_id: 'hero',
+        character_ids: ['guard'],
+        items: [opening, last],
+      }),
+    })
+    replaceCharacterTurn.mockResolvedValue({
+      data: makeCharacterSceneItem({
+        id: 'last',
+        narration: 'Replacement.',
+        llm_data: { character_model_id: 'model-a', narrator_model_id: 'model-b' },
+      }),
+    })
+    renderPage()
+    await screen.findByText('Last.')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retry paragraph' }))
+
+    expect(screen.getByLabelText('Actor')).toHaveValue('guard')
+    expect(screen.getByLabelText('Guidance')).toHaveValue('Original guidance')
+    expect(screen.getByLabelText('Character LLM')).toHaveValue('model-b')
+    expect(screen.getByLabelText('LLM')).toHaveValue('model-a')
+
+    await userEvent.clear(screen.getByLabelText('Guidance'))
+    await userEvent.type(screen.getByLabelText('Guidance'), 'Changed guidance')
+    await userEvent.selectOptions(screen.getByLabelText('Character LLM'), 'model-a')
+    await userEvent.selectOptions(screen.getByLabelText('LLM'), 'model-b')
+    await userEvent.click(screen.getByRole('button', { name: 'Replace last paragraph' }))
+
+    expect(replaceCharacterTurn).toHaveBeenCalledWith('story-1', 'scene-1', 'last', {
+      actor: { type: 'character', character_id: 'guard' },
+      guidance: 'Changed guidance',
+      character_model_id: 'model-a',
+      narrator_model_id: 'model-b',
+    })
+    expect(submitCharacterTurn).not.toHaveBeenCalled()
+    expect(await screen.findByText('Replacement.')).toBeInTheDocument()
+    expect(screen.queryByText('Last.')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('article')).toHaveLength(2)
+    expect(screen.getByLabelText('Actor')).toHaveValue('player')
+    expect(screen.getByLabelText('Action')).toHaveValue('')
+    expect(screen.getByLabelText('LLM')).toHaveValue('model-b')
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
+  })
+
+  it('keeps retry mode and staged inputs when replacement fails', async () => {
+    const last = makeCharacterSceneItem({
+      id: 'last',
+      actor: { type: 'player' },
+      input: { action: 'Original action' },
+      narration: 'Last.',
+      llm_data: { character_model_id: null, narrator_model_id: 'model-b' },
+    })
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({
+        items: [makeCharacterSceneItem({ id: 'opening' }), last],
+      }),
+    })
+    replaceCharacterTurn.mockRejectedValue(new Error('Replacement failed'))
+    renderPage()
+    await screen.findByText('Last.')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retry paragraph' }))
+    await userEvent.clear(screen.getByLabelText('Action'))
+    await userEvent.type(screen.getByLabelText('Action'), 'Adjusted action')
+    await userEvent.click(screen.getByRole('button', { name: 'Replace last paragraph' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Replacement failed')
+    expect(screen.getByRole('button', { name: 'Replace last paragraph' })).toBeEnabled()
+    expect(screen.getByLabelText('Actor')).toHaveValue('player')
+    expect(screen.getByLabelText('Action')).toHaveValue('Adjusted action')
+    expect(screen.getByText('Last.')).toBeInTheDocument()
+    expect(screen.getAllByRole('article')).toHaveLength(2)
+  })
+
+  it('returns to an empty Player composer when retry is canceled without a draft', async () => {
+    getCharacterScene.mockResolvedValue({
+      data: makeCharacterScene({
+        items: [
+          makeCharacterSceneItem({ id: 'opening', narration: 'Opening.' }),
+          makeCharacterSceneItem({
+            id: 'last',
+            actor: { type: 'player' },
+            input: { action: 'Original action' },
+            narration: 'Last.',
+          }),
+        ],
+      }),
+    })
+    renderPage()
+    await screen.findByText('Last.')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retry paragraph' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel retry' }))
+
+    expect(screen.getByLabelText('Actor')).toHaveValue('player')
+    expect(screen.getByLabelText('Action')).toHaveValue('')
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
   })
 
   it('hides the composer for a finished scene', async () => {

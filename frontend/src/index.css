@@ -431,6 +431,11 @@ button {
   gap: var(--space-sm);
 }
 
+.turn-composer__retry-status {
+  margin: 0;
+  color: var(--accent);
+}
+
 .turn-composer__submit {
   margin-left: auto;
 }

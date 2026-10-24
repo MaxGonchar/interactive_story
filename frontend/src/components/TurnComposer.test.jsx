@@ -88,4 +88,22 @@ describe('TurnComposer', () => {
 
     expect(screen.getByText('Character and narrator are working')).toBeInTheDocument()
   })
+
+  it('shows retry controls and calls the cancel handler', async () => {
+    const onCancelRetry = vi.fn()
+    renderComposer({ retrying: true, onCancelRetry, text: 'Try again' })
+
+    expect(screen.getByRole('status')).toHaveTextContent('Retrying last paragraph')
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel retry' }))
+
+    expect(onCancelRetry).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'Replace last paragraph' })).toBeEnabled()
+  })
+
+  it('uses the retry submit label for a character actor', () => {
+    renderComposer({ actor: 'guard', retrying: true })
+
+    expect(screen.getByRole('button', { name: 'Replace last paragraph' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Trigger' })).not.toBeInTheDocument()
+  })
 })

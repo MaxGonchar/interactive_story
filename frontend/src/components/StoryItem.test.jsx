@@ -131,4 +131,38 @@ describe('StoryItem', () => {
 
     expect(onDelete).toHaveBeenCalledWith('last')
   })
+
+  it('only shows Retry for a last paragraph that is not the opening item', async () => {
+    const user = userEvent.setup()
+    const onRetry = vi.fn()
+    const openingItem = makeCharacterSceneItem({ id: 'opening', narration: 'Opening.' })
+    const lastItem = makeCharacterSceneItem({ id: 'last', narration: 'Last.' })
+    const { rerender } = render(
+      <StoryItem item={openingItem} isOpening isLast onRetry={onRetry} />
+    )
+
+    expect(screen.queryByRole('button', { name: 'Retry paragraph' })).not.toBeInTheDocument()
+
+    rerender(<StoryItem item={lastItem} isLast onRetry={onRetry} />)
+    await user.click(screen.getByRole('button', { name: 'Retry paragraph' }))
+
+    expect(onRetry).toHaveBeenCalledWith(lastItem)
+  })
+
+  it('disables paragraph actions when retry mode is active', () => {
+    render(
+      <StoryItem
+        item={makeCharacterSceneItem()}
+        isLast
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onRetry={vi.fn()}
+        actionsDisabled
+      />
+    )
+
+    expect(screen.getByRole('button', { name: 'Edit paragraph' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Delete paragraph' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Retry paragraph' })).toBeDisabled()
+  })
 })
