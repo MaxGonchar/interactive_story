@@ -54,7 +54,7 @@ type: "scene"
 created_at: "2024-06-01T12:00:00Z"
 ```
 
-`type` is `scene` or `choice_driven`. For a choice-driven story, the same file also contains the fields used to generate story steps and choices:
+`type` is `scene`, `character_driven`, or `choice_driven`. For a choice-driven story, the same file also contains the fields used to generate story steps and choices:
 
 ```yaml
 title: "The Black Harbor"
@@ -107,7 +107,7 @@ context:
 
 - `finished` is a boolean and defaults to `false` when omitted.
 - `character_ids` is the list of supporting story character IDs for the scene.
-- `user_character_id` is required and may be a character ID or `null`. A null user character is supported only for `scene` stories.
+- `user_character_id` is required and may be a character ID or `null`. A null user character is supported for `scene` and `character_driven` stories, but not for `choice_driven` stories.
 - `scene_description` contains the required `general_scene_guide` and `writing_style` strings.
 - `scene_summary` is a list of strings or `null`; it is recorded when the scene is finished.
 - `context` is a list of strings or `null`.
@@ -131,6 +131,44 @@ messages:
 ```
 
 The document contains a `messages` list. Each item has an integer `id`, a `role` of `user` or `assistant`, and string `content`. `llm_data` is optional and, when present, contains the `model_id` used for the assistant response. Missing `messages.yaml` is treated as an empty message list. Play appends the user and assistant messages together; message edit and delete operations rewrite this file while preserving IDs of remaining messages.
+
+### Character-driven scene items
+
+Path: `<DATA_ROOT>/stories/<story_id>/scenes/<scene_id>/messages.yaml`
+
+For a `character_driven` story, each entry is a completed turn rather than a role/content chat message:
+
+```yaml
+messages:
+  - id: 1
+    input: null
+    narration: "A bell rings through the fog."
+    llm_data:
+      character_model_id: "character-model"
+      narrator_model_id: "narrator-model"
+  - id: 2
+    input:
+      action: "I look for the nearest light source."
+      author: "captain"
+      guidance: null
+    narration: "You turn toward a wavering glow at the end of the pier."
+    llm_data:
+      character_model_id: null
+      narrator_model_id: "narrator-model"
+  - id: 3
+    input:
+      action: "INTERNAL: ... ACTION: ... SPEECH: ... TONE: ..."
+      author: "navigator"
+      guidance: "Warn the captain about the harbor master."
+    narration: "The navigator catches your sleeve and whispers a warning."
+    llm_data:
+      character_model_id: "character-model"
+      narrator_model_id: "narrator-model"
+```
+
+An entry has an integer `id`, nullable `input`, a `narration` string, and required `llm_data`. The opening entry has no input and stores both model IDs selected at scene creation. Later inputs store the player's submitted action or the character agent's raw action, the acting character ID (null only for a player turn without a player character), and optional guidance. The narrator's paragraph and generated character action remain separate. The API derives `actor` and `character_action` from this stored input and the scene participant IDs.
+
+A player turn invokes the narrator; a character turn invokes the character agent and then the narrator. The repository writes a single complete item only after all required model calls succeed. Editing changes only `narration`; replacing the latest turn keeps its ID; deleting removes only the last item and never the opening item. Remaining IDs are not renumbered, and a later item uses one more than the maximum ID that remains, so a deleted highest ID can be reused.
 
 ### Choice-driven history
 
@@ -176,7 +214,9 @@ calls:
     step_id: null
 ```
 
-`calls` is an ordered list. `operation` is one of `scene_reply`, `scene_summary`, `story_generation`, or `choice_generation`. Every record contains a UUID, selected and provider model IDs, provider timestamp, duration, and token usage. `cost_usd` and content references are nullable. Scene operations require `scene_id`; choice generation requires `step_id`; story generation has no scene, message, or step reference. Missing `llm_usage.yaml` is treated as an empty list.
+`calls` is an ordered list. `operation` is one of `scene_reply`, `scene_summary`, `story_generation`, `choice_generation`, `character_action`, `narration`, or `character_memory_update`. Every record contains a UUID, selected and provider model IDs, provider timestamp, duration, and token usage. `cost_usd` and content references are nullable. Scene operations require `scene_id`; character action and narration calls also require `message_id`, and character actions identify their `character_id`. Character-memory updates identify their `character_id` and have no message or step reference. Choice generation requires `step_id`; story generation has no scene, message, or step reference. Missing `llm_usage.yaml` is treated as an empty list.
+
+Character turn usage records are appended after the complete item is persisted; failed model chains create neither an item nor usage records. Summary and memory draft requests do not save draft content to the scene or character files, although usage records may be appended.
 
 ### Model registry
 
@@ -198,12 +238,14 @@ The mapping key is the model ID. `name` and `providerModelID` are required non-e
 - Each persisted file write uses a temporary file in the same directory, flushes and `fsync`s it, then replaces the target with `os.replace`.
 - Atomic replacement applies to one file at a time. It does not make multi-file operations transactional. Scene creation writes `meta.yaml` and `messages.yaml` separately; interruption between those writes may leave only one of the files updated.
 - Scene play persists the user and assistant messages together in one atomic write to `messages.yaml`, after the LLM response succeeds. LLM usage is appended to its own file separately.
+- Character-driven turn and replacement operations persist one complete item atomically to the scene's `messages.yaml`; edit and delete operations rewrite that file. Finish appends approved, non-duplicate memories to participant character files and writes the finished scene metadata last. If a finish write raises an error, prior memories are restored; a process crash between per-file writes is not transactional.
 - Choice-driven history and LLM usage are each rewritten atomically as individual files. Usage appends are protected by an in-process per-story lock; scene message writes do not use that lock.
 
 ## Application-Managed Changes
 
 - Creating a scene creates its scene directory and writes `meta.yaml` and an initial assistant message in `messages.yaml`.
 - Playing, editing, regenerating, or deleting messages updates the scene's `messages.yaml`; finishing a scene updates its `meta.yaml` with `finished: true` and the summary.
+- Creating a character-driven scene writes its metadata and opening item. Player/character turns append complete items; replacing, editing, and deleting update the scene's `messages.yaml`. Finishing saves the summary in `meta.yaml` and appends approved memory updates to each participant's character file. Draft responses themselves are not saved.
 - Choice-driven generation, editing, and rewind operations update `history.yaml`.
 - LLM calls append usage records to `llm_usage.yaml` when usage metadata is available.
 - Story definitions and character cards are read from their YAML files; the application does not expose operations to edit those files.

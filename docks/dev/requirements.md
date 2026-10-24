@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Interactive Story is a local application for playing and progressing interactive stories. It supports scene-based stories and choice-driven stories, with language models used to generate story content and responses.
+Interactive Story is a local application for playing and progressing interactive stories. It supports scene-based, character-driven, and choice-driven stories, with language models used to generate story content and responses.
 
 The application is for a single user working with story content available on their local machine. Editing the underlying story and character definitions is done outside the application.
 
@@ -16,6 +16,15 @@ See [`docks/project/scene_driven_story_play.md`](../project/scene_driven_story_p
 
 See [`docks/project/choice_driven_story_play.md`](../project/choice_driven_story_play.md) for the full choice-driven story play flow, from choice generation through step selection and branching back.
 
+### Character-driven stories
+
+- Character-driven story definitions and character cards are prepared as YAML files outside the application.
+- The user creates a scene by selecting an optional player character, participating characters, context, narrative direction, writing style, opening narration, and character/narrator models. Only one unfinished scene may exist per story.
+- Each scene is a timeline of narrator paragraphs. The player can submit an action or trigger one of the scene's participating characters with optional guidance. A player turn calls the narrator; a character turn calls the character agent and then the narrator.
+- The user can replace the latest turn, edit any paragraph's narration, and delete only the latest turn. The opening paragraph can be edited but cannot be replaced or deleted.
+- The user can generate unsaved summary and character-memory drafts, edit them in the client, and finish the scene by submitting the reviewed summary and one memory-update list per participant. Finishing appends new, non-duplicate memory entries and marks the scene finished.
+- Finished scenes remain readable but do not accept turns, edits, deletes, or drafts. A later scene can use the accumulated character memories.
+
 ### Reference data
 
 - The user can view the characters available in a story and choose them when creating a scene.
@@ -23,11 +32,14 @@ See [`docks/project/choice_driven_story_play.md`](../project/choice_driven_story
 
 ## Behavioral Requirements
 
-- A story has one of two progression modes: scene-based or choice-driven. The user experience and progression rules depend on the story's mode.
+- A story has one of three progression modes: scene-based, character-driven, or choice-driven. The user experience and progression rules depend on the story's mode.
 - A scene is either active or finished. New scene messages, message edits, and message deletions are not accepted for a finished scene.
 - Editing a message changes its content without changing its role. Deleting messages does not renumber the remaining message identifiers.
 - If a scene-play language-model call fails, the attempted user message and assistant response are not added to scene history.
 - Finishing a scene records its summary and prevents further scene play or message changes.
+- In character-driven play, player and character turns are saved as one complete item only after all required language-model calls succeed. Failed calls do not append or replace an item.
+- Replacing a character-driven turn changes the latest item in place only after generation succeeds. Editing changes only the narrator paragraph; deleting removes only the latest item, and never the opening item.
+- Character-driven summary and memory drafts are not saved by draft requests. Finishing requires a non-empty summary and memory updates for exactly the participating characters; duplicate memory entries are not appended.
 - Returning to an earlier choice-driven step removes steps that follow it.
 
 ## Quality Requirements
@@ -56,8 +68,9 @@ These are target limits for a local environment, excluding frontend rendering an
 
 - **Story**: a narrative with a title, story type, and progression. Scene-based stories contain ordered scenes; choice-driven stories contain ordered steps.
 - **Character**: a story character definition that can be assigned to a scene.
-- **Scene**: a playable episode in a scene-based story, with context, writing guidance, participating characters, messages, and an active or finished status.
+- **Scene**: a playable episode in a scene-based or character-driven story, with context, writing guidance, participating characters, and an active or finished status.
 - **Message**: a user or assistant entry in a scene's ordered conversation.
+- **Story item**: a character-driven scene entry containing the turn input or character action, narrator paragraph, and model metadata.
 - **Scene summary**: a summary recorded when a scene is finished and available as context for later scenes.
 - **Choice**: an action and its consequence offered as a way to progress a choice-driven story.
 - **Step**: a segment of a choice-driven story, containing story text and any choices available to continue.

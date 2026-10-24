@@ -1,8 +1,10 @@
+from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
 
+from app.exceptions import LLMError
 from app.llm.logging_config import (
     configure_llm_logger,
     log_prompt_messages,
@@ -42,5 +44,8 @@ class MemoryAgentClient:
             raise TypeError("Memory agent model returned non-text content.")
 
         log_response_content(self._logger, response.content)
-        result = self._parser.parse(response.content)
+        try:
+            result = self._parser.parse(response.content)
+        except OutputParserException as exc:
+            raise LLMError("Memory agent returned invalid structured output.") from exc
         return parse_llm_completion(response).model_copy(update={"result": result.items})

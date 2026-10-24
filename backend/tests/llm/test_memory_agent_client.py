@@ -5,8 +5,8 @@ import types
 from unittest.mock import AsyncMock
 
 import pytest
-from langchain_core.exceptions import OutputParserException
 
+from app.exceptions import LLMError
 from app.llm.memory_agent_client import MemoryAgentClient
 from app.llm.prompt_builder import build_scene_transcript
 from app.models.domain import (
@@ -125,7 +125,7 @@ async def test_prompt_without_memories_shows_placeholder():
 async def test_invoke_raises_on_malformed_response():
     client, _ = _client("not valid json at all")
 
-    with pytest.raises(OutputParserException):
+    with pytest.raises(LLMError, match="invalid structured output"):
         await client.invoke(_character(), _messages(), _NAMES)
 
 

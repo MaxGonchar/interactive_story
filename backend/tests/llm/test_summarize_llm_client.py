@@ -5,8 +5,8 @@ import types
 from unittest.mock import AsyncMock
 
 import pytest
-from langchain_core.exceptions import OutputParserException
 
+from app.exceptions import LLMError
 from app.llm.summarize_llm_client import SummarizeLLMClient
 
 _SCENE_CONTENT = "The hero entered the cave and defeated the troll."
@@ -66,6 +66,23 @@ async def test_invoke_with_empty_previous_summary():
 
 
 @pytest.mark.asyncio
+async def test_invoke_requests_json_matching_the_output_parser():
+    client = _make_client()
+    captured: list[list] = []
+
+    async def _mock_ainvoke(messages):
+        captured.append(messages)
+        return _ai_response(_well_formed_json())
+
+    client._model = types.SimpleNamespace(ainvoke=_mock_ainvoke)
+
+    await client.invoke(previous_summary=[], scene_content=_SCENE_CONTENT)
+
+    assert "JSON object required by the Format Instructions" in captured[0][0].content
+    assert "Do not use a bulleted list" in captured[0][0].content
+
+
+@pytest.mark.asyncio
 async def test_invoke_with_previous_summary():
     client = _make_client()
     captured: list[list] = []
@@ -93,7 +110,7 @@ async def test_invoke_raises_on_malformed_response():
     client._model = types.SimpleNamespace(
         ainvoke=AsyncMock(return_value=_ai_response("not valid json at all"))
     )
-    with pytest.raises(OutputParserException):
+    with pytest.raises(LLMError, match="invalid structured output"):
         await client.invoke(previous_summary=[], scene_content=_SCENE_CONTENT)
 
 

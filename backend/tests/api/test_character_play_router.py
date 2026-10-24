@@ -446,6 +446,7 @@ def test_submit_character_turn_success():
             **_CHARACTER_TURN_PAYLOAD,
             "actor": {"type": "character"},
         },
+        {**_CHARACTER_TURN_PAYLOAD, "action": "Only player turns accept action."},
     ],
 )
 def test_submit_turn_invalid_payload(payload):
