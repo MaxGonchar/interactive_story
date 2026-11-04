@@ -31,8 +31,11 @@ class MemoryAgentClient:
         character: CharacterCard,
         messages: list[CharacterDrivenMessage],
         character_names: dict[str, str],
+        player_character_id: str | None = None,
     ) -> LLMCompletion:
-        variables = build_memory_agent_context(character, messages, character_names).model_dump()
+        variables = build_memory_agent_context(
+            character, messages, character_names, player_character_id
+        ).model_dump()
         prompt = [
             SystemMessage(self._prompt_builder.render("memory_agent_system.j2", **variables)),
             HumanMessage(self._prompt_builder.render("memory_agent_user.j2", **variables)),

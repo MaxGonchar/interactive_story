@@ -5,8 +5,18 @@ from pathlib import Path
 import pytest
 
 from app.llm.models import SceneContext
-from app.llm.prompt_builder import CharacterDrivenPromptBuilder, PromptBuilder
-from app.models.domain import CharacterCard, SceneDescription
+from app.llm.prompt_builder import (
+    CharacterDrivenPromptBuilder,
+    PromptBuilder,
+    build_character_agent_context,
+)
+from app.models.domain import (
+    CharacterCard,
+    CharacterDrivenInput,
+    CharacterDrivenLLMData,
+    CharacterDrivenMessage,
+    SceneDescription,
+)
 
 
 def _make_scene_description() -> SceneDescription:
@@ -32,6 +42,27 @@ def _make_user_character() -> CharacterCard:
     return CharacterCard(id="user-1", story_id="story-1", name="Mila")
 
 
+def _story_message(
+    message_id: int,
+    author: str | None,
+    narration: str,
+    action: str | None = None,
+    internal: str | None = None,
+) -> CharacterDrivenMessage:
+    return CharacterDrivenMessage(
+        id=message_id,
+        input=(
+            None
+            if action is None
+            else CharacterDrivenInput(author=author, action=action, internal=internal)
+        ),
+        narration=narration,
+        llm_data=CharacterDrivenLLMData(
+            character_model_id=None, narrator_model_id="narrator"
+        ),
+    )
+
+
 def _build(context: SceneContext) -> str:
     return PromptBuilder().build_system_prompt(context)
 
@@ -45,6 +76,58 @@ def test_character_driven_prompt_builder_loads_and_renders_template(tmp_path: Pa
     )
 
     assert result == "You are Mira."
+
+
+def test_character_agent_context_includes_only_owners_private_thoughts_in_order():
+    messages = [
+        _story_message(1, None, "Opening narration."),
+        _story_message(
+            2,
+            "char-1",
+            "Mira looks away.",
+            action="Looks away.",
+            internal="Mira's private thought.",
+        ),
+        _story_message(
+            3,
+            "char-2",
+            "Borin raises a hand.",
+            action="Raises a hand.",
+            internal="Borin's private thought.",
+        ),
+        _story_message(
+            4,
+            "player",
+            "The player answers.",
+            action="I answer.",
+            internal="The player's private thought.",
+        ),
+        _story_message(
+            5,
+            "char-1",
+            "Mira approaches.",
+            action=(
+                "INTERNAL: Mira's legacy thought.\n\n"
+                "ACTION: Mira approaches.\n\nSPEECH: Hello.\n\nTONE: Warm"
+            ),
+        ),
+        _story_message(6, "char-2", "Borin nods.", action="Nods."),
+    ]
+
+    context = build_character_agent_context(
+        _make_character(id="char-1"),
+        messages,
+        player_character_id="player",
+    )
+
+    assert context.current_scene_context == (
+        "Opening narration.\n\n"
+        "INTERNAL:\nMira's private thought.\n\nNarration:\nMira looks away.\n\n"
+        "Borin raises a hand.\n\n"
+        "The player answers.\n\n"
+        "INTERNAL:\nMira's legacy thought.\n\nNarration:\nMira approaches.\n\n"
+        "Borin nods."
+    )
 
 
 # --- acceptance criteria ---
@@ -186,4 +269,3 @@ def test_character_with_all_optional_fields_populated():
     assert "Coffee" in result
     assert "Heights" in result
     assert "First meeting." in result
-

@@ -263,6 +263,30 @@ async def test_submit_character_turn_persists_action_and_records_both_usages():
         character_agent_factory,
         _,
     ) = make_service()
+    history = [
+        _OPENING,
+        CharacterDrivenMessage(
+            id=2,
+            input=CharacterDrivenInput(
+                author="villain",
+                action="The villain lowers a lantern.",
+                internal="The villain remembers the route.",
+            ),
+            narration="The villain lowers a lantern.",
+            llm_data=CharacterDrivenLLMData(
+                character_model_id="model-a", narrator_model_id="model-b"
+            ),
+        ),
+        CharacterDrivenMessage(
+            id=3,
+            input=CharacterDrivenInput(author="hero", action="I step forward."),
+            narration="The hero steps forward.",
+            llm_data=CharacterDrivenLLMData(
+                character_model_id=None, narrator_model_id="model-b"
+            ),
+        ),
+    ]
+    cd_repo.get_messages.return_value = history
 
     metadata, message = await service.submit_turn(
         STORY_ID, SCENE_ID, make_character_request()
@@ -293,15 +317,20 @@ async def test_submit_character_turn_persists_action_and_records_both_usages():
     character_agent_factory.assert_called_once_with("pa")
     character_agent.invoke.assert_awaited_once_with(
         character=CharacterCard(id="villain", name="Villain"),
-        scene_narrations=["A bell rings."],
+        scene_messages=history,
         player_guidance="",
+        player_character_id="hero",
     )
     narrator_factory.assert_called_once_with("pb")
     narrator.invoke.assert_awaited_once_with(
         story_context=["Previously..."],
         general_scene_guide="Build tension.",
         writing_style="Cinematic.",
-        scene_narrations=["A bell rings."],
+        scene_narrations=[
+            "A bell rings.",
+            "The villain lowers a lantern.",
+            "The hero steps forward.",
+        ],
         actor_name="Villain",
         current_turn=rendered_action,
     )
@@ -526,9 +555,7 @@ async def test_replace_character_turn_excludes_item_and_records_both_usages():
 
     assert message.id == 2
     assert message.input.author == "villain"
-    assert character_agent.invoke.await_args.kwargs["scene_narrations"] == [
-        "A bell rings."
-    ]
+    assert character_agent.invoke.await_args.kwargs["scene_messages"] == [_OPENING]
     assert narrator.invoke.await_args.kwargs["scene_narrations"] == ["A bell rings."]
     operations = [call.args[1].operation for call in usage_repo.append.await_args_list]
     assert operations == ["character_action", "narration"]

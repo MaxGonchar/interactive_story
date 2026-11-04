@@ -62,7 +62,7 @@ class CharacterDrivenSceneMemoryService:
         character_names = {card.id: card.name for card in participants}
 
         completion = await self._llm_client.invoke(
-            character, messages, character_names
+            character, messages, character_names, metadata.user_character_id
         )
         await record_usage(
             self._usage_repository,

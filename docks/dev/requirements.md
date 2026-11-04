@@ -24,6 +24,7 @@ See [`docks/project/choice_driven_story_play.md`](../project/choice_driven_story
 - The user can replace the latest turn, edit any paragraph's narration, and delete only the latest turn. The opening paragraph can be edited but cannot be replaced or deleted.
 - The user can generate unsaved summary and character-memory drafts, edit them in the client, and finish the scene by submitting the reviewed summary and one memory-update list per participant. Finishing appends new, non-duplicate memory entries and marks the scene finished.
 - Finished scenes remain readable but do not accept turns, edits, deletes, or drafts. A later scene can use the accumulated character memories.
+- A character's own prior internal thoughts inform that character's future turns and memory generation. Internal thoughts are private to their author and are never included in another character's context or shown to the player; narration remains available to all character and memory contexts.
 
 ### Reference data
 

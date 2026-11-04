@@ -16,13 +16,23 @@ from app.models.domain import (
     CharacterDrivenMessage,
 )
 
-_NAMES = {"c1": "Mira", "c2": "Borin"}
+_NAMES = {"c1": "Mira", "c2": "Borin", "player": "The Player"}
 
 
-def _message(id: int, author: str | None, action: str | None, narration: str):
+def _message(
+    id: int,
+    author: str | None,
+    action: str | None,
+    narration: str,
+    internal: str | None = None,
+):
     return CharacterDrivenMessage(
         id=id,
-        input=None if action is None else CharacterDrivenInput(author=author, action=action),
+        input=(
+            None
+            if action is None
+            else CharacterDrivenInput(author=author, action=action, internal=internal)
+        ),
         narration=narration,
         llm_data=CharacterDrivenLLMData(narrator_model_id="m", character_model_id=None),
     )
@@ -32,7 +42,26 @@ def _messages() -> list[CharacterDrivenMessage]:
     return [
         _message(1, None, None, "A storm rolls in."),
         _message(2, None, "I draw my sword.", "The hero draws a sword."),
-        _message(3, "c1", "INTERNAL: afraid\nACTION: nods", "Mira nods."),
+        _message(
+            3,
+            "c1",
+            "INTERNAL: afraid\n\nACTION: nods",
+            "Mira nods.",
+        ),
+        _message(
+            4,
+            "c2",
+            "Borin raises a lantern.",
+            "Borin raises a lantern.",
+            internal="Borin's private thought.",
+        ),
+        _message(
+            5,
+            "player",
+            "The player waits.",
+            "The player waits.",
+            internal="The player's private thought.",
+        ),
     ]
 
 
@@ -71,19 +100,37 @@ def _client(content):
 # --- transcript ---
 
 def test_transcript_lists_entries_in_order_with_actor_action_and_narration():
-    result = build_scene_transcript(_messages(), _NAMES)
+    result = build_scene_transcript(
+        _messages(), _NAMES, "c1", player_character_id="player"
+    )
 
     assert result == (
         "A storm rolls in.\n\n"
         "Actor: Player\nI draw my sword.\n\nNarration:\nThe hero draws a sword.\n\n"
-        "Actor: Mira\nINTERNAL: afraid\nACTION: nods\n\nNarration:\nMira nods."
+        "Actor: Mira\nACTION: nods\n\nINTERNAL:\nafraid\n\nNarration:\nMira nods.\n\n"
+        "Actor: Borin\nBorin raises a lantern.\n\nNarration:\nBorin raises a lantern.\n\n"
+        "Actor: The Player\nThe player waits.\n\nNarration:\nThe player waits."
     )
 
 
 def test_transcript_renders_null_author_as_player():
-    result = build_scene_transcript([_message(1, None, "Hello", "Hi.")], _NAMES)
+    result = build_scene_transcript(
+        [_message(1, None, "Hello", "Hi.")], _NAMES, "c1"
+    )
 
     assert result.startswith("Actor: Player\n")
+
+
+def test_transcript_includes_only_memory_owners_internal_thoughts():
+    result = build_scene_transcript(
+        _messages(), _NAMES, "c2", player_character_id="player"
+    )
+
+    assert "Borin's private thought." in result
+    assert "afraid" not in result
+    assert "The player's private thought." not in result
+    assert "A storm rolls in." in result
+    assert "Borin raises a lantern." in result
 
 
 # --- invoke ---
@@ -105,10 +152,14 @@ async def test_prompt_contains_character_memories_and_transcript():
 
     system, user = captured[0]
     assert "propose new memories for Mira" in system.content
+    assert "INTERNAL blocks are private thoughts belonging only to Mira" in system.content
     assert "Wary and sharp" in system.content
     assert "- Lost her dagger" in system.content
     assert user.content.startswith("## Completed Scene\nA storm rolls in.")
     assert "Actor: Player" in user.content
+    assert "afraid" in user.content
+    assert "Borin's private thought." not in user.content
+    assert "The player's private thought." not in user.content
 
 
 @pytest.mark.asyncio

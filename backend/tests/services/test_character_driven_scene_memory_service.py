@@ -101,6 +101,7 @@ async def test_draft_returns_items_for_npc_and_player_character(character_id):
         CARDS[character_id],
         make_messages(),
         {"captain": "Captain", "navigator": "Navigator", "hero": "Hero"},
+        "hero",
     )
 
 
