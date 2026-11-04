@@ -11,7 +11,7 @@ from app.llm.logging_config import (
 )
 from app.llm.models import LLMCompletion, parse_llm_completion
 from app.llm.prompt_builder import CharacterDrivenPromptBuilder, build_character_agent_context
-from app.models.domain import CharacterCard, CharacterTurnOutput
+from app.models.domain import CharacterCard, CharacterDrivenMessage, CharacterTurnOutput
 
 
 class CharacterAgentClient:
@@ -24,10 +24,13 @@ class CharacterAgentClient:
     async def invoke(
         self,
         character: CharacterCard,
-        scene_narrations: list[str],
+        scene_messages: list[CharacterDrivenMessage],
         player_guidance: str | None = None,
+        player_character_id: str | None = None,
     ) -> LLMCompletion:
-        context = build_character_agent_context(character, scene_narrations, player_guidance)
+        context = build_character_agent_context(
+            character, scene_messages, player_guidance, player_character_id
+        )
         variables = context.model_dump()
         variables["format_instructions"] = self._parser.get_format_instructions()
         messages = [

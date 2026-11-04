@@ -265,8 +265,9 @@ class CharacterDrivenSceneTurnService:
         try:
             character_completion = await character_agent.invoke(
                 character=character,
-                scene_narrations=[message.narration for message in history],
+                scene_messages=history,
                 player_guidance=request.guidance,
+                player_character_id=metadata.user_character_id,
             )
         except LLMError:
             logger.error(
