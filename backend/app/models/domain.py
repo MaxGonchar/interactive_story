@@ -159,6 +159,26 @@ class CharacterDrivenInput(BaseModel):
     author: str | None
     action: str
     guidance: str | None = None
+    internal: str | None = None
+    speech: str | None = None
+    tone: str | None = None
+
+    def render_character_action(self) -> str:
+        if self.internal is None or self.speech is None or self.tone is None:
+            return self.action
+        return (
+            f"**INTERNAL:** {self.internal}\n"
+            f"**ACTION:** {self.action}\n"
+            f"**SPEECH:** {self.speech}\n"
+            f"**TONE:** {self.tone}"
+        )
+
+
+class CharacterTurnOutput(BaseModel):
+    internal: str
+    action: str
+    speech: str
+    tone: str
 
 
 class CharacterDrivenLLMData(BaseModel):

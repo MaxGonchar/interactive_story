@@ -9,6 +9,7 @@ from app.models.domain import (
     CharacterDrivenInput,
     CharacterDrivenLLMData,
     CharacterDrivenMessage,
+    CharacterTurnOutput,
     Choice,
     ChoiceDrivenStoryMeta,
     get_character_driven_turn_type,
@@ -328,6 +329,48 @@ def test_character_driven_domain_models_construct_from_storage_models():
             character_model_id="character-model",
         ),
     )
+
+
+def test_character_driven_input_renders_structured_action_fields():
+    character_input = CharacterDrivenInput(
+        author="navigator",
+        action="Raises a lantern.",
+        internal="The path is clear.",
+        speech="Stay close.",
+        tone="Wary",
+    )
+
+    assert character_input.render_character_action() == (
+        "**INTERNAL:** The path is clear.\n"
+        "**ACTION:** Raises a lantern.\n"
+        "**SPEECH:** Stay close.\n"
+        "**TONE:** Wary"
+    )
+
+
+def test_character_driven_input_preserves_legacy_action_rendering():
+    character_input = CharacterDrivenInput(
+        author="navigator",
+        action="INTERNAL: old thought\nACTION: old action\nSPEECH: old words\nTONE: old tone",
+    )
+
+    assert character_input.render_character_action() == character_input.action
+
+
+def test_character_turn_output_requires_all_four_fields():
+    output = CharacterTurnOutput(
+        internal="Thinking.",
+        action="Moves.",
+        speech="Hello.",
+        tone="Calm",
+    )
+
+    assert output.model_dump() == {
+        "internal": "Thinking.",
+        "action": "Moves.",
+        "speech": "Hello.",
+        "tone": "Calm",
+    }
 
 
 @pytest.mark.parametrize(

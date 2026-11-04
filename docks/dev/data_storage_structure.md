@@ -157,16 +157,19 @@ messages:
       narrator_model_id: "narrator-model"
   - id: 3
     input:
-      action: "INTERNAL: ... ACTION: ... SPEECH: ... TONE: ..."
+      action: "The navigator raises a lantern."
       author: "navigator"
       guidance: "Warn the captain about the harbor master."
+      internal: "The path ahead is clear."
+      speech: "Stay close."
+      tone: "Wary"
     narration: "The navigator catches your sleeve and whispers a warning."
     llm_data:
       character_model_id: "character-model"
       narrator_model_id: "narrator-model"
 ```
 
-An entry has an integer `id`, nullable `input`, a `narration` string, and required `llm_data`. The opening entry has no input and stores both model IDs selected at scene creation. Later inputs store the player's submitted action or the character agent's raw action, the acting character ID (null only for a player turn without a player character), and optional guidance. The narrator's paragraph and generated character action remain separate. The API derives `actor` and `character_action` from this stored input and the scene participant IDs.
+An entry has an integer `id`, nullable `input`, a `narration` string, and required `llm_data`. The opening entry has no input and stores both model IDs selected at scene creation. Later inputs store the player's submitted action or, for character turns, the character agent's separate `internal`, `action`, `speech`, and `tone` strings, the acting character ID (null only for a player turn without a player character), and optional guidance. Player turns continue to store their submitted action without structured character values. Earlier character turns remain valid: their `action` may contain the legacy raw four-field text and omit `internal`, `speech`, and `tone`. The narrator's paragraph and generated character action remain separate. The API renders structured fields as the established four-field text for `character_action`, and returns a legacy raw `action` unchanged.
 
 A player turn invokes the narrator; a character turn invokes the character agent and then the narrator. The repository writes a single complete item only after all required model calls succeed. Editing changes only `narration`; replacing the latest turn keeps its ID; deleting removes only the last item and never the opening item. Remaining IDs are not renumbered, and a later item uses one more than the maximum ID that remains, so a deleted highest ID can be reused.
 

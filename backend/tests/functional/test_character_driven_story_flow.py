@@ -119,7 +119,12 @@ def test_character_driven_story_lifecycle(character_driven_client):
             "id": 3,
             "actor": {"type": "character", "character_id": "navigator"},
             "input": {"guidance": "Point out the safest route."},
-            "character_action": "ACTION: The navigator points toward the harbor.",
+            "character_action": (
+                "**INTERNAL:** The navigator sees a safe route.\n"
+                "**ACTION:** The navigator points toward the harbor.\n"
+                "**SPEECH:** This way.\n"
+                "**TONE:** Alert"
+            ),
             "narration": "The navigator points toward the harbor.",
             "llm_data": {
                 "character_model_id": "character-model",
@@ -142,7 +147,12 @@ def test_character_driven_story_lifecycle(character_driven_client):
             "id": 3,
             "actor": {"type": "character", "character_id": "navigator"},
             "input": {"guidance": "Warn the captain about the harbor master."},
-            "character_action": "ACTION: The navigator points toward the harbor.",
+            "character_action": (
+                "**INTERNAL:** The navigator sees a safe route.\n"
+                "**ACTION:** The navigator points toward the harbor.\n"
+                "**SPEECH:** This way.\n"
+                "**TONE:** Alert"
+            ),
             "narration": "The navigator warns the captain.",
             "llm_data": {
                 "character_model_id": "character-model",
@@ -162,7 +172,12 @@ def test_character_driven_story_lifecycle(character_driven_client):
             "id": 3,
             "actor": {"type": "character", "character_id": "navigator"},
             "input": {"guidance": "Warn the captain about the harbor master."},
-            "character_action": "ACTION: The navigator points toward the harbor.",
+            "character_action": (
+                "**INTERNAL:** The navigator sees a safe route.\n"
+                "**ACTION:** The navigator points toward the harbor.\n"
+                "**SPEECH:** This way.\n"
+                "**TONE:** Alert"
+            ),
             "narration": "The navigator signals the captain to stay back.",
             "llm_data": {
                 "character_model_id": "character-model",

@@ -16,7 +16,7 @@ from app.api.dependencies import (
 )
 from app.main import app
 from app.llm.models import LLMCompletion
-from app.models.domain import ModelMetadata, ModelRegistry, TokenUsage
+from app.models.domain import CharacterTurnOutput, ModelMetadata, ModelRegistry, TokenUsage
 
 _STORY_ID = "test-story-1"
 _SCENE_ID = 1
@@ -160,12 +160,22 @@ def character_driven_client(tmp_path, monkeypatch):
     character_agent_client = MagicMock()
     character_agent_client.invoke = AsyncMock(
         return_value=LLMCompletion(
-            content="ACTION: The navigator points toward the harbor.",
+            content=(
+                '{"internal":"The navigator sees a safe route.",'
+                '"action":"The navigator points toward the harbor.",'
+                '"speech":"This way.","tone":"Alert"}'
+            ),
             model_id="provider-character",
             provider_model_id="provider-character",
             provider_created=1700000000,
             duration_ms=100,
             usage=TokenUsage(prompt_tokens=1, completion_tokens=1, total_tokens=2),
+            result=CharacterTurnOutput(
+                internal="The navigator sees a safe route.",
+                action="The navigator points toward the harbor.",
+                speech="This way.",
+                tone="Alert",
+            ),
         )
     )
     summarize_client = MagicMock()
