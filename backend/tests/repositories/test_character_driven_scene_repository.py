@@ -164,6 +164,36 @@ async def test_get_messages_returns_sorted_by_id(data_root):
     assert [m.id for m in result] == [1, 5]
 
 
+@pytest.mark.asyncio
+async def test_get_messages_reads_legacy_raw_character_action(data_root):
+    repo = await _create()
+    path = _scene_dir(data_root) / "messages.yaml"
+    data = _read_yaml(path)
+    data["messages"].append(
+        {
+            "id": 2,
+            "input": {
+                "author": "navigator",
+                "action": "INTERNAL: old thought\nACTION: old action",
+                "guidance": None,
+            },
+            "narration": "The navigator moves.",
+            "llm_data": {
+                "character_model_id": "character",
+                "narrator_model_id": "narrator",
+            },
+        }
+    )
+    path.write_text(yaml.safe_dump(data))
+
+    messages = await repo.get_messages(STORY_ID, SCENE_ID)
+
+    assert messages[1].input == CharacterDrivenInput(
+        author="navigator",
+        action="INTERNAL: old thought\nACTION: old action",
+    )
+
+
 # --- append_message ---
 
 
@@ -179,6 +209,13 @@ async def test_append_message_assigns_max_id_plus_one(data_root):
         id=2, input=_player_input(), narration="Turn.", llm_data=_llm_data()
     )
     assert await repo.get_messages(STORY_ID, SCENE_ID) == [_opening(), result]
+    assert _read_yaml(_scene_dir(data_root) / "messages.yaml")["messages"][1][
+        "input"
+    ] == {
+        "action": "I look around.",
+        "author": "captain",
+        "guidance": None,
+    }
 
 
 @pytest.mark.asyncio
@@ -206,6 +243,34 @@ async def test_append_message_npc_author_in_character_ids_is_valid(data_root):
     )
 
     assert result.input == npc_input
+
+
+@pytest.mark.asyncio
+async def test_append_message_persists_structured_character_fields(data_root):
+    repo = await _create()
+    character_input = CharacterDrivenInput(
+        author="navigator",
+        action="Raises a lantern.",
+        internal="The path is clear.",
+        speech="Stay close.",
+        tone="Wary",
+    )
+
+    await repo.append_message(
+        STORY_ID, SCENE_ID, character_input, "Turn.", _llm_data("character")
+    )
+
+    stored_input = _read_yaml(_scene_dir(data_root) / "messages.yaml")["messages"][1][
+        "input"
+    ]
+    assert stored_input == {
+        "action": "Raises a lantern.",
+        "author": "navigator",
+        "guidance": None,
+        "internal": "The path is clear.",
+        "speech": "Stay close.",
+        "tone": "Wary",
+    }
 
 
 @pytest.mark.asyncio

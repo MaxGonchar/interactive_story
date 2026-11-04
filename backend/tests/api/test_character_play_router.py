@@ -176,10 +176,16 @@ def test_map_character_driven_item_maps_player_item():
 
 def test_map_character_driven_item_maps_character_item():
     metadata = make_scene_metadata()
+    legacy_action = (
+        "INTERNAL: The path is clear.\n"
+        "ACTION: The navigator warns the captain.\n"
+        'SPEECH: "Stay close."\n'
+        "TONE: Wary"
+    )
     message = CharacterDrivenMessage(
         id=3,
         input=CharacterDrivenInput(
-            author="c1", action="The navigator warns the captain.", guidance="Warn her."
+            author="c1", action=legacy_action, guidance="Warn her."
         ),
         narration="The navigator leans closer.",
         llm_data=CharacterDrivenLLMData(
@@ -193,8 +199,46 @@ def test_map_character_driven_item_maps_character_item():
         "id": 3,
         "actor": {"type": "character", "character_id": "c1"},
         "input": {"guidance": "Warn her."},
-        "character_action": "The navigator warns the captain.",
+        "character_action": legacy_action,
         "narration": "The navigator leans closer.",
+        "llm_data": {
+            "character_model_id": "character-model",
+            "narrator_model_id": "narrator-model",
+        },
+    }
+
+
+def test_map_character_driven_item_renders_structured_action_without_exposing_internal():
+    metadata = make_scene_metadata()
+    message = CharacterDrivenMessage(
+        id=3,
+        input=CharacterDrivenInput(
+            author="c1",
+            action="Raises a lantern.",
+            guidance="Warn her.",
+            internal="The path is clear.",
+            speech="Stay close.",
+            tone="Wary",
+        ),
+        narration="The navigator raises a lantern.",
+        llm_data=CharacterDrivenLLMData(
+            character_model_id="character-model", narrator_model_id="narrator-model"
+        ),
+    )
+
+    item = map_character_driven_item(message, metadata)
+
+    assert item.model_dump() == {
+        "id": 3,
+        "actor": {"type": "character", "character_id": "c1"},
+        "input": {"guidance": "Warn her."},
+        "character_action": (
+            "**INTERNAL:** The path is clear.\n"
+            "**ACTION:** Raises a lantern.\n"
+            "**SPEECH:** Stay close.\n"
+            "**TONE:** Wary"
+        ),
+        "narration": "The navigator raises a lantern.",
         "llm_data": {
             "character_model_id": "character-model",
             "narrator_model_id": "narrator-model",

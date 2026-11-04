@@ -427,7 +427,7 @@ For a player actor, `action` is required and `guidance` is not accepted. Charact
         "id": 2,
         "actor": {"type": "character", "character_id": "navigator"},
         "input": {"guidance": "Warn the captain about the harbor master."},
-        "character_action": "INTERNAL: ... ACTION: ... SPEECH: ... TONE: ...",
+        "character_action": "**INTERNAL:** ...\n**ACTION:** ...\n**SPEECH:** ...\n**TONE:** ...",
         "narration": "The navigator leans close and warns the captain.",
         "llm_data": {
             "character_model_id": "character-model",
@@ -437,7 +437,7 @@ For a player actor, `action` is required and `guidance` is not accepted. Charact
 }
 ```
 
-The generated character action is retained unparsed in `character_action` and passed to the narrator. For player requests, `input.action` contains the submitted action and `character_action` is `null`. Turn IDs use one more than the highest existing item ID.
+The character agent returns structured `internal`, `action`, `speech`, and `tone` values. The narrator receives those values rendered in the established four-field text, and `character_action` returns the same rendering; `internal` is not exposed as a separate API field. For older stored turns whose `action` contains the legacy raw text and has no structured fields, `character_action` returns that raw `action` unchanged. For player requests, `input.action` contains the submitted action and `character_action` is `null`. Turn IDs use one more than the highest existing item ID.
 
 **Errors**: `404 not_found` if the story, scene, or character file is missing; `409 scene_finished` if the scene is finished; `422 validation_error` if the request is invalid, a character is not part of the scene, or a selected model is unavailable; `502 llm_error` if either model call fails. A failed turn persists no item and records no model usage.
 

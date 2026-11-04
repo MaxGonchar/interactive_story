@@ -142,7 +142,16 @@ class CharacterDrivenSceneRepository:
     async def _save_messages(
         self, story_id: str, scene_id: int, messages: list[CharacterDrivenMessage]
     ) -> None:
-        data = {"messages": [m.model_dump() for m in messages]}
+        serialized_messages = []
+        for message in messages:
+            serialized = message.model_dump()
+            if message.input is not None:
+                input_data = serialized["input"]
+                for field in ("internal", "speech", "tone"):
+                    if input_data[field] is None:
+                        del input_data[field]
+            serialized_messages.append(serialized)
+        data = {"messages": serialized_messages}
         await atomic_write(
             file_paths.scene_messages_file(story_id, scene_id),
             yaml_storage.dump_yaml(data),

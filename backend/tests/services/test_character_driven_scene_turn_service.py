@@ -25,6 +25,7 @@ from app.models.domain import (
     CharacterDrivenInput,
     CharacterDrivenLLMData,
     CharacterDrivenMessage,
+    CharacterTurnOutput,
     ModelMetadata,
     ModelRegistry,
     SceneDescription,
@@ -65,7 +66,9 @@ def make_metadata(
     )
 
 
-def make_completion(content: str = "The hero steps forward.") -> LLMCompletion:
+def make_completion(
+    content: str = "The hero steps forward.", result: object = "The hero steps forward."
+) -> LLMCompletion:
     return LLMCompletion(
         content=content,
         model_id="provider-b",
@@ -73,7 +76,7 @@ def make_completion(content: str = "The hero steps forward.") -> LLMCompletion:
         provider_created=1,
         usage=TokenUsage(prompt_tokens=1, completion_tokens=2, total_tokens=3),
         duration_ms=10,
-        result="The hero steps forward.",
+        result=result,
     )
 
 
@@ -147,7 +150,14 @@ def make_service(
         if character_error is not None
         else AsyncMock(
             return_value=make_completion(
-                "INTERNAL: The path is clear. ACTION: The villain raises a lantern."
+                content='{"internal":"The path is clear.","action":"The villain raises a lantern.",'
+                '"speech":"Stay close.","tone":"Wary"}',
+                result=CharacterTurnOutput(
+                    internal="The path is clear.",
+                    action="The villain raises a lantern.",
+                    speech="Stay close.",
+                    tone="Wary",
+                ),
             )
         )
     )
@@ -258,12 +268,22 @@ async def test_submit_character_turn_persists_action_and_records_both_usages():
         STORY_ID, SCENE_ID, make_character_request()
     )
 
-    raw_action = "INTERNAL: The path is clear. ACTION: The villain raises a lantern."
+    rendered_action = (
+        "**INTERNAL:** The path is clear.\n"
+        "**ACTION:** The villain raises a lantern.\n"
+        "**SPEECH:** Stay close.\n"
+        "**TONE:** Wary"
+    )
     assert metadata == make_metadata()
     assert message == CharacterDrivenMessage(
         id=2,
         input=CharacterDrivenInput(
-            author="villain", action=raw_action, guidance=""
+            author="villain",
+            action="The villain raises a lantern.",
+            guidance="",
+            internal="The path is clear.",
+            speech="Stay close.",
+            tone="Wary",
         ),
         narration="The hero steps forward.",
         llm_data=CharacterDrivenLLMData(
@@ -283,12 +303,19 @@ async def test_submit_character_turn_persists_action_and_records_both_usages():
         writing_style="Cinematic.",
         scene_narrations=["A bell rings."],
         actor_name="Villain",
-        current_turn=raw_action,
+        current_turn=rendered_action,
     )
     cd_repo.append_message.assert_awaited_once_with(
         STORY_ID,
         SCENE_ID,
-        CharacterDrivenInput(author="villain", action=raw_action, guidance=""),
+        CharacterDrivenInput(
+            author="villain",
+            action="The villain raises a lantern.",
+            guidance="",
+            internal="The path is clear.",
+            speech="Stay close.",
+            tone="Wary",
+        ),
         "The hero steps forward.",
         CharacterDrivenLLMData(
             character_model_id="model-a", narrator_model_id="model-b"

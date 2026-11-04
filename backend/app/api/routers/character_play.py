@@ -80,7 +80,7 @@ def map_character_driven_item(
             item_input = CharacterDrivenCharacterInput(
                 guidance=message.input.guidance
             )
-            character_action = message.input.action
+            character_action = message.input.render_character_action()
 
     return CharacterDrivenSceneItem(
         id=message.id,

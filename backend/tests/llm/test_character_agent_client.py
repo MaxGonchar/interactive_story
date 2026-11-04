@@ -7,9 +7,15 @@ import pytest
 
 from app.exceptions import LLMError
 from app.llm.character_agent_client import CharacterAgentClient
-from app.models.domain import CharacterCard
+from app.models.domain import CharacterCard, CharacterTurnOutput
 
-_RAW = "INTERNAL: hmm\nACTION: nods\nSPEECH: \"Hi.\"\nTONE: calm\n"
+_RAW = (
+    '{"internal":"hmm","action":"nods","speech":"\\"Hi.\\"",'
+    '"tone":"calm"}'
+)
+_OUTPUT = CharacterTurnOutput(
+    internal="hmm", action="nods", speech='"Hi."', tone="calm"
+)
 
 
 def _character() -> CharacterCard:
@@ -88,13 +94,14 @@ async def test_guidance_block_present_only_when_provided():
 # --- response handling ---
 
 @pytest.mark.asyncio
-async def test_raw_response_returned_unchanged():
+async def test_structured_response_is_parsed():
     client, _ = _client()
 
     completion = await client.invoke(_character(), ["Scene."])
 
     assert completion.content == _RAW
-    assert completion.result == _RAW
+    assert completion.result == _OUTPUT
+    assert completion.result.action == "nods"
 
 
 @pytest.mark.asyncio
@@ -104,3 +111,31 @@ async def test_empty_response_raises_llm_error(content):
 
     with pytest.raises(LLMError):
         await client.invoke(_character(), ["Scene."])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "content",
+    [
+        "INTERNAL: hmm\nACTION: nods\nSPEECH: Hi.\nTONE: calm",
+        '{"internal":"hmm","action":"nods"}',
+    ],
+)
+async def test_invalid_structured_response_raises_llm_error(content):
+    client, _ = _client(content)
+
+    with pytest.raises(LLMError, match="invalid structured output"):
+        await client.invoke(_character(), ["Scene."])
+
+
+@pytest.mark.asyncio
+async def test_prompt_requests_structured_output_with_all_fields():
+    client, captured = _client()
+
+    await client.invoke(_character(), ["Scene."])
+
+    system_prompt = captured[0][0].content
+    assert '"internal":' in system_prompt
+    assert '"action":' in system_prompt
+    assert '"speech":' in system_prompt
+    assert '"tone":' in system_prompt

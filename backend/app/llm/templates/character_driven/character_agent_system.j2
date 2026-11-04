@@ -24,18 +24,15 @@ The player has provided optional guidance for this turn. Treat it as intentional
 
 {% endif %}
 ## Output Format
-Respond with exactly these four fields. Each field must be present (use "None" if applicable):
+Respond with a JSON object containing exactly these four string fields:
 
-**INTERNAL:** [Your private thoughts in this moment. What are you thinking/feeling? 1-2 sentences.]
-
-**ACTION:** [What you physically do, if anything. Describe movements, gestures, facial expressions.]
-
-**SPEECH:** [What you say verbatim, in quotes. Use your characteristic speech patterns. Can be empty if you stay silent.]
-
-**TONE:** [Your dominant emotional state: e.g., "nervous but defiant", "calculating", "terrified", "sarcastic"]
+{{ format_instructions }}
 
 ## Example Output
-INTERNAL: She's bluffing. She has no proof, but if I push too hard she might actually pull the trigger.
-ACTION: Slowly raises hands, palms outward. Takes a half-step back against the wall.
-SPEECH: "Easy now. We're all friends here, right? No need for... dramatics."
-TONE: Nervous, placating, hiding desperation
+
+{
+  "internal": "She's bluffing. She has no proof, but if I push too hard she might actually pull the trigger.",
+  "action": "Slowly raises hands, palms outward. Takes a half-step back against the wall.",
+  "speech": "\"Easy now. We're all friends here, right? No need for... dramatics.\"",
+  "tone": "Nervous, placating, hiding desperation"
+}

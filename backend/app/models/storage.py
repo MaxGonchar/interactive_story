@@ -137,6 +137,9 @@ class CharacterDrivenInputYaml(BaseModel):
     action: str
     author: str | None
     guidance: str | None = None
+    internal: str | None = None
+    speech: str | None = None
+    tone: str | None = None
 
 
 class CharacterDrivenLLMDataYaml(BaseModel):

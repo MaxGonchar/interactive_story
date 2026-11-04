@@ -27,6 +27,7 @@ from app.models.domain import (
     CharacterDrivenMessage,
     ModelMetadata,
     SceneMetadata,
+    CharacterTurnOutput,
 )
 from app.repositories.character_driven_scene_repository import (
     CharacterDrivenSceneRepository,
@@ -275,6 +276,15 @@ class CharacterDrivenSceneTurnService:
             )
             raise
 
+        character_turn = CharacterTurnOutput.model_validate(character_completion.result)
+        character_input = CharacterDrivenInput(
+            author=character.id,
+            action=character_turn.action,
+            guidance=request.guidance,
+            internal=character_turn.internal,
+            speech=character_turn.speech,
+            tone=character_turn.tone,
+        )
         narrator = self._narrator_client_factory(narrator_model.provider_model_id)
         try:
             narration_completion = await narrator.invoke(
@@ -283,7 +293,7 @@ class CharacterDrivenSceneTurnService:
                 writing_style=metadata.scene_description.writing_style,
                 scene_narrations=[message.narration for message in history],
                 actor_name=character.name,
-                current_turn=character_completion.content,
+                current_turn=character_input.render_character_action(),
             )
         except LLMError:
             logger.error(
@@ -294,11 +304,7 @@ class CharacterDrivenSceneTurnService:
             raise
 
         return GeneratedItem(
-            input=CharacterDrivenInput(
-                author=character.id,
-                action=character_completion.content,
-                guidance=request.guidance,
-            ),
+            input=character_input,
             narration=narration_completion.content,
             llm_data=CharacterDrivenLLMData(
                 character_model_id=request.character_model_id,

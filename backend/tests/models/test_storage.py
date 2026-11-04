@@ -266,6 +266,25 @@ def test_character_driven_messages_yaml_parses_opening_and_turn_items():
     )
 
 
+def test_character_driven_input_yaml_parses_structured_character_fields():
+    input_data = CharacterDrivenInputYaml(
+        action="Raises a lantern.",
+        author="navigator",
+        internal="The path is clear.",
+        speech="Stay close.",
+        tone="Wary",
+    )
+
+    assert input_data.model_dump() == {
+        "action": "Raises a lantern.",
+        "author": "navigator",
+        "guidance": None,
+        "internal": "The path is clear.",
+        "speech": "Stay close.",
+        "tone": "Wary",
+    }
+
+
 def test_character_driven_message_requires_llm_data():
     with pytest.raises(ValidationError):
         CharacterDrivenMessageYaml(
